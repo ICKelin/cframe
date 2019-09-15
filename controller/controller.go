@@ -1,30 +1,19 @@
 package controller
 
 import (
-	"encoding/json"
-	"net/http"
+	"log"
 )
 
-func Main() {
-}
-
-type server struct {
-	nodeMgr *NodeManager
-}
-
-func newServer() *server {
-	return &server{
-		nodeMgr: &NodeManager{},
+func Main(confpath string) {
+	cfg, err := ParseConfig(confpath)
+	if err != nil {
+		log.Println(err)
+		return
 	}
-}
 
-func (s *server) ListenAndServe() {
-	http.HandleFunc("/api/v1/nodes", s.getNodes)
-	http.ListenAndServe(":10033", nil)
-}
+	log.Println(cfg)
 
-func (s *server) getNodes(w http.ResponseWriter, r *http.Request) {
-	nodes := s.nodeMgr.GetNodes()
-	b, _ := json.Marshal(nodes)
-	w.Write(b)
+	nodeManager := NewNodeManager(cfg.Nodes)
+	s := NewServer(cfg.ServerConfig, nodeManager)
+	s.ListenAndServe()
 }

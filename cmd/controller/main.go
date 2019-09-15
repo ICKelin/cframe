@@ -1,7 +1,13 @@
 package main
 
-import "github.com/ICKelin/cframe/controller"
+import (
+	"flag"
+
+	"github.com/ICKelin/cframe/controller"
+)
 
 func main() {
-	controller.Main()
+	flgConf := flag.String("c", "", "conf path")
+	flag.Parse()
+	controller.Main(*flgConf)
 }

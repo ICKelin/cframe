@@ -8,6 +8,8 @@ import (
 )
 
 type Config struct {
+	ServerConfig ServerConfig `toml:"server" json:"server"`
+	Nodes        []*Node      `toml:"nodes" json:"nodes"`
 }
 
 func ParseConfig(path string) (*Config, error) {
