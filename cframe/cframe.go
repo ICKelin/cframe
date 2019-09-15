@@ -1,14 +1,24 @@
 package cframe
 
-import "flag"
+import (
+	"flag"
+	"fmt"
+	"log"
+)
 
 func Main() {
-	flgServer := flag.String("s", "", "server address")
-	flgLan := flag.String("lan", "", "lan address")
-	flgMask := flag.Int("mask", 32, "mask")
+	flgConf := flag.String("c", "", "config file")
 	flag.Parse()
 
-	c := NewClient(*flgServer, *flgLan, int32(*flgMask))
-	c.Run()
+	cfg, err := ParseConfig(*flgConf)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
+	log.Println(cfg)
+
+	ctrl := NewCtrlClient(cfg.CtrlConfig)
+	c := NewClient(cfg.ClientConfig, ctrl)
+	c.Run()
 }

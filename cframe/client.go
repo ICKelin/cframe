@@ -7,6 +7,8 @@ import (
 	"io"
 	"log"
 	"net"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -15,14 +17,21 @@ import (
 	"github.com/xtaci/smux"
 )
 
-type Client struct {
-	tun  *water.Interface
-	srv  string
-	lan  string
-	mask int32
+type ClientConfig struct {
+	NodeName string `toml:"node_name"`
+	SrvAddr  string `toml:"srv_addr"`
 }
 
-func NewClient(srv, lan string, mask int32) *Client {
+type Client struct {
+	tun      *water.Interface
+	srv      string
+	nodeName string
+	ctrl     *CtrlClient
+	lan      string
+	mask     int32
+}
+
+func NewClient(cliCfg ClientConfig, ctrl *CtrlClient) *Client {
 	cfg := water.Config{}
 	cfg.DeviceType = water.TUN
 	tun, err := water.New(cfg)
@@ -31,14 +40,42 @@ func NewClient(srv, lan string, mask int32) *Client {
 	}
 
 	return &Client{
-		tun:  tun,
-		srv:  srv,
-		lan:  lan,
-		mask: mask,
+		tun:      tun,
+		srv:      cliCfg.SrvAddr,
+		nodeName: cliCfg.NodeName,
+		ctrl:     ctrl,
+		// lan:  lan,
+		// mask: mask,
 	}
 }
 
-func (c *Client) Run() {
+func (c *Client) Run() error {
+	for {
+		nodes, err := c.ctrl.GetNodes()
+		if err != nil {
+			log.Println(err)
+			time.Sleep(time.Second * 5)
+			continue
+		}
+
+		for _, n := range nodes {
+			if n.Name == c.nodeName {
+				sp := strings.Split(n.CIDR, "/")
+				if len(sp) != 2 {
+					return fmt.Errorf("invalid config from controller")
+				}
+
+				mask, _ := strconv.Atoi(sp[1])
+				c.lan = sp[0]
+				c.mask = int32(mask)
+			} else {
+				// TODO: add other node route
+			}
+		}
+
+		break
+	}
+
 	for {
 		err := c.run()
 		if err != nil {
@@ -77,6 +114,10 @@ func (c *Client) run() error {
 	wg.Wait()
 
 	return nil
+}
+
+func (c *Client) handleNodes(nodes []*Node) {
+
 }
 
 func (c *Client) handshake(stream net.Conn) error {

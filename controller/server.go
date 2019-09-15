@@ -33,6 +33,7 @@ func NewServer(cfg ServerConfig, nm *NodeManager) *Server {
 func (s *Server) ListenAndServe() {
 	log.Println("listening: ", s.addr)
 	http.HandleFunc("/api/v1/nodes", s.getNodes)
+	http.HandleFunc("/api/v1/nodes/new", s.newNodes)
 	http.ListenAndServe(s.addr, nil)
 }
 
@@ -40,4 +41,12 @@ func (s *Server) getNodes(w http.ResponseWriter, r *http.Request) {
 	nodes := s.nodeMgr.GetNodes()
 	b, _ := json.Marshal(nodes)
 	w.Write(b)
+}
+
+func (s *Server) newNodes(w http.ResponseWriter, r *http.Request) {
+	// TODO:
+}
+
+func (s *Server) delNodes(w http.ResponseWriter, r *http.Request) {
+	// TODO:
 }
