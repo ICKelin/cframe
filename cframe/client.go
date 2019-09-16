@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"os/exec"
 	"strconv"
 	"strings"
 	"sync"
@@ -50,30 +51,36 @@ func NewClient(cliCfg ClientConfig, ctrl *CtrlClient) *Client {
 }
 
 func (c *Client) Run() error {
+	var nodes []*Node
+	var err error
+
 	for {
-		nodes, err := c.ctrl.GetNodes()
+		nodes, err = c.ctrl.GetNodes()
 		if err != nil {
 			log.Println(err)
 			time.Sleep(time.Second * 5)
 			continue
 		}
 
-		for _, n := range nodes {
-			if n.Name == c.nodeName {
-				sp := strings.Split(n.CIDR, "/")
-				if len(sp) != 2 {
-					return fmt.Errorf("invalid config from controller")
-				}
+		break
+	}
 
-				mask, _ := strconv.Atoi(sp[1])
-				c.lan = sp[0]
-				c.mask = int32(mask)
-			} else {
-				// TODO: add other node route
+	for _, n := range nodes {
+		if n.Name == c.nodeName {
+			sp := strings.Split(n.CIDR, "/")
+			if len(sp) != 2 {
+				return fmt.Errorf("invalid config from controller")
+			}
+
+			mask, _ := strconv.Atoi(sp[1])
+			c.lan = sp[0]
+			c.mask = int32(mask)
+		} else {
+			err = route(c.tun.Name(), n.CIDR, "")
+			if err != nil {
+				log.Println(err)
 			}
 		}
-
-		break
 	}
 
 	for {
@@ -114,10 +121,6 @@ func (c *Client) run() error {
 	wg.Wait()
 
 	return nil
-}
-
-func (c *Client) handleNodes(nodes []*Node) {
-
 }
 
 func (c *Client) handshake(stream net.Conn) error {
@@ -190,4 +193,9 @@ func (c *Client) sock2tun(stream net.Conn, wg *sync.WaitGroup) {
 
 		c.tun.Write(buf)
 	}
+}
+
+func route(dev string, cidr, nexthop string) error {
+	cmd := exec.Command("ip", []string{"ro", "add", cidr, "dev", dev}...)
+	return cmd.Run()
 }
