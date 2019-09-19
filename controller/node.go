@@ -1,8 +1,9 @@
 package controller
 
 type Node struct {
-	CIDR string `json:"cidr" toml:"cidr"`
-	Name string `json:"name" toml:"name"`
+	Gateway string `json:"gateway" toml:"gateway"`
+	CIDR    string `json:"cidr" toml:"cidr"`
+	Name    string `json:"name" toml:"name"`
 }
 
 type NodeManager struct {

@@ -12,8 +12,9 @@ var (
 )
 
 type Node struct {
-	CIDR string `json:"cidr"`
-	Name string `json:"name"`
+	Gateway string `json:"gateway"`
+	CIDR    string `json:"cidr"`
+	Name    string `json:"name"`
 }
 
 type CtrlConfig struct {

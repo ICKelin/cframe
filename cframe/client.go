@@ -67,7 +67,7 @@ func (c *Client) Run() error {
 
 	for _, n := range nodes {
 		if n.Name == c.nodeName {
-			sp := strings.Split(n.CIDR, "/")
+			sp := strings.Split(n.Gateway, "/")
 			if len(sp) != 2 {
 				return fmt.Errorf("invalid config from controller")
 			}
@@ -76,7 +76,7 @@ func (c *Client) Run() error {
 			c.lan = sp[0]
 			c.mask = int32(mask)
 		} else {
-			err = route(c.tun.Name(), n.CIDR, "")
+			err = route(c.tun.Name(), n.Gateway, "")
 			if err != nil {
 				log.Println(err)
 			}
@@ -115,6 +115,7 @@ func (c *Client) run() error {
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
 
+	log.Println("tunning")
 	go c.tun2sock(stream, wg)
 	go c.sock2tun(stream, wg)
 
@@ -196,6 +197,15 @@ func (c *Client) sock2tun(stream net.Conn, wg *sync.WaitGroup) {
 }
 
 func route(dev string, cidr, nexthop string) error {
-	cmd := exec.Command("ip", []string{"ro", "add", cidr, "dev", dev}...)
+	// up interface
+	cmd := exec.Command("ifconfig", []string{dev, "up"}...)
+	cmd.Run()
+
+	// set interface
+	cmd = exec.Command("ip", []string{"addr", "add", cidr, "dev", dev}...)
+	cmd.Run()
+
+	// add route
+	cmd = exec.Command("ip", []string{"ro", "add", cidr, "dev", dev}...)
 	return cmd.Run()
 }
