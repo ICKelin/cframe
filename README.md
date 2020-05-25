@@ -1,4 +1,2 @@
 ## cframe
-cframe is a container to container connector.(developing)
-
-![](arch.jpg)
+cframe是个容器互联项目，使用cframe可以将多个宿主机的容器连接起来，容器或者宿主机当中，均可直接使用容器ip进行访问。

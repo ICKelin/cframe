@@ -1,4 +1,4 @@
-package cframed
+package main
 
 import "fmt"
 
