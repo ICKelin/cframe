@@ -1,21 +1,37 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
+	"strings"
 )
 
 type Server struct {
-	laddr    string
-	peers    []*Node
-	peerConn []*net.UDPConn
+	// server监听udp地址
+	laddr string
+
+	// 其他宿主机的laddr
+	peers []*Node
+
+	// 与其他宿主机的udp connect
+	peerConns []*peerConn
+
+	// 虚拟设备接口
+	iface *Interface
 }
 
-func NewServer(laddr string, peers []*Node) *Server {
+type peerConn struct {
+	conn *net.UDPConn
+	cidr string
+}
+
+func NewServer(laddr string, peers []*Node, iface *Interface) *Server {
 	return &Server{
-		laddr:    laddr,
-		peers:    peers,
-		peerConn: make([]*net.UDPConn, 0),
+		laddr:     laddr,
+		peers:     peers,
+		peerConns: make([]*peerConn, 0),
+		iface:     iface,
 	}
 }
 
@@ -31,13 +47,14 @@ func (s *Server) ListenAndServe() error {
 	}
 	defer lconn.Close()
 
-	iface, err := NewInterface()
-	if err != nil {
-		return err
-	}
-	defer iface.Close()
-	iface.Up()
+	s.connectPeers()
 
+	go s.readLocal(lconn)
+	s.readRemote(lconn)
+	return nil
+}
+
+func (s *Server) connectPeers() {
 	for _, node := range s.peers {
 		raddr, err := net.ResolveUDPAddr("udp", node.Addr)
 		if err != nil {
@@ -50,15 +67,16 @@ func (s *Server) ListenAndServe() error {
 			continue
 		}
 
-		s.peerConn = append(s.peerConn, conn)
-	}
+		peer := &peerConn{
+			conn: conn,
+			cidr: node.CIDR,
+		}
 
-	go s.readLocal(lconn, iface)
-	s.readRemote(lconn, iface)
-	return nil
+		s.peerConns = append(s.peerConns, peer)
+	}
 }
 
-func (s *Server) readRemote(lconn *net.UDPConn, iface *Interface) {
+func (s *Server) readRemote(lconn *net.UDPConn) {
 	buf := make([]byte, 1024*64)
 	for {
 		nr, _, err := lconn.ReadFromUDP(buf)
@@ -77,13 +95,13 @@ func (s *Server) readRemote(lconn *net.UDPConn, iface *Interface) {
 		dst := p.Dst()
 		log.Printf("[D] %s => %s\n", src, dst)
 
-		iface.Write(buf[:nr])
+		s.iface.Write(buf[:nr])
 	}
 }
 
-func (s *Server) readLocal(lconn *net.UDPConn, iface *Interface) {
+func (s *Server) readLocal(lconn *net.UDPConn) {
 	for {
-		buf, err := iface.Read()
+		buf, err := s.iface.Read()
 		if err != nil {
 			log.Println("[E] read iface error: ", err)
 			continue
@@ -99,12 +117,45 @@ func (s *Server) readLocal(lconn *net.UDPConn, iface *Interface) {
 		dst := p.Dst()
 		log.Printf("[D] %s => %s\n", src, dst)
 
-		for _, conn := range s.peerConn {
-			_, err := conn.Write(buf)
-			if err != nil {
-				log.Println("[E] write to peer: ", err)
-				continue
-			}
+		peer, err := s.route(dst)
+		if err != nil {
+			log.Println("[E] not route to host: ", dst)
+			continue
+		}
+
+		_, err = peer.Write(buf)
+		if err != nil {
+			log.Println("[E] write to peer: ", err)
 		}
 	}
+}
+
+func (s *Server) route(dst string) (*net.UDPConn, error) {
+	// Test route
+	for _, p := range s.peerConns {
+		_, ipnet, err := net.ParseCIDR(p.cidr)
+		if err != nil {
+			log.Println("parse cidr fail: ", err)
+			continue
+		}
+
+		sp := strings.Split(p.cidr, "/")
+		if len(sp) != 2 {
+			log.Println("parse cidr fail: ", err)
+			continue
+		}
+
+		dstCidr := fmt.Sprintf("%s/%s", dst, sp[1])
+		_, dstNet, err := net.ParseCIDR(dstCidr)
+		if err != nil {
+			log.Println("parse cidr fail: ", err)
+			continue
+		}
+
+		if ipnet.String() == dstNet.String() {
+			return p.conn, nil
+		}
+	}
+
+	return nil, fmt.Errorf("no route")
 }
