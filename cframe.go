@@ -61,11 +61,21 @@ func (s *Server) connectPeers() {
 			log.Println("[E] ", err)
 			continue
 		}
+
 		conn, err := net.DialUDP("udp", nil, raddr)
 		if err != nil {
 			log.Println("[E] ", err)
 			continue
 		}
+
+		out, err := execCmd("route", []string{"add", "-net",
+			node.CIDR, "dev", s.iface.tun.Name()})
+
+		if err != nil {
+			log.Println("[E] add route fail: ", err, out)
+		}
+
+		log.Printf("[I] add route %s to %s\n", node.CIDR, s.iface.tun.Name())
 
 		peer := &peerConn{
 			conn: conn,
@@ -131,7 +141,6 @@ func (s *Server) readLocal(lconn *net.UDPConn) {
 }
 
 func (s *Server) route(dst string) (*net.UDPConn, error) {
-	// Test route
 	for _, p := range s.peerConns {
 		_, ipnet, err := net.ParseCIDR(p.cidr)
 		if err != nil {
