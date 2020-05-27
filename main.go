@@ -2,21 +2,18 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 )
 
 func main() {
-	laddr := flag.String("l", ":58422", "local udp address")
-	remote := flag.String("r", "172.18.171.245:58422", "remote addr")
-	cidr := flag.String("cidr", "192.168.10.0/24", "remote cidr")
-
+	confpath := flag.String("c", "", "config file")
 	flag.Parse()
 
-	nodes := []*Node{
-		{
-			Addr: *remote,
-			CIDR: *cidr,
-		},
+	cfg, err := ParseConfig(*confpath)
+	if err != nil {
+		fmt.Printf("parse config fali: %v\n", err)
+		return
 	}
 
 	iface, err := NewInterface()
@@ -28,6 +25,6 @@ func main() {
 	defer iface.Close()
 	iface.Up()
 
-	s := NewServer(*laddr, nodes, iface)
+	s := NewServer(cfg.Local.Addr, cfg.Peers, iface)
 	s.ListenAndServe()
 }
