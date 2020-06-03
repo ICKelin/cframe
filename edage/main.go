@@ -26,7 +26,9 @@ func main() {
 	defer iface.Close()
 	iface.Up()
 
-	reg := NewRegistry(cfg.Controller, cfg.Local.Addr, cfg.Local.CIDR)
+	s := NewServer(cfg.Local.Addr, cfg.Peers, iface)
+
+	reg := NewRegistry(cfg.Controller, cfg.Local.Addr, cfg.Local.CIDR, s)
 	go func() {
 		err := reg.Run()
 		if err != nil {
@@ -35,6 +37,5 @@ func main() {
 		}
 	}()
 
-	s := NewServer(cfg.Local.Addr, cfg.Peers, iface)
 	s.ListenAndServe()
 }

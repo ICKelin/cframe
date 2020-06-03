@@ -12,20 +12,19 @@ type RegistryServer struct {
 	addr string
 
 	// 所有host信息
-	mu    sync.Mutex
-	hosts map[string]*Host
+	mu   sync.Mutex
+	sess map[string]*Session
 }
 
-type Host struct {
-	addr string
-	cidr string
+type Session struct {
+	host *codec.Host
 	conn net.Conn
 }
 
 func NewRegistryServer(addr string) *RegistryServer {
 	return &RegistryServer{
-		addr:  addr,
-		hosts: make(map[string]*Host),
+		addr: addr,
+		sess: make(map[string]*Session),
 	}
 }
 
@@ -56,20 +55,37 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 		return
 	}
 
+	log.Println("[I] node register", reg)
+
+	onlineHosts := make([]*codec.Host, 0)
 	s.mu.Lock()
-	s.hosts[reg.HostAddr] = &Host{
-		addr: reg.HostAddr,
-		cidr: reg.ContainerCidr,
+	for _, sess := range s.sess {
+		if sess.host.HostAddr != reg.HostAddr {
+			onlineHosts = append(onlineHosts, sess.host)
+		}
+	}
+
+	s.sess[reg.HostAddr] = &Session{
+		host: &codec.Host{
+			HostAddr:      reg.HostAddr,
+			ContainerCidr: reg.ContainerCidr,
+		},
 		conn: conn,
 	}
 	s.mu.Unlock()
 	defer func() {
 		s.mu.Lock()
-		delete(s.hosts, reg.HostAddr)
+		delete(s.sess, reg.HostAddr)
 		s.mu.Unlock()
 	}()
 
-	log.Println("[I] node register", reg)
+	// 响应
+	err = codec.WriteJSON(conn, codec.CmdRegister, &codec.RegisterReply{
+		OnlineHost: onlineHosts,
+	})
+	if err != nil {
+		log.Println("[E] ", err)
+	}
 
 	// 通知上线
 	s.broadCastOnline(&reg)
@@ -105,7 +121,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 func (s *RegistryServer) broadCastOnline(reg *codec.RegisterReq) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	for addr, host := range s.hosts {
+	for addr, host := range s.sess {
 		if addr == reg.HostAddr {
 			continue
 		}
@@ -115,7 +131,18 @@ func (s *RegistryServer) broadCastOnline(reg *codec.RegisterReq) {
 }
 
 func (s *RegistryServer) online(peer net.Conn, host *codec.RegisterReq) {
+	log.Printf("[I] send online msg %v to %s\b",
+		host, peer.RemoteAddr().String())
 
+	obj := &codec.BroadcastOnlineMsg{
+		HostAddr:      host.HostAddr,
+		ContainerCidr: host.ContainerCidr,
+	}
+
+	err := codec.WriteJSON(peer, codec.CmdOnline, obj)
+	if err != nil {
+		log.Println("[E] ", err)
+	}
 }
 
 // 广播节点下线
@@ -123,7 +150,7 @@ func (s *RegistryServer) broadcastOffline(reg *codec.RegisterReq) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	for addr, host := range s.hosts {
+	for addr, host := range s.sess {
 		if addr == reg.HostAddr {
 			continue
 		}
@@ -132,6 +159,17 @@ func (s *RegistryServer) broadcastOffline(reg *codec.RegisterReq) {
 	}
 }
 
-func (s *RegistryServer) offline(conn net.Conn, reg *codec.RegisterReq) {
+func (s *RegistryServer) offline(peer net.Conn, host *codec.RegisterReq) {
+	log.Printf("[I] send offline msg %v to %s\b",
+		host, peer.RemoteAddr().String())
 
+	obj := &codec.BroadcastOfflineMsg{
+		HostAddr:      host.HostAddr,
+		ContainerCidr: host.ContainerCidr,
+	}
+
+	err := codec.WriteJSON(peer, codec.CmdOffline, obj)
+	if err != nil {
+		log.Println("[E] ", err)
+	}
 }

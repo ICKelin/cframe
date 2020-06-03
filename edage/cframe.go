@@ -5,6 +5,8 @@ import (
 	"log"
 	"net"
 	"strings"
+
+	"github.com/ICKelin/cframe/codec"
 )
 
 type Server struct {
@@ -167,4 +169,18 @@ func (s *Server) route(dst string) (*net.UDPConn, error) {
 	}
 
 	return nil, fmt.Errorf("no route")
+}
+
+func (s *Server) AddPeer(peer *codec.Host) {
+	log.Println("[I] add peer: ", peer)
+}
+
+func (s *Server) AddPeers(peers []*codec.Host) {
+	for _, p := range peers {
+		s.AddPeer(p)
+	}
+}
+
+func (s *Server) DelPeer(peer *codec.Host) {
+	log.Println("[I] del peer: ", peer)
 }

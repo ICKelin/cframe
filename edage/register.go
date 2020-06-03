@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net"
 	"time"
@@ -12,13 +13,15 @@ type Registry struct {
 	srv      string
 	hostAddr string
 	cidr     string
+	server   *Server
 }
 
-func NewRegistry(srv string, host, cidr string) *Registry {
+func NewRegistry(srv, host, cidr string, s *Server) *Registry {
 	return &Registry{
 		srv:      srv,
 		hostAddr: host,
 		cidr:     cidr,
+		server:   s,
 	}
 }
 
@@ -45,7 +48,9 @@ func (r *Registry) run() error {
 		return err
 	}
 
-	// TODO: read response
+	reply := &codec.RegisterReply{}
+	codec.ReadJSON(conn, reply)
+	r.server.AddPeers(reply.OnlineHost)
 
 	hbchan := make(chan struct{})
 	go r.read(conn)
@@ -91,11 +96,30 @@ func (r *Registry) read(conn net.Conn) {
 			log.Println("[I] heartbeat from server ")
 
 		case codec.CmdOnline:
-			log.Println("online cmd: ", body)
+			log.Println("online cmd: ", string(body))
+			online := codec.BroadcastOnlineMsg{}
+			err := json.Unmarshal(body, &online)
+			if err != nil {
+				log.Println("[E] ", err)
+				continue
+			}
+			r.server.AddPeer(&codec.Host{
+				HostAddr:      online.HostAddr,
+				ContainerCidr: online.ContainerCidr,
+			})
 
 		case codec.CmdOffline:
-			log.Println("offline cmd: ", body)
-
+			log.Println("offline cmd: ", string(body))
+			offline := codec.BroadcastOfflineMsg{}
+			err := json.Unmarshal(body, &offline)
+			if err != nil {
+				log.Println("[E] ", err)
+				continue
+			}
+			r.server.DelPeer(&codec.Host{
+				HostAddr:      offline.HostAddr,
+				ContainerCidr: offline.ContainerCidr,
+			})
 		}
 	}
 }
