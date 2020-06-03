@@ -5,7 +5,7 @@ import (
 	"net"
 	"sync"
 
-	"github.com/ICKelin/cframe/inner_proto"
+	"github.com/ICKelin/cframe/codec"
 )
 
 type RegistryServer struct {
@@ -22,8 +22,11 @@ type Host struct {
 	conn net.Conn
 }
 
-func NewRegistryServer() *RegistryServer {
-	return &RegistryServer{}
+func NewRegistryServer(addr string) *RegistryServer {
+	return &RegistryServer{
+		addr:  addr,
+		hosts: make(map[string]*Host),
+	}
 }
 
 func (s *RegistryServer) ListenAndServe() error {
@@ -46,8 +49,8 @@ func (s *RegistryServer) ListenAndServe() error {
 
 func (s *RegistryServer) onConn(conn net.Conn) {
 	defer conn.Close()
-	reg := inner_proto.RegisterReq{}
-	err := ReadJSON(conn, &reg)
+	reg := codec.RegisterReq{}
+	err := codec.ReadJSON(conn, &reg)
 	if err != nil {
 		log.Println(err)
 		return
@@ -66,6 +69,8 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 		s.mu.Unlock()
 	}()
 
+	log.Println("[I] node register", reg)
+
 	// 通知上线
 	s.broadCastOnline(&reg)
 
@@ -75,8 +80,8 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	// 维持心跳
 	fail := 0
 	for {
-		hb := inner_proto.Heartbeat{}
-		err := ReadJSON(conn, &hb)
+		hb := codec.Heartbeat{}
+		err := codec.ReadJSON(conn, &hb)
 		if err != nil {
 			log.Println(err)
 			fail += 1
@@ -87,7 +92,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 		}
 
 		log.Println("heartbeat from client: ", conn.RemoteAddr().String())
-		err = WriteJSON(conn, CmdHeartbeat, &hb)
+		err = codec.WriteJSON(conn, codec.CmdHeartbeat, &hb)
 		if err != nil {
 			log.Println(err)
 		}
@@ -97,7 +102,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 }
 
 // 广播节点上线
-func (s *RegistryServer) broadCastOnline(reg *inner_proto.RegisterReq) {
+func (s *RegistryServer) broadCastOnline(reg *codec.RegisterReq) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	for addr, host := range s.hosts {
@@ -109,12 +114,12 @@ func (s *RegistryServer) broadCastOnline(reg *inner_proto.RegisterReq) {
 	}
 }
 
-func (s *RegistryServer) online(peer net.Conn, host *inner_proto.RegisterReq) {
+func (s *RegistryServer) online(peer net.Conn, host *codec.RegisterReq) {
 
 }
 
 // 广播节点下线
-func (s *RegistryServer) broadcastOffline(reg *inner_proto.RegisterReq) {
+func (s *RegistryServer) broadcastOffline(reg *codec.RegisterReq) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -127,6 +132,6 @@ func (s *RegistryServer) broadcastOffline(reg *inner_proto.RegisterReq) {
 	}
 }
 
-func (s *RegistryServer) offline(conn net.Conn, reg *inner_proto.RegisterReq) {
+func (s *RegistryServer) offline(conn net.Conn, reg *codec.RegisterReq) {
 
 }

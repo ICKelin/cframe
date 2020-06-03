@@ -7,8 +7,9 @@ import (
 )
 
 type Config struct {
-	Local *Node   `toml:"local"`
-	Peers []*Node `toml:"peers"`
+	Controller string  `toml:"controller"`
+	Local      *Node   `toml:"local"`
+	Peers      []*Node `toml:"peers"`
 }
 
 type Node struct {

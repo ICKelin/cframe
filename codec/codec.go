@@ -1,4 +1,4 @@
-package main
+package codec
 
 import (
 	"encoding/binary"
@@ -10,7 +10,9 @@ import (
 const (
 	_ = iota
 	CmdHeartbeat
-	CmdData
+	CmdRegister
+	CmdOnline
+	CmdOffline
 )
 
 // 1字节版本

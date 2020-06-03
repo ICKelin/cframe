@@ -1,4 +1,4 @@
-package inner_proto
+package codec
 
 // 节点注册请求
 type RegisterReq struct {

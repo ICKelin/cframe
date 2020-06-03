@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 )
 
 func main() {
@@ -24,6 +25,15 @@ func main() {
 
 	defer iface.Close()
 	iface.Up()
+
+	reg := NewRegistry(cfg.Controller, cfg.Local.Addr, cfg.Local.CIDR)
+	go func() {
+		err := reg.Run()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(0)
+		}
+	}()
 
 	s := NewServer(cfg.Local.Addr, cfg.Peers, iface)
 	s.ListenAndServe()
