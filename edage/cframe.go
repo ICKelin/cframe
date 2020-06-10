@@ -28,10 +28,10 @@ type peerConn struct {
 	cidr string
 }
 
-func NewServer(laddr string, peers []*Node, iface *Interface) *Server {
+func NewServer(laddr string, iface *Interface) *Server {
 	return &Server{
 		laddr:     laddr,
-		peers:     peers,
+		peers:     make([]*Node, 0),
 		peerConns: make([]*peerConn, 0),
 		iface:     iface,
 	}
@@ -173,6 +173,10 @@ func (s *Server) route(dst string) (*net.UDPConn, error) {
 
 func (s *Server) AddPeer(peer *codec.Host) {
 	log.Println("[I] add peer: ", peer)
+	out, err := execCmd("route", []string{"add", "-net",
+		peer.ContainerCidr, "dev", s.iface.tun.Name()})
+	log.Printf("[I] route add -net %s dev %s, %s %v\n",
+		peer.ContainerCidr, s.iface.tun.Name(), out, err)
 }
 
 func (s *Server) AddPeers(peers []*codec.Host) {
@@ -183,4 +187,8 @@ func (s *Server) AddPeers(peers []*codec.Host) {
 
 func (s *Server) DelPeer(peer *codec.Host) {
 	log.Println("[I] del peer: ", peer)
+	out, err := execCmd("route", []string{"del", "-net",
+		peer.ContainerCidr, "dev", s.iface.tun.Name()})
+	log.Printf("[I] route del -net %s dev %s, %s %v\n",
+		peer.ContainerCidr, s.iface.tun.Name(), out, err)
 }
