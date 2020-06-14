@@ -26,7 +26,10 @@ func NewRegistry(srv, host, cidr string, s *Server) *Registry {
 }
 
 func (r *Registry) Run() error {
-	return r.run()
+	for {
+		r.run()
+		time.Sleep(time.Second * 3)
+	}
 }
 
 func (r *Registry) run() error {

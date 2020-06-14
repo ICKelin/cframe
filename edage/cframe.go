@@ -17,7 +17,7 @@ type Server struct {
 	peers []*Node
 
 	// 与其他宿主机的udp connect
-	peerConns []*peerConn
+	peerConns map[string]*peerConn
 
 	// 虚拟设备接口
 	iface *Interface
@@ -32,7 +32,7 @@ func NewServer(laddr string, iface *Interface) *Server {
 	return &Server{
 		laddr:     laddr,
 		peers:     make([]*Node, 0),
-		peerConns: make([]*peerConn, 0),
+		peerConns: make(map[string]*peerConn),
 		iface:     iface,
 	}
 }
@@ -49,43 +49,9 @@ func (s *Server) ListenAndServe() error {
 	}
 	defer lconn.Close()
 
-	s.connectPeers()
-
 	go s.readLocal(lconn)
 	s.readRemote(lconn)
 	return nil
-}
-
-func (s *Server) connectPeers() {
-	for _, node := range s.peers {
-		raddr, err := net.ResolveUDPAddr("udp", node.Addr)
-		if err != nil {
-			log.Println("[E] ", err)
-			continue
-		}
-
-		conn, err := net.DialUDP("udp", nil, raddr)
-		if err != nil {
-			log.Println("[E] ", err)
-			continue
-		}
-
-		out, err := execCmd("route", []string{"add", "-net",
-			node.CIDR, "dev", s.iface.tun.Name()})
-
-		if err != nil {
-			log.Println("[E] add route fail: ", err, out)
-		}
-
-		log.Printf("[I] add route %s to %s\n", node.CIDR, s.iface.tun.Name())
-
-		peer := &peerConn{
-			conn: conn,
-			cidr: node.CIDR,
-		}
-
-		s.peerConns = append(s.peerConns, peer)
-	}
 }
 
 func (s *Server) readRemote(lconn *net.UDPConn) {
@@ -173,8 +139,28 @@ func (s *Server) route(dst string) (*net.UDPConn, error) {
 
 func (s *Server) AddPeer(peer *codec.Host) {
 	log.Println("[I] add peer: ", peer)
+	if _, ok := s.peerConns[peer.ContainerCidr]; ok {
+		log.Printf("host %s already added\n", peer.HostAddr)
+		return
+	}
+
+	err := s.connectPeer(&Node{
+		Addr: peer.HostAddr,
+		CIDR: peer.ContainerCidr,
+	})
+	if err != nil {
+		log.Printf("[E] add peer %v fail: %v\n", peer, err)
+	}
+
 	out, err := execCmd("route", []string{"add", "-net",
 		peer.ContainerCidr, "dev", s.iface.tun.Name()})
+	if err != nil {
+		log.Printf("[I] route add -net %s dev %s, %s %v\n",
+			peer.ContainerCidr, s.iface.tun.Name(), out, err)
+		// 移除peer
+		s.disconnPeer(peer.ContainerCidr)
+		return
+	}
 	log.Printf("[I] route add -net %s dev %s, %s %v\n",
 		peer.ContainerCidr, s.iface.tun.Name(), out, err)
 }
@@ -187,8 +173,42 @@ func (s *Server) AddPeers(peers []*codec.Host) {
 
 func (s *Server) DelPeer(peer *codec.Host) {
 	log.Println("[I] del peer: ", peer)
+	s.disconnPeer(peer.ContainerCidr)
+
 	out, err := execCmd("route", []string{"del", "-net",
 		peer.ContainerCidr, "dev", s.iface.tun.Name()})
 	log.Printf("[I] route del -net %s dev %s, %s %v\n",
 		peer.ContainerCidr, s.iface.tun.Name(), out, err)
+}
+
+func (s *Server) connectPeer(node *Node) error {
+	raddr, err := net.ResolveUDPAddr("udp", node.Addr)
+	if err != nil {
+		log.Println("[E] ", err)
+		return err
+	}
+
+	conn, err := net.DialUDP("udp", nil, raddr)
+	if err != nil {
+		log.Println("[E] ", err)
+		return err
+	}
+
+	peer := &peerConn{
+		conn: conn,
+		cidr: node.CIDR,
+	}
+
+	s.peerConns[peer.cidr] = peer
+	return nil
+}
+
+func (s *Server) disconnPeer(key string) {
+	p := s.peerConns[key]
+	if p != nil {
+		p.conn.Close()
+	}
+
+	delete(s.peerConns, key)
+	log.Printf("[I] delete peer %s\n", key)
 }

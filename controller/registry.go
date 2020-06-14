@@ -4,6 +4,7 @@ import (
 	"log"
 	"net"
 	"sync"
+	"time"
 
 	"github.com/ICKelin/cframe/codec"
 )
@@ -34,6 +35,8 @@ func (s *RegistryServer) ListenAndServe() error {
 		return err
 	}
 	defer lis.Close()
+
+	go s.state()
 
 	for {
 		conn, err := lis.Accept()
@@ -107,7 +110,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 			continue
 		}
 
-		log.Println("heartbeat from client: ", conn.RemoteAddr().String())
+		// log.Println("heartbeat from client: ", conn.RemoteAddr().String())
 		err = codec.WriteJSON(conn, codec.CmdHeartbeat, &hb)
 		if err != nil {
 			log.Println(err)
@@ -171,5 +174,17 @@ func (s *RegistryServer) offline(peer net.Conn, host *codec.RegisterReq) {
 	err := codec.WriteJSON(peer, codec.CmdOffline, obj)
 	if err != nil {
 		log.Println("[E] ", err)
+	}
+}
+
+func (s *RegistryServer) state() {
+	tick := time.NewTicker(time.Second * 30)
+	defer tick.Stop()
+	for range tick.C {
+		s.mu.Lock()
+		for _, sess := range s.sess {
+			log.Printf("%v\n", sess.host)
+		}
+		s.mu.Unlock()
 	}
 }
