@@ -26,7 +26,7 @@ func main() {
 	defer iface.Close()
 	iface.Up()
 
-	s := NewServer(cfg.Local.Addr, iface)
+	s := NewServer(cfg.Local.ListenAddr, iface)
 
 	reg := NewRegistry(cfg.Controller, cfg.Local.Addr, cfg.Local.CIDR, s)
 	go func() {

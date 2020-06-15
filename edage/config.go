@@ -12,8 +12,9 @@ type Config struct {
 }
 
 type Node struct {
-	Addr string `toml:"addr"`
-	CIDR string `toml:"cidr"`
+	ListenAddr string `toml:"listen_addr"` // 监听地址，内网
+	Addr       string `toml:"addr"`        // 监听地址，外网
+	CIDR       string `toml:"cidr"`
 }
 
 func ParseConfig(path string) (*Config, error) {
