@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ICKelin/cframe/codec"
+	"github.com/ICKelin/cframe/controller/edagemanager"
 )
 
 type RegistryServer struct {
@@ -59,26 +60,33 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	}
 
 	log.Println("[I] node register", reg)
+	edage := edagemanager.GetEdage(reg.Name)
+	if edage == nil {
+		log.Printf("[E] get edage for %s fail\n", reg.Name)
+		return
+	}
 
+	log.Printf("[I] register success: %v\n", edage)
+
+	host := edage.HostAddr
 	onlineHosts := make([]*codec.Host, 0)
 	s.mu.Lock()
 	for _, sess := range s.sess {
-		if sess.host.HostAddr != reg.HostAddr {
+		if sess.host.HostAddr != host {
 			onlineHosts = append(onlineHosts, sess.host)
 		}
 	}
-
-	s.sess[reg.HostAddr] = &Session{
+	s.sess[host] = &Session{
 		host: &codec.Host{
-			HostAddr:      reg.HostAddr,
-			ContainerCidr: reg.ContainerCidr,
+			HostAddr: host,
+			Cidr:     edage.Cidr,
 		},
 		conn: conn,
 	}
 	s.mu.Unlock()
 	defer func() {
 		s.mu.Lock()
-		delete(s.sess, reg.HostAddr)
+		delete(s.sess, host)
 		s.mu.Unlock()
 	}()
 
@@ -91,10 +99,10 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	}
 
 	// 通知上线
-	s.broadCastOnline(&reg)
+	s.broadCastOnline(edage)
 
 	// 通知下线
-	defer s.broadcastOffline(&reg)
+	defer s.broadcastOffline(edage)
 
 	// 维持心跳
 	fail := 0
@@ -107,6 +115,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 			if fail >= 3 {
 				break
 			}
+			time.Sleep(time.Second * 1)
 			continue
 		}
 
@@ -121,57 +130,57 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 }
 
 // 广播节点上线
-func (s *RegistryServer) broadCastOnline(reg *codec.RegisterReq) {
+func (s *RegistryServer) broadCastOnline(edage *edagemanager.Edage) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	for addr, host := range s.sess {
-		if addr == reg.HostAddr {
+		if addr == edage.HostAddr {
 			continue
 		}
 
-		go s.online(host.conn, reg)
+		go s.online(host.conn, edage)
 	}
 }
 
-func (s *RegistryServer) online(peer net.Conn, host *codec.RegisterReq) {
+func (s *RegistryServer) online(peer net.Conn, edage *edagemanager.Edage) {
 	log.Printf("[I] send online msg %v to %s\b",
-		host, peer.RemoteAddr().String())
+		edage, peer.RemoteAddr().String())
 
 	obj := &codec.BroadcastOnlineMsg{
-		HostAddr:      host.HostAddr,
-		ContainerCidr: host.ContainerCidr,
+		HostAddr: edage.HostAddr,
+		Cidr:     edage.Cidr,
 	}
 
-	err := codec.WriteJSON(peer, codec.CmdOnline, obj)
+	err := codec.WriteJSON(peer, codec.CmdAdd, obj)
 	if err != nil {
 		log.Println("[E] ", err)
 	}
 }
 
 // 广播节点下线
-func (s *RegistryServer) broadcastOffline(reg *codec.RegisterReq) {
+func (s *RegistryServer) broadcastOffline(edage *edagemanager.Edage) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	for addr, host := range s.sess {
-		if addr == reg.HostAddr {
+		if addr == edage.HostAddr {
 			continue
 		}
 
-		go s.offline(host.conn, reg)
+		go s.offline(host.conn, edage)
 	}
 }
 
-func (s *RegistryServer) offline(peer net.Conn, host *codec.RegisterReq) {
+func (s *RegistryServer) offline(peer net.Conn, edage *edagemanager.Edage) {
 	log.Printf("[I] send offline msg %v to %s\b",
-		host, peer.RemoteAddr().String())
+		edage, peer.RemoteAddr().String())
 
 	obj := &codec.BroadcastOfflineMsg{
-		HostAddr:      host.HostAddr,
-		ContainerCidr: host.ContainerCidr,
+		HostAddr: edage.HostAddr,
+		Cidr:     edage.Cidr,
 	}
 
-	err := codec.WriteJSON(peer, codec.CmdOffline, obj)
+	err := codec.WriteJSON(peer, codec.CmdDel, obj)
 	if err != nil {
 		log.Println("[E] ", err)
 	}

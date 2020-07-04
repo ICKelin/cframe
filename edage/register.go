@@ -10,18 +10,16 @@ import (
 )
 
 type Registry struct {
-	srv      string
-	hostAddr string
-	cidr     string
-	server   *Server
+	srv    string
+	name   string
+	server *Server
 }
 
-func NewRegistry(srv, host, cidr string, s *Server) *Registry {
+func NewRegistry(srv, name string, s *Server) *Registry {
 	return &Registry{
-		srv:      srv,
-		hostAddr: host,
-		cidr:     cidr,
-		server:   s,
+		srv:    srv,
+		name:   name,
+		server: s,
 	}
 }
 
@@ -42,8 +40,7 @@ func (r *Registry) run() error {
 	defer conn.Close()
 
 	reg := codec.RegisterReq{
-		HostAddr:      r.hostAddr,
-		ContainerCidr: r.cidr,
+		Name: r.name,
 	}
 	err = codec.WriteJSON(conn, codec.CmdRegister, &reg)
 	if err != nil {
@@ -98,7 +95,7 @@ func (r *Registry) read(conn net.Conn) {
 		case codec.CmdHeartbeat:
 			log.Println("[I] heartbeat from server ")
 
-		case codec.CmdOnline:
+		case codec.CmdAdd:
 			log.Println("online cmd: ", string(body))
 			online := codec.BroadcastOnlineMsg{}
 			err := json.Unmarshal(body, &online)
@@ -107,11 +104,11 @@ func (r *Registry) read(conn net.Conn) {
 				continue
 			}
 			r.server.AddPeer(&codec.Host{
-				HostAddr:      online.HostAddr,
-				ContainerCidr: online.ContainerCidr,
+				HostAddr: online.HostAddr,
+				Cidr:     online.Cidr,
 			})
 
-		case codec.CmdOffline:
+		case codec.CmdDel:
 			log.Println("offline cmd: ", string(body))
 			offline := codec.BroadcastOfflineMsg{}
 			err := json.Unmarshal(body, &offline)
@@ -120,8 +117,8 @@ func (r *Registry) read(conn net.Conn) {
 				continue
 			}
 			r.server.DelPeer(&codec.Host{
-				HostAddr:      offline.HostAddr,
-				ContainerCidr: offline.ContainerCidr,
+				HostAddr: offline.HostAddr,
+				Cidr:     offline.Cidr,
 			})
 		}
 	}

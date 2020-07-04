@@ -11,8 +11,8 @@ const (
 	_ = iota
 	CmdHeartbeat
 	CmdRegister
-	CmdOnline
-	CmdOffline
+	CmdAdd
+	CmdDel
 )
 
 // 1字节版本

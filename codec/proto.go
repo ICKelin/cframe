@@ -4,16 +4,13 @@ import "encoding/json"
 
 // 节点注册请求
 type RegisterReq struct {
-	// 主机监听的地址
-	HostAddr string
-
-	// 容器网段
-	ContainerCidr string
+	// edage name
+	Name string
 }
 
 type Host struct {
-	HostAddr      string
-	ContainerCidr string
+	HostAddr string
+	Cidr     string
 }
 
 // 节点注册响应
@@ -32,7 +29,7 @@ type BroadcastOnlineMsg struct {
 	HostAddr string
 
 	// 容器网段
-	ContainerCidr string
+	Cidr string
 }
 
 // 广播节点下线消息
@@ -41,7 +38,7 @@ type BroadcastOfflineMsg struct {
 	HostAddr string
 
 	// 容器网段
-	ContainerCidr string
+	Cidr string
 }
 
 type Heartbeat struct{}

@@ -1,0 +1,11 @@
+listen_addr=":58422"
+
+[[edages]]
+name="cn-wg-uat-137"
+host_addr = "10.210.25.137:58423"
+cidr = "192.168.0.0/24"
+
+[[edages]]
+name="cn-wg-uat-145"
+host_addr = "10.210.25.145:58423"
+cidr = "192.168.10.0/24"

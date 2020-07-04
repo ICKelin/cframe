@@ -7,14 +7,9 @@ import (
 )
 
 type Config struct {
+	Name       string `toml:"name"`
 	Controller string `toml:"controller"`
-	Local      *Node  `toml:"local"`
-}
-
-type Node struct {
-	ListenAddr string `toml:"listen_addr"` // 监听地址，内网
-	Addr       string `toml:"addr"`        // 监听地址，外网
-	CIDR       string `toml:"cidr"`
+	ListenAddr string `toml:"listen_addr"`
 }
 
 func ParseConfig(path string) (*Config, error) {

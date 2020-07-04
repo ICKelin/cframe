@@ -13,9 +13,6 @@ type Server struct {
 	// server监听udp地址
 	laddr string
 
-	// 其他宿主机的laddr
-	peers []*Node
-
 	// 与其他宿主机的udp connect
 	peerConns map[string]*peerConn
 
@@ -31,7 +28,6 @@ type peerConn struct {
 func NewServer(laddr string, iface *Interface) *Server {
 	return &Server{
 		laddr:     laddr,
-		peers:     make([]*Node, 0),
 		peerConns: make(map[string]*peerConn),
 		iface:     iface,
 	}
@@ -139,30 +135,27 @@ func (s *Server) route(dst string) (*net.UDPConn, error) {
 
 func (s *Server) AddPeer(peer *codec.Host) {
 	log.Println("[I] add peer: ", peer)
-	if _, ok := s.peerConns[peer.ContainerCidr]; ok {
+	if _, ok := s.peerConns[peer.Cidr]; ok {
 		log.Printf("host %s already added\n", peer.HostAddr)
 		return
 	}
 
-	err := s.connectPeer(&Node{
-		Addr: peer.HostAddr,
-		CIDR: peer.ContainerCidr,
-	})
+	err := s.connectPeer(peer)
 	if err != nil {
 		log.Printf("[E] add peer %v fail: %v\n", peer, err)
 	}
 
 	out, err := execCmd("route", []string{"add", "-net",
-		peer.ContainerCidr, "dev", s.iface.tun.Name()})
+		peer.Cidr, "dev", s.iface.tun.Name()})
 	if err != nil {
 		log.Printf("[I] route add -net %s dev %s, %s %v\n",
-			peer.ContainerCidr, s.iface.tun.Name(), out, err)
+			peer.Cidr, s.iface.tun.Name(), out, err)
 		// 移除peer
-		s.disconnPeer(peer.ContainerCidr)
+		s.disconnPeer(peer.Cidr)
 		return
 	}
 	log.Printf("[I] route add -net %s dev %s, %s %v\n",
-		peer.ContainerCidr, s.iface.tun.Name(), out, err)
+		peer.Cidr, s.iface.tun.Name(), out, err)
 }
 
 func (s *Server) AddPeers(peers []*codec.Host) {
@@ -173,16 +166,16 @@ func (s *Server) AddPeers(peers []*codec.Host) {
 
 func (s *Server) DelPeer(peer *codec.Host) {
 	log.Println("[I] del peer: ", peer)
-	s.disconnPeer(peer.ContainerCidr)
+	s.disconnPeer(peer.Cidr)
 
 	out, err := execCmd("route", []string{"del", "-net",
-		peer.ContainerCidr, "dev", s.iface.tun.Name()})
+		peer.Cidr, "dev", s.iface.tun.Name()})
 	log.Printf("[I] route del -net %s dev %s, %s %v\n",
-		peer.ContainerCidr, s.iface.tun.Name(), out, err)
+		peer.Cidr, s.iface.tun.Name(), out, err)
 }
 
-func (s *Server) connectPeer(node *Node) error {
-	raddr, err := net.ResolveUDPAddr("udp", node.Addr)
+func (s *Server) connectPeer(node *codec.Host) error {
+	raddr, err := net.ResolveUDPAddr("udp", node.HostAddr)
 	if err != nil {
 		log.Println("[E] ", err)
 		return err
@@ -196,7 +189,7 @@ func (s *Server) connectPeer(node *Node) error {
 
 	peer := &peerConn{
 		conn: conn,
-		cidr: node.CIDR,
+		cidr: node.Cidr,
 	}
 
 	s.peerConns[peer.cidr] = peer

@@ -11,6 +11,8 @@ func main() {
 	confpath := flag.String("c", "", "config file")
 	flag.Parse()
 
+	log.SetFlags(log.Lshortfile)
+
 	cfg, err := ParseConfig(*confpath)
 	if err != nil {
 		fmt.Printf("parse config fali: %v\n", err)
@@ -26,9 +28,9 @@ func main() {
 	defer iface.Close()
 	iface.Up()
 
-	s := NewServer(cfg.Local.ListenAddr, iface)
+	s := NewServer(cfg.ListenAddr, iface)
 
-	reg := NewRegistry(cfg.Controller, cfg.Local.Addr, cfg.Local.CIDR, s)
+	reg := NewRegistry(cfg.Controller, cfg.Name, s)
 	go func() {
 		err := reg.Run()
 		if err != nil {
