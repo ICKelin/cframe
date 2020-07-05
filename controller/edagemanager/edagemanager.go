@@ -1,7 +1,6 @@
 package edagemanager
 
 import (
-	"fmt"
 	"log"
 	"strconv"
 	"strings"
@@ -20,13 +19,6 @@ type EdageManager struct {
 	// val: &Edage{}
 	edageMu sync.Mutex
 	edages  map[string]*Edage
-}
-
-type Edage struct {
-	Name     string
-	Comment  string
-	Cidr     string
-	HostAddr string
 }
 
 func New() *EdageManager {
@@ -160,9 +152,4 @@ func GetEdages() map[string]*Edage {
 		return nil
 	}
 	return defaultEdageManager.GetEdages()
-}
-
-func (e *Edage) String() string {
-	return fmt.Sprintf("name: %s hostaddr: %s cidr: %s",
-		e.Name, e.HostAddr, e.Cidr)
 }

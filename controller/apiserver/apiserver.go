@@ -1,6 +1,9 @@
 package apiserver
 
 import (
+	"net/http"
+
+	"github.com/ICKelin/cframe/controller/edagemanager"
 	"github.com/gin-gonic/gin"
 )
 
@@ -8,7 +11,7 @@ type ApiServer struct {
 	addr string
 }
 
-func NewApiServer(addr string) *ApiServer {
+func New(addr string) *ApiServer {
 	return &ApiServer{
 		addr: addr,
 	}
@@ -23,6 +26,9 @@ func (s *ApiServer) Run() {
 	eng.Run(s.addr)
 }
 
-func (s *ApiServer) addEdage(ctx *gin.Context)     {}
-func (s *ApiServer) delEdage(ctx *gin.Context)     {}
-func (s *ApiServer) getEdageList(ctx *gin.Context) {}
+func (s *ApiServer) addEdage(ctx *gin.Context) {}
+func (s *ApiServer) delEdage(ctx *gin.Context) {}
+func (s *ApiServer) getEdageList(ctx *gin.Context) {
+	edages := edagemanager.GetEdages()
+	ctx.JSON(http.StatusOK, edages)
+}

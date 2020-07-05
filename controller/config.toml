@@ -1,4 +1,5 @@
 listen_addr=":58422"
+api_addr=":12345"
 
 [[edages]]
 name="cn-wg-uat-137"

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/ICKelin/cframe/controller/apiserver"
 	"github.com/ICKelin/cframe/controller/edagemanager"
 )
 
@@ -35,6 +36,10 @@ func main() {
 		}
 		edageManager.AddEdage(edage.Name, edage)
 	}
+
+	// create api server
+	s := apiserver.New(conf.ApiAddr)
+	go s.Run()
 
 	r := NewRegistryServer(conf.ListenAddr)
 	r.ListenAndServe()

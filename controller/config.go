@@ -7,6 +7,7 @@ import (
 )
 
 type Config struct {
+	ApiAddr       string         `toml:"api_addr"`
 	ListenAddr    string         `toml:"listen_addr"`
 	BuildInEdages []*EdageConfig `toml:"edages"`
 }
