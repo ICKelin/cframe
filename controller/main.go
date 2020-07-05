@@ -29,6 +29,10 @@ func main() {
 		}
 
 		log.Printf("create build in edage %v", edage)
+		if edageManager.VerifyCidr(edage.Cidr) == false {
+			log.Printf("[E] create edage %v fail,conflict exist\n", edage)
+			continue
+		}
 		edageManager.AddEdage(edage.Name, edage)
 	}
 

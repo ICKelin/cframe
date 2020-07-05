@@ -1,19 +1,28 @@
+// proto.go defines transfer protocol between
+// edage and controller
+// includes the following sections:
+//  1. edage register
+//  2. edage online
+//  3. edage offline
+//  @ICKelin 2020.07.05
+
 package codec
 
 import "encoding/json"
 
-// 节点注册请求
+// edage register req
 type RegisterReq struct {
 	// edage name
 	Name string
 }
 
+// edage host information
 type Host struct {
 	HostAddr string
 	Cidr     string
 }
 
-// 节点注册响应
+// reply for edage register req
 type RegisterReply struct {
 	OnlineHost []*Host
 }
@@ -23,21 +32,27 @@ func (r *RegisterReply) String() string {
 	return string(b)
 }
 
-// 广播节点上线消息
+// broadcast edage online
+// once edage register success
+// controller will broadcast edage online msg
+// to all online edages.
 type BroadcastOnlineMsg struct {
-	// 对端监听地址
+	// onlined edage host address(udp://ip:port)
 	HostAddr string
 
-	// 容器网段
+	// offline edage network subnet(192.168.10.0/24)
 	Cidr string
 }
 
-// 广播节点下线消息
+// broadcase edage offline
+// once edage keepalive faile
+// controller will broadcase edage offline msg
+// to all online edages
 type BroadcastOfflineMsg struct {
-	// 对端监听地址
+	// offlined edage host address
 	HostAddr string
 
-	// 容器网段
+	// offlined edage network subnet
 	Cidr string
 }
 

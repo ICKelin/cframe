@@ -1,3 +1,11 @@
+// codec defines protocol header, encode/decode
+// of edage and controller
+// includes the following sections:
+//  1. header
+//		| 1byte ver | 1byte cmd | 2bytes bodylen | payload..... |
+//  2. encode/decode from network connection
+//  @ICKelin 2020.07..5
+
 package codec
 
 import (
@@ -15,9 +23,9 @@ const (
 	CmdDel
 )
 
-// 1字节版本
-// 1字节命令
-// 2字节长度
+// version: 1byte
+// cmd: 1byte
+// body len: 2bytes
 type Header [4]byte
 
 func (h Header) Version() int {
@@ -32,6 +40,8 @@ func (h Header) Bodylen() int {
 	return (int(h[2]) << 8) + int(h[3])
 }
 
+// Read from net connection
+// return header, body and error
 func Read(conn net.Conn) (Header, []byte, error) {
 	h := Header{}
 	_, err := io.ReadFull(conn, h[:])
@@ -53,6 +63,9 @@ func Read(conn net.Conn) (Header, []byte, error) {
 	return h, body, nil
 }
 
+// Write to net connection
+// cmd: header.cmd
+// body: payload
 func Write(conn net.Conn, cmd int, body []byte) error {
 	bodylen := make([]byte, 2)
 	binary.BigEndian.PutUint16(bodylen, uint16(len(body)))
@@ -67,6 +80,7 @@ func Write(conn net.Conn, cmd int, body []byte) error {
 	return err
 }
 
+// WriteJSON wraps Write with json encoder
 func WriteJSON(conn net.Conn, cmd int, obj interface{}) error {
 	body, err := json.Marshal(obj)
 	if err != nil {
@@ -75,6 +89,7 @@ func WriteJSON(conn net.Conn, cmd int, obj interface{}) error {
 	return Write(conn, cmd, body)
 }
 
+// ReadJSON wraps Read with json decoder
 func ReadJSON(conn net.Conn, obj interface{}) error {
 	_, body, err := Read(conn)
 	if err != nil {

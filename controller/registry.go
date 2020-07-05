@@ -10,10 +10,19 @@ import (
 	"github.com/ICKelin/cframe/controller/edagemanager"
 )
 
+// registry server for edages
+// edages register information to registry server
+// and keep connection alive
+// once there is any edage online/offline
+// registry will notify onlined edages the new edages info
 type RegistryServer struct {
+	// registry server listen tcp addr
+	// eg: 0.0.0.0:58422
 	addr string
 
-	// 所有host信息
+	// online edages
+	// key: edages host addr
+	// val: edages info and tcp connection
 	mu   sync.Mutex
 	sess map[string]*Session
 }
@@ -60,6 +69,11 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	}
 
 	log.Println("[I] node register", reg)
+
+	// verify edage
+	// only if the edages is configured with api server
+	// or controller build in configuration
+	// then the edages is valid
 	edage := edagemanager.GetEdage(reg.Name)
 	if edage == nil {
 		log.Printf("[E] get edage for %s fail\n", reg.Name)
@@ -90,7 +104,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 		s.mu.Unlock()
 	}()
 
-	// 响应
+	// response current online edages
 	err = codec.WriteJSON(conn, codec.CmdRegister, &codec.RegisterReply{
 		OnlineHost: onlineHosts,
 	})
@@ -98,13 +112,13 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 		log.Println("[E] ", err)
 	}
 
-	// 通知上线
+	// broadcast edage online to all onlined edages
 	s.broadCastOnline(edage)
 
-	// 通知下线
+	// broadcast edage offline to all onlined edages
 	defer s.broadcastOffline(edage)
 
-	// 维持心跳
+	// keepalived...
 	fail := 0
 	for {
 		hb := codec.Heartbeat{}
@@ -129,7 +143,6 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	}
 }
 
-// 广播节点上线
 func (s *RegistryServer) broadCastOnline(edage *edagemanager.Edage) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -157,7 +170,6 @@ func (s *RegistryServer) online(peer net.Conn, edage *edagemanager.Edage) {
 	}
 }
 
-// 广播节点下线
 func (s *RegistryServer) broadcastOffline(edage *edagemanager.Edage) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
