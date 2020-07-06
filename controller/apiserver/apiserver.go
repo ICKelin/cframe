@@ -27,7 +27,9 @@ func (s *ApiServer) Run() {
 }
 
 func (s *ApiServer) addEdage(ctx *gin.Context) {}
+
 func (s *ApiServer) delEdage(ctx *gin.Context) {}
+
 func (s *ApiServer) getEdageList(ctx *gin.Context) {
 	edages := edagemanager.GetEdages()
 	ctx.JSON(http.StatusOK, edages)

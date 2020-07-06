@@ -4,7 +4,6 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/ICKelin/cframe/pkg/ip"
 )
@@ -14,11 +13,7 @@ var (
 )
 
 type EdageManager struct {
-	// edages info
-	// key: Edage.Name
-	// val: &Edage{}
-	edageMu sync.Mutex
-	edages  map[string]*Edage
+	storage IStorage
 }
 
 func New() *EdageManager {
@@ -27,44 +22,32 @@ func New() *EdageManager {
 	}
 
 	m := &EdageManager{
-		edages: make(map[string]*Edage),
+		storage: NewMemStorage(),
 	}
 	defaultEdageManager = m
 	return m
 }
 
 func (m *EdageManager) AddEdage(name string, edage *Edage) {
-	m.edageMu.Lock()
-	defer m.edageMu.Unlock()
-	m.edages[name] = edage
+	m.storage.Set(name, edage)
 }
 
 func (m *EdageManager) DelEdage(name string) {
-	m.edageMu.Lock()
-	defer m.edageMu.Unlock()
-	delete(m.edages, name)
+	m.storage.Del(name)
 }
 
 func (m *EdageManager) GetEdage(name string) *Edage {
-	m.edageMu.Lock()
-	defer m.edageMu.Unlock()
-	return m.edages[name]
+	return m.storage.Get(name)
 }
 
 func (m *EdageManager) GetEdages() map[string]*Edage {
-	m.edageMu.Lock()
-	defer m.edageMu.Unlock()
-	return m.edages
+	return m.storage.List()
 }
 
 func (m *EdageManager) VerifyCidr(cidr string) bool {
-	m.edageMu.Lock()
-	defer m.edageMu.Unlock()
-	for _, e := range m.edages {
-		if m.verifyConflict(cidr, e.Cidr) == false {
-			return false
-		}
-	}
+	m.storage.Range(func(key string, edage *Edage) bool {
+		return m.verifyConflict(cidr, edage.Cidr)
+	})
 
 	return true
 }

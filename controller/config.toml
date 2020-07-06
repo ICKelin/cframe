@@ -2,9 +2,9 @@ listen_addr=":58422"
 api_addr=":12345"
 
 [[edages]]
-name="cn-wg-uat-137"
+name="cn-wg-uat-102"
 host_addr = "10.210.25.137:58423"
-cidr = "192.168.0.0/24"
+cidr = "172.21.0.1/20"
 
 [[edages]]
 name="cn-wg-uat-145"
