@@ -45,11 +45,13 @@ func (m *EdageManager) GetEdages() map[string]*Edage {
 }
 
 func (m *EdageManager) VerifyCidr(cidr string) bool {
+	b := false
 	m.storage.Range(func(key string, edage *Edage) bool {
-		return m.verifyConflict(cidr, edage.Cidr)
+		b = m.verifyConflict(cidr, edage.Cidr)
+		return b
 	})
 
-	return true
+	return b
 }
 
 // VerifyConflict verify cidr1 and cidr2 ip range

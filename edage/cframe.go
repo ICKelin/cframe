@@ -134,11 +134,12 @@ func (s *Server) route(dst string) (*net.UDPConn, error) {
 }
 
 func (s *Server) AddPeer(peer *codec.Host) {
+	s.DelPeer(peer)
 	log.Println("[I] add peer: ", peer)
-	if _, ok := s.peerConns[peer.Cidr]; ok {
-		log.Printf("host %s already added\n", peer.HostAddr)
-		return
-	}
+	// if _, ok := s.peerConns[peer.Cidr]; ok {
+	// 	log.Printf("host %s already added\n", peer.HostAddr)
+	// 	return
+	// }
 
 	err := s.connectPeer(peer)
 	if err != nil {
