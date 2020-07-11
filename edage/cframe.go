@@ -10,6 +10,8 @@ import (
 )
 
 type Server struct {
+	registry *Registry
+
 	// server监听udp地址
 	laddr string
 
@@ -32,7 +34,9 @@ func NewServer(laddr string, iface *Interface) *Server {
 		iface:     iface,
 	}
 }
-
+func (s *Server) SetRegistry(r *Registry) {
+	s.registry = r
+}
 func (s *Server) ListenAndServe() error {
 	laddr, err := net.ResolveUDPAddr("udp", s.laddr)
 	if err != nil {
@@ -90,6 +94,9 @@ func (s *Server) readLocal(lconn *net.UDPConn) {
 		src := p.Src()
 		dst := p.Dst()
 		log.Printf("[D] %s => %s\n", src, dst)
+
+		// report src ip as edage host ip
+		s.registry.Report(src)
 
 		peer, err := s.route(dst)
 		if err != nil {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net"
+	"sync"
 	"time"
 
 	"github.com/ICKelin/cframe/codec"
@@ -13,17 +14,36 @@ type Registry struct {
 	srv    string
 	name   string
 	server *Server
+
+	//heart beat channel
+	hbchan chan struct{}
+
+	// report channel
+	reportchan chan struct{}
+
+	// report channel store msg
+	// to be reported.
+	// will drop the overflow reported msg
+	mu          sync.Mutex
+	reportQueue []string
+	reporting   map[string]struct{}
 }
 
 func NewRegistry(srv, name string, s *Server) *Registry {
 	return &Registry{
-		srv:    srv,
-		name:   name,
-		server: s,
+		srv:         srv,
+		name:        name,
+		server:      s,
+		hbchan:      make(chan struct{}),
+		reportchan:  make(chan struct{}),
+		reportQueue: make([]string, 0),
+		reporting:   make(map[string]struct{}),
 	}
 }
 
 func (r *Registry) Run() error {
+	go r.heartbeat()
+	go r.report()
 	for {
 		r.run()
 		time.Sleep(time.Second * 3)
@@ -52,32 +72,54 @@ func (r *Registry) run() error {
 	codec.ReadJSON(conn, reply)
 	r.server.AddPeers(reply.OnlineHost)
 
-	hbchan := make(chan struct{})
 	go r.read(conn)
-	go r.heartbeat(hbchan)
-	r.write(conn, hbchan)
+	r.write(conn)
 	return nil
-
 }
 
-func (r *Registry) heartbeat(hbchan chan struct{}) {
+func (r *Registry) heartbeat() {
 	tick := time.NewTicker(time.Second * 3)
 	defer tick.Stop()
 
 	for range tick.C {
-		hbchan <- struct{}{}
+		r.hbchan <- struct{}{}
 	}
 }
 
-func (r *Registry) write(conn net.Conn, hbchan chan struct{}) {
+func (r *Registry) report() {
+	tick := time.NewTicker(time.Minute * 1)
+	defer tick.Stop()
+
+	for range tick.C {
+		r.reportchan <- struct{}{}
+	}
+}
+
+func (r *Registry) write(conn net.Conn) {
 	for {
 		select {
-		case <-hbchan:
+		case <-r.hbchan:
 			hb := &codec.Heartbeat{}
 			err := codec.WriteJSON(conn, codec.CmdHeartbeat, hb)
 			if err != nil {
 				log.Println("[E] ", err)
 				return
+			}
+		case <-r.reportchan:
+			r.mu.Lock()
+			q := make([]string, len(r.reportQueue))
+			copy(q, r.reportQueue)
+			r.reportQueue = r.reportQueue[:0]
+			r.reporting = make(map[string]struct{})
+			r.mu.Unlock()
+
+			report := codec.ReportEdageHost{
+				HostIPs: q,
+			}
+
+			err := codec.WriteJSON(conn, codec.CmdReport, report)
+			if err != nil {
+				log.Println("[E] ", err)
 			}
 		}
 	}
@@ -122,4 +164,23 @@ func (r *Registry) read(conn net.Conn) {
 			})
 		}
 	}
+}
+
+// add report to report channel
+func (r *Registry) Report(ip string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if _, ok := r.reporting[ip]; ok {
+		return
+	}
+
+	ipv4 := net.ParseIP(ip)
+	if ipv4.To4() == nil {
+		log.Println("[W] ignore invalid ip ", ip)
+		return
+	}
+
+	log.Println("add report ip ", ip)
+	r.reportQueue = append(r.reportQueue, ip)
+	r.reporting[ip] = struct{}{}
 }

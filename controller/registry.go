@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net"
 	"sync"
@@ -120,9 +121,9 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 
 	// keepalived...
 	fail := 0
+	hb := codec.Heartbeat{}
 	for {
-		hb := codec.Heartbeat{}
-		err := codec.ReadJSON(conn, &hb)
+		header, body, err := codec.Read(conn)
 		if err != nil {
 			log.Println(err)
 			fail += 1
@@ -133,10 +134,32 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 			continue
 		}
 
-		// log.Println("heartbeat from client: ", conn.RemoteAddr().String())
-		err = codec.WriteJSON(conn, codec.CmdHeartbeat, &hb)
-		if err != nil {
-			log.Println(err)
+		switch header.Cmd() {
+		case codec.CmdHeartbeat:
+			// log.Println("heartbeat from client: ", conn.RemoteAddr().String())
+			err = codec.WriteJSON(conn, codec.CmdHeartbeat, &hb)
+			if err != nil {
+				log.Println(err)
+			}
+
+		case codec.CmdReport:
+			log.Println("receive report msg from edage: ", edage.Name)
+			reportMsg := codec.ReportEdageHost{}
+			err = json.Unmarshal(body, &reportMsg)
+			if err != nil {
+				log.Println("[E] ", err)
+				continue
+			}
+
+			for _, ip := range reportMsg.HostIPs {
+				host := &edagemanager.EdageHost{
+					IP: ip,
+				}
+
+				edagemanager.AddedageHost(edage, host)
+			}
+		default:
+			log.Println("unsupported cmd ", header.Cmd())
 		}
 
 		fail = 0

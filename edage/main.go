@@ -39,5 +39,6 @@ func main() {
 		}
 	}()
 
+	s.SetRegistry(reg)
 	s.ListenAndServe()
 }

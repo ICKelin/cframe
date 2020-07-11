@@ -37,6 +37,9 @@ func main() {
 		edageManager.AddEdage(edage.Name, edage)
 	}
 
+	// create edage host manager
+	edagemanager.NewEdageHostManager()
+
 	// create api server
 	s := apiserver.New(conf.ApiAddr)
 	go s.Run()

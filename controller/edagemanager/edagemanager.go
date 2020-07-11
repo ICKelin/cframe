@@ -45,12 +45,11 @@ func (m *EdageManager) GetEdages() map[string]*Edage {
 }
 
 func (m *EdageManager) VerifyCidr(cidr string) bool {
-	b := false
+	b := true
 	m.storage.Range(func(key string, edage *Edage) bool {
 		b = m.verifyConflict(cidr, edage.Cidr)
 		return b
 	})
-
 	return b
 }
 

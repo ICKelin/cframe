@@ -56,4 +56,18 @@ type BroadcastOfflineMsg struct {
 	Cidr string
 }
 
+// edage report host
+// edage report host information
+// to controller
+// controller get topology
+//  host1                    host1'
+//       \                  /
+//        edage1 ---- edage2
+//       /                  \
+//  host2                    host2'
+//
+type ReportEdageHost struct {
+	HostIPs []string
+}
+
 type Heartbeat struct{}

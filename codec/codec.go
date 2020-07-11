@@ -17,10 +17,20 @@ import (
 
 const (
 	_ = iota
+	// heartbeat between controller and edage
 	CmdHeartbeat
+
+	// edage register to controller
 	CmdRegister
+
+	// controller tell edage that new edage join
 	CmdAdd
+
+	// controller tell edage that edage leave
 	CmdDel
+
+	// edage report subhost of it to controller
+	CmdReport
 )
 
 // version: 1byte
