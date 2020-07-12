@@ -1,11 +1,11 @@
 package edagemanager
 
 import (
-	"log"
 	"strconv"
 	"strings"
 
 	"github.com/ICKelin/cframe/pkg/ip"
+	log "github.com/ICKelin/cframe/pkg/logs"
 )
 
 var (
@@ -62,39 +62,39 @@ func (m *EdageManager) VerifyCidr(cidr string) bool {
 func (m *EdageManager) verifyConflict(cidr1, cidr2 string) bool {
 	sp := strings.Split(cidr1, "/")
 	if len(sp) != 2 {
-		log.Println("[E] invalid cidr format: ", cidr1)
+		log.Error("invalid cidr format: %s", cidr1)
 		return false
 	}
 
 	ip1, sprefix1 := sp[0], sp[1]
 	prefix1, err := strconv.Atoi(sprefix1)
 	if err != nil {
-		log.Println("[E] invalid cidr format: ", cidr1)
+		log.Error("invalid cidr format: %s", cidr1)
 		return false
 	}
 
 	ipv41, err := ip.ParseIP4(ip1)
 	if err != nil {
-		log.Println("[E] invalid cidr format: ", cidr1)
+		log.Error("invalid cidr format: %s", cidr1)
 		return false
 	}
 
 	sp = strings.Split(cidr2, "/")
 	if len(sp) != 2 {
-		log.Println("[E] invalid cidr format: ", cidr2)
+		log.Error("invalid cidr format: %s", cidr2)
 		return false
 	}
 
 	ip2, sprefix2 := sp[0], sp[1]
 	prefix2, err := strconv.Atoi(sprefix2)
 	if err != nil {
-		log.Println("[E] invalid cidr format: ", cidr2)
+		log.Error("invalid cidr format: %s", cidr2)
 		return false
 	}
 
 	ipv42, err := ip.ParseIP4(ip2)
 	if err != nil {
-		log.Println("[E] invalid cidr format: ", cidr2)
+		log.Error("invalid cidr format: %s", cidr2)
 		return false
 	}
 

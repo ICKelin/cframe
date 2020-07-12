@@ -2,12 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"net"
 	"sync"
 	"time"
 
 	"github.com/ICKelin/cframe/codec"
+	log "github.com/ICKelin/cframe/pkg/logs"
 )
 
 type Registry struct {
@@ -53,7 +53,7 @@ func (r *Registry) Run() error {
 func (r *Registry) run() error {
 	conn, err := net.DialTimeout("tcp", r.srv, time.Second*30)
 	if err != nil {
-		log.Println("[E] ", err)
+		log.Error("%v", err)
 		return err
 	}
 
@@ -64,7 +64,7 @@ func (r *Registry) run() error {
 	}
 	err = codec.WriteJSON(conn, codec.CmdRegister, &reg)
 	if err != nil {
-		log.Println("[E] ", err)
+		log.Error("write json: %v", err)
 		return err
 	}
 
@@ -87,11 +87,17 @@ func (r *Registry) heartbeat() {
 }
 
 func (r *Registry) report() {
-	tick := time.NewTicker(time.Minute * 1)
+	tick := time.NewTicker(time.Second * 10)
 	defer tick.Stop()
 
 	for range tick.C {
-		r.reportchan <- struct{}{}
+		timeout := time.NewTicker(time.Second * 3)
+		select {
+		case r.reportchan <- struct{}{}:
+		case <-timeout.C:
+			log.Warn("report channel timeout")
+		}
+		timeout.Stop()
 	}
 }
 
@@ -99,14 +105,21 @@ func (r *Registry) write(conn net.Conn) {
 	for {
 		select {
 		case <-r.hbchan:
+			log.Debug("send heartbeat to server")
 			hb := &codec.Heartbeat{}
+			conn.SetWriteDeadline(time.Now().Add(time.Second * 30))
 			err := codec.WriteJSON(conn, codec.CmdHeartbeat, hb)
+			conn.SetWriteDeadline(time.Time{})
 			if err != nil {
-				log.Println("[E] ", err)
+				log.Error("invalid hb msg: %v", err)
 				return
 			}
 		case <-r.reportchan:
 			r.mu.Lock()
+			if len(r.reportQueue) <= 0 {
+				r.mu.Unlock()
+				continue
+			}
 			q := make([]string, len(r.reportQueue))
 			copy(q, r.reportQueue)
 			r.reportQueue = r.reportQueue[:0]
@@ -117,10 +130,12 @@ func (r *Registry) write(conn net.Conn) {
 				HostIPs: q,
 			}
 
+			conn.SetWriteDeadline(time.Now().Add(time.Second * 30))
 			err := codec.WriteJSON(conn, codec.CmdReport, report)
 			if err != nil {
-				log.Println("[E] ", err)
+				log.Error("write json fail: %v", err)
 			}
+			conn.SetWriteDeadline(time.Time{})
 		}
 	}
 }
@@ -129,20 +144,20 @@ func (r *Registry) read(conn net.Conn) {
 	for {
 		hdr, body, err := codec.Read(conn)
 		if err != nil {
-			log.Println(err)
+			log.Error("read fail: %v", err)
 			return
 		}
 
 		switch hdr.Cmd() {
 		case codec.CmdHeartbeat:
-			log.Println("[I] heartbeat from server ")
+			log.Debug("heartbeat from server ")
 
 		case codec.CmdAdd:
-			log.Println("online cmd: ", string(body))
+			log.Debug("online cmd: %s", string(body))
 			online := codec.BroadcastOnlineMsg{}
 			err := json.Unmarshal(body, &online)
 			if err != nil {
-				log.Println("[E] ", err)
+				log.Error("invalid online msg %v", err)
 				continue
 			}
 			r.server.AddPeer(&codec.Host{
@@ -151,11 +166,11 @@ func (r *Registry) read(conn net.Conn) {
 			})
 
 		case codec.CmdDel:
-			log.Println("offline cmd: ", string(body))
+			log.Info("offline cmd: %s", string(body))
 			offline := codec.BroadcastOfflineMsg{}
 			err := json.Unmarshal(body, &offline)
 			if err != nil {
-				log.Println("[E] ", err)
+				log.Error("invalid offline msg %v ", err)
 				continue
 			}
 			r.server.DelPeer(&codec.Host{
@@ -176,11 +191,15 @@ func (r *Registry) Report(ip string) {
 
 	ipv4 := net.ParseIP(ip)
 	if ipv4.To4() == nil {
-		log.Println("[W] ignore invalid ip ", ip)
+		log.Warn("ignore invalid ip %s", ip)
 		return
 	}
 
-	log.Println("add report ip ", ip)
+	if ipv4.IsLoopback() || ipv4.Equal(net.IPv4zero) {
+		return
+	}
+
+	log.Info("add report ip %s", ip)
 	r.reportQueue = append(r.reportQueue, ip)
 	r.reporting[ip] = struct{}{}
 }

@@ -1,6 +1,6 @@
 vendor
 bin
 log
-logs
+*.log
 dist
 webui

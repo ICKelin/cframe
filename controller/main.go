@@ -3,17 +3,17 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 
 	"github.com/ICKelin/cframe/controller/apiserver"
 	"github.com/ICKelin/cframe/controller/edagemanager"
+	log "github.com/ICKelin/cframe/pkg/logs"
 )
 
 func main() {
 	flgConf := flag.String("c", "", "config file path")
 	flag.Parse()
 
-	log.SetFlags(log.Lshortfile)
+	log.Init("./log/controller.log", "debug", 3)
 	conf, err := ParseConfig(*flgConf)
 	if err != nil {
 		fmt.Println(err)
@@ -29,9 +29,9 @@ func main() {
 			Cidr:     edageConf.Cidr,
 		}
 
-		log.Printf("create build in edage %v", edage)
+		log.Info("create build in edage %v", edage)
 		if edageManager.VerifyCidr(edage.Cidr) == false {
-			log.Printf("[E] create edage %v fail,conflict exist\n", edage)
+			log.Info("create edage %v fail,conflict exist\n", edage)
 			continue
 		}
 		edageManager.AddEdage(edage.Name, edage)

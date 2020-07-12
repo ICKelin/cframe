@@ -2,13 +2,13 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"net"
 	"sync"
 	"time"
 
 	"github.com/ICKelin/cframe/codec"
 	"github.com/ICKelin/cframe/controller/edagemanager"
+	log "github.com/ICKelin/cframe/pkg/logs"
 )
 
 // registry server for edages
@@ -52,7 +52,7 @@ func (s *RegistryServer) ListenAndServe() error {
 	for {
 		conn, err := lis.Accept()
 		if err != nil {
-			log.Println("[E] accept: ", err)
+			log.Error("accept: ", err)
 			return err
 		}
 
@@ -65,11 +65,11 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	reg := codec.RegisterReq{}
 	err := codec.ReadJSON(conn, &reg)
 	if err != nil {
-		log.Println(err)
+		log.Error("read json fail: %v", err)
 		return
 	}
 
-	log.Println("[I] node register", reg)
+	log.Info("node register %v", reg)
 
 	// verify edage
 	// only if the edages is configured with api server
@@ -77,11 +77,11 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	// then the edages is valid
 	edage := edagemanager.GetEdage(reg.Name)
 	if edage == nil {
-		log.Printf("[E] get edage for %s fail\n", reg.Name)
+		log.Error("get edage for %s fail\n", reg.Name)
 		return
 	}
 
-	log.Printf("[I] register success: %v\n", edage)
+	log.Info("register success: %v", edage)
 
 	host := edage.HostAddr
 	onlineHosts := make([]*codec.Host, 0)
@@ -110,7 +110,8 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 		OnlineHost: onlineHosts,
 	})
 	if err != nil {
-		log.Println("[E] ", err)
+		log.Error("write json fail: %v", err)
+		return
 	}
 
 	// broadcast edage online to all onlined edages
@@ -125,7 +126,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	for {
 		header, body, err := codec.Read(conn)
 		if err != nil {
-			log.Println(err)
+			log.Error("read fail: %v", err)
 			fail += 1
 			if fail >= 3 {
 				break
@@ -136,18 +137,18 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 
 		switch header.Cmd() {
 		case codec.CmdHeartbeat:
-			// log.Println("heartbeat from client: ", conn.RemoteAddr().String())
+			log.Debug("heartbeat from client: %s", conn.RemoteAddr().String())
 			err = codec.WriteJSON(conn, codec.CmdHeartbeat, &hb)
 			if err != nil {
-				log.Println(err)
+				log.Error("write json fail: %v", err)
 			}
 
 		case codec.CmdReport:
-			log.Println("receive report msg from edage: ", edage.Name)
+			log.Info("receive report msg from edage: %s", edage.Name)
 			reportMsg := codec.ReportEdageHost{}
 			err = json.Unmarshal(body, &reportMsg)
 			if err != nil {
-				log.Println("[E] ", err)
+				log.Error("invalid report msg: %v", err)
 				continue
 			}
 
@@ -159,7 +160,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 				edagemanager.AddedageHost(edage, host)
 			}
 		default:
-			log.Println("unsupported cmd ", header.Cmd())
+			log.Warn("unsupported cmd %d", header.Cmd())
 		}
 
 		fail = 0
@@ -179,7 +180,7 @@ func (s *RegistryServer) broadCastOnline(edage *edagemanager.Edage) {
 }
 
 func (s *RegistryServer) online(peer net.Conn, edage *edagemanager.Edage) {
-	log.Printf("[I] send online msg %v to %s\b",
+	log.Info("[I] send online msg %v to %s",
 		edage, peer.RemoteAddr().String())
 
 	obj := &codec.BroadcastOnlineMsg{
@@ -189,7 +190,7 @@ func (s *RegistryServer) online(peer net.Conn, edage *edagemanager.Edage) {
 
 	err := codec.WriteJSON(peer, codec.CmdAdd, obj)
 	if err != nil {
-		log.Println("[E] ", err)
+		log.Error("write json fail: %v", err)
 	}
 }
 
@@ -207,7 +208,7 @@ func (s *RegistryServer) broadcastOffline(edage *edagemanager.Edage) {
 }
 
 func (s *RegistryServer) offline(peer net.Conn, edage *edagemanager.Edage) {
-	log.Printf("[I] send offline msg %v to %s\b",
+	log.Info("send offline msg %v to %s\n",
 		edage, peer.RemoteAddr().String())
 
 	obj := &codec.BroadcastOfflineMsg{
@@ -217,7 +218,7 @@ func (s *RegistryServer) offline(peer net.Conn, edage *edagemanager.Edage) {
 
 	err := codec.WriteJSON(peer, codec.CmdDel, obj)
 	if err != nil {
-		log.Println("[E] ", err)
+		log.Error("write json fail: %v", err)
 	}
 }
 
@@ -227,7 +228,7 @@ func (s *RegistryServer) state() {
 	for range tick.C {
 		s.mu.Lock()
 		for _, sess := range s.sess {
-			log.Printf("%v\n", sess.host)
+			log.Info("edage: %s cidr: %s", sess.host.HostAddr, sess.host.Cidr)
 		}
 		s.mu.Unlock()
 	}

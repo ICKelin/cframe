@@ -3,15 +3,16 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
+
+	log "github.com/ICKelin/cframe/pkg/logs"
 )
 
 func main() {
 	confpath := flag.String("c", "", "config file")
 	flag.Parse()
 
-	log.SetFlags(log.Lshortfile)
+	log.Init("log/edage.log", "debug", 3)
 
 	cfg, err := ParseConfig(*confpath)
 	if err != nil {
@@ -21,7 +22,7 @@ func main() {
 
 	iface, err := NewInterface()
 	if err != nil {
-		log.Println("[E] new interface fail: ", err)
+		log.Error("[E] new interface fail: ", err)
 		return
 	}
 
