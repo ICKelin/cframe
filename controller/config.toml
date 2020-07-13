@@ -1,6 +1,10 @@
 listen_addr=":58422"
 api_addr=":12345"
 
+etcd = [
+    "127.0.0.1:2379"
+]
+
 [[edages]]
 name="cn-wg-uat-102"
 host_addr = "10.210.25.137:58423"

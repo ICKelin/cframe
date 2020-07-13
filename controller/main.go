@@ -19,9 +19,13 @@ func main() {
 		fmt.Println(err)
 		return
 	}
+	log.Info("%v", conf)
+
+	// create etcd storage
+	store := edagemanager.NewEtcdStorage(conf.Etcd)
 
 	// create build in edages
-	edageManager := edagemanager.New()
+	edageManager := edagemanager.New(store)
 	for _, edageConf := range conf.BuildInEdages {
 		edage := &edagemanager.Edage{
 			Name:     edageConf.Name,
@@ -38,7 +42,7 @@ func main() {
 	}
 
 	// create edage host manager
-	edagemanager.NewEdageHostManager()
+	edagemanager.NewEdageHostManager(store)
 
 	// create api server
 	s := apiserver.New(conf.ApiAddr)

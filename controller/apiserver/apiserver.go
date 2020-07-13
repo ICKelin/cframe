@@ -36,8 +36,8 @@ func (s *ApiServer) getEdageList(ctx *gin.Context) {
 }
 
 type topology struct {
-	EdageNode map[string]*edagemanager.Edage `json:"edage_node"`
-	EdageHost []*edagemanager.EdageHost      `json:"edage_host"`
+	EdageNode []*edagemanager.Edage     `json:"edage_node"`
+	EdageHost []*edagemanager.EdageHost `json:"edage_host"`
 }
 
 func (s *ApiServer) getTopology(ctx *gin.Context) {

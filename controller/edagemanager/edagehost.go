@@ -1,8 +1,8 @@
 package edagemanager
 
 import (
+	"encoding/json"
 	"fmt"
-	"sync"
 	"time"
 
 	log "github.com/ICKelin/cframe/pkg/logs"
@@ -14,6 +14,7 @@ var (
 	recycleInterval = time.Second * 30
 
 	defaultEdageHostManager *EdageHostManager
+	edageHostPrefix         = "/host"
 )
 
 type EdageHost struct {
@@ -27,65 +28,54 @@ func (h *EdageHost) String() string {
 }
 
 type EdageHostManager struct {
-	mu    sync.Mutex
-	table map[string]*EdageHost
+	store *EtcdStorage
 }
 
-func NewEdageHostManager() *EdageHostManager {
+func NewEdageHostManager(store *EtcdStorage) *EdageHostManager {
 	if defaultEdageHostManager != nil {
 		return defaultEdageHostManager
 	}
 
 	m := &EdageHostManager{
-		table: make(map[string]*EdageHost),
+		store: store,
 	}
 
 	defaultEdageHostManager = m
-	go m.recycle()
 	return defaultEdageHostManager
 }
 
-func (m *EdageHostManager) recycle() {
-	tick := time.NewTicker(recycleInterval)
-	defer tick.Stop()
-	for range tick.C {
-		log.Info("recycle checking")
-		m.mu.Lock()
-		for key, val := range m.table {
-			if val.expiredIn.Before(time.Now()) {
-				log.Info("delete expiration edage host: %s", key)
-				delete(m.table, key)
-			}
-		}
-		m.mu.Unlock()
-	}
-}
-
 func (m *EdageHostManager) AddEdageHost(edage *Edage, host *EdageHost) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	key := fmt.Sprintf("%s-%s", edage.Name, host.String())
-	host.expiredIn = time.Now().Add(defaultLease)
+	key := fmt.Sprintf("%s/%s/%s", edageHostPrefix, edage.Name, host.String())
 	host.EdageName = edage.Name
-	log.Info("set edage host info %s", key)
-	m.table[key] = host
+	err := m.store.SetWithExpiration(key, host, defaultLease)
+	if err != nil {
+		log.Error("set edage host %s fail: %v", key, err)
+	}
 }
 
 func (m *EdageHostManager) DelEdageHost(edage *Edage, host *EdageHost) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	key := fmt.Sprintf("%s-%s", edage.Name, host.String())
-	delete(m.table, key)
+	key := fmt.Sprintf("%s/%s/%s", edageHostPrefix, edage.Name, host.String())
+	m.store.Del(key)
 }
 
 func (m *EdageHostManager) GetEdageHosts() []*EdageHost {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	results := make([]*EdageHost, 0)
-	for _, val := range m.table {
-		results = append(results, val)
+	res, err := m.store.List(edageHostPrefix)
+	if err != nil {
+		log.Error("list %s fail: %v", edageHostPrefix, err)
+		return nil
 	}
-	return results
+
+	hosts := make([]*EdageHost, 0)
+	for _, v := range res {
+		host := EdageHost{}
+		err := json.Unmarshal([]byte(v), &host)
+		if err != nil {
+			log.Error("unmarshal to host fail: %v", err)
+			continue
+		}
+		hosts = append(hosts, &host)
+	}
+	return hosts
 }
 
 func AddedageHost(edage *Edage, host *EdageHost) {

@@ -1,6 +1,7 @@
 package edagemanager
 
 import (
+	"encoding/json"
 	"strconv"
 	"strings"
 
@@ -10,46 +11,64 @@ import (
 
 var (
 	defaultEdageManager *EdageManager
+	edagePrefix         = "/edages/"
 )
 
 type EdageManager struct {
-	storage IStorage
+	storage *EtcdStorage
 }
 
-func New() *EdageManager {
+func New(store *EtcdStorage) *EdageManager {
 	if defaultEdageManager != nil {
 		return defaultEdageManager
 	}
 
 	m := &EdageManager{
-		storage: NewMemStorage(),
+		storage: store,
 	}
 	defaultEdageManager = m
 	return m
 }
 
 func (m *EdageManager) AddEdage(name string, edage *Edage) {
-	m.storage.Set(name, edage)
+	m.storage.Set(edagePrefix+name, edage)
 }
 
 func (m *EdageManager) DelEdage(name string) {
-	m.storage.Del(name)
+	m.storage.Del(edagePrefix + name)
 }
 
 func (m *EdageManager) GetEdage(name string) *Edage {
-	return m.storage.Get(name)
+	edg := Edage{}
+	err := m.storage.Get(edagePrefix+name, &edg)
+	if err != nil {
+		return nil
+	}
+	return &edg
 }
 
-func (m *EdageManager) GetEdages() map[string]*Edage {
-	return m.storage.List()
+func (m *EdageManager) GetEdages() []*Edage {
+	res, err := m.storage.List(edagePrefix)
+	if err != nil {
+		log.Error("list %s fail: %v", edagePrefix, err)
+		return nil
+	}
+
+	edages := make([]*Edage, 0)
+	for _, val := range res {
+		edage := Edage{}
+		err := json.Unmarshal([]byte(val), &edage)
+		if err != nil {
+			log.Error("unmarshal to edage fail: %v", err)
+			continue
+		}
+		edages = append(edages, &edage)
+	}
+	return edages
 }
 
 func (m *EdageManager) VerifyCidr(cidr string) bool {
 	b := true
-	m.storage.Range(func(key string, edage *Edage) bool {
-		b = m.verifyConflict(cidr, edage.Cidr)
-		return b
-	})
 	return b
 }
 
@@ -131,7 +150,7 @@ func GetEdage(name string) *Edage {
 	return defaultEdageManager.GetEdage(name)
 }
 
-func GetEdages() map[string]*Edage {
+func GetEdages() []*Edage {
 	if defaultEdageManager == nil {
 		return nil
 	}

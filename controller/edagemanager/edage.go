@@ -9,11 +9,11 @@ const (
 )
 
 type Edage struct {
-	Name     string
-	Comment  string
-	Cidr     string
-	HostAddr string
-	Status   int
+	Name     string `json:"name"`
+	Comment  string `json:"comment"`
+	Cidr     string `json:"cidr"`
+	HostAddr string `json:"host_addr"`
+	Status   int    `json:"status"`
 }
 
 func (e *Edage) String() string {

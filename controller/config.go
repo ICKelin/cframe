@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"io/ioutil"
 
 	"github.com/pelletier/go-toml"
@@ -9,6 +10,7 @@ import (
 type Config struct {
 	ApiAddr       string         `toml:"api_addr"`
 	ListenAddr    string         `toml:"listen_addr"`
+	Etcd          []string       `toml:"etcd"`
 	BuildInEdages []*EdageConfig `toml:"edages"`
 }
 
@@ -31,4 +33,9 @@ func ParseConfig(path string) (*Config, error) {
 	}
 
 	return &cfg, nil
+}
+
+func (c *Config) String() string {
+	b, _ := json.MarshalIndent(c, "", "\t")
+	return string(b)
 }
