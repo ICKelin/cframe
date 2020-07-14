@@ -1,11 +1,12 @@
 package edagemanager
 
-import "fmt"
+import (
+	"fmt"
+)
 
 const (
-	_ = iota
+	StatusOffline = iota
 	StatusOnline
-	StatusOffline
 )
 
 type Edage struct {

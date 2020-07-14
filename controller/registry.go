@@ -81,6 +81,9 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 		return
 	}
 
+	edage.SetOnline()
+	defer edage.SetOffline()
+
 	log.Info("register success: %v", edage)
 
 	host := edage.HostAddr
