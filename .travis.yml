@@ -2,7 +2,7 @@ language: go
 go:
     - 1.13
 before_install:
-    - go mod tidy
+    - go mod download
 install:
 before_script:
 script:
