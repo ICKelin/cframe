@@ -1,0 +1,11 @@
+language: go
+go:
+    - 1.13
+before_install:
+    - go mod tidy
+install:
+before_script:
+script:
+    - cd $HOME/gopath/src/github.com/ICKelin/cframe
+    - ./build.sh
+
