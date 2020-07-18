@@ -16,6 +16,7 @@ require (
 	github.com/google/uuid v1.1.1 // indirect
 	github.com/pelletier/go-toml v1.8.0
 	github.com/songgao/water v0.0.0-20200317203138-2b4b6d7c09d8
+	github.com/urfave/cli v1.22.4 // indirect
 	go.uber.org/zap v1.15.0 // indirect
 	google.golang.org/genproto v0.0.0-20200711021454-869866162049 // indirect
 	google.golang.org/grpc v1.27.0

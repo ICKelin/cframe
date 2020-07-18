@@ -26,6 +26,7 @@ func New(store *EtcdStorage) *EdageManager {
 	m := &EdageManager{
 		storage: store,
 	}
+	m.storage.DelPrefix(edagePrefix)
 	defaultEdageManager = m
 	return m
 }

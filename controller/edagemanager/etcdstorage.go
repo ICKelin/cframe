@@ -62,6 +62,10 @@ func (s *EtcdStorage) Del(key string) {
 	s.cli.Delete(context.Background(), key)
 }
 
+func (s *EtcdStorage) DelPrefix(prefix string) {
+	s.cli.Delete(context.Background(), prefix, clientv3.WithPrefix())
+}
+
 func (s *EtcdStorage) List(root string) (map[string]string, error) {
 	resp, err := s.cli.Get(context.Background(), root, clientv3.WithPrefix())
 	if err != nil {
