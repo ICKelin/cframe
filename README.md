@@ -1,86 +1,176 @@
 ## cframe
-cframe是一个网络互联项目，主要解决：
+xframe is a vpc peering product which is used connect different cloud provider(eg: aws, aliyun, tencent cloud).
 
-- 容器互联
-- 跨VPC互联
-- 跨云互联
-- 云与IDC互联
+## How is works
+cframe is a CUPS like project. it contains `controller` and `edage`.
 
-## v1.1.x
-v1.1.x在v1.0.0的基础上，支持跨主机容器互联，VPC之间互联，跨云互联等，理论上支持云与IDC互联（未测试）。
+edage is our data plane, it gets other edages from controller, routes via distination ip and finally forwards packet to peer via UDP.
 
-**v1.1.x版本需要网络管理员自行解决地址冲突与地址划分**
+controller is our control plane, she export http api to users to configure edage and dispatch configuration to edage via tcp longlive connection.
 
-## 场景实例
-此处提供三种互联应用场景实例。
+![doc/images/cframe1.0.0](doc/images/cframe1.1.0.jpg)
 
-### 容器间互联
-第一个场景，解决以下拓扑当中container 1和container 2能够通过容器ip进行通信，最终的目的是在左侧容器当中，ping 192.168.0.2能够收到回包，在右侧容器ping 192.168.10.2也能够收到回包。
+## Get started
+In this case, will will use cframe to connect aliyun and tencent cloud, we make 3 vpc connects via internal ip
 
-![cc.jpg](cc.jpg)
+### VPCs and cloud server
+- VPC1, aliyun ShenZhen.
 
-左侧配置:
+vpc cidr: 172.18.0.0/16
 
-```
-controller="172.18.171.245:8384"
+| internal ip | role |
+|:--| :-- |:--|
+| 172.18.171.245 | edage + controller|
+| 172.18.171.247 | - |
 
-[local]
-listen_addr="172.18.171.245:58423"
-addr="172.18.171.245:58423"
-cidr="192.168.10.0/24"
+2. VPC2, aliyun HongKong
 
-```
+vpc cidr: 172.31.0.0/16
 
-- controller指定控制器地址
-- local.listen_addr指定本地内网监听地址，
-- local.addr指定本地外网监听地址，该地址是其他节点与其通信的基础
-- cidr指定本地容器网段
+| internal ip| role |
+|:--|:--|
+| 172.31.185.158 | edage |
+| 172.31.185.159 | - |
 
-同一VPC当中local.listen_addr应该等于local.addr
+3. VPC3 tengcent cloud GuangZhou
 
-右侧配置:
+vpc cidr: 172.20.0.0/16
 
-```
-controller="172.18.171.245:8384"
+| internal ip | role |
+|:--|:--|
+| 172.20.0.9  | edage |
+| 172.20.0.13 | - |
 
-[local]
-listen_addr="172.18.171.247:58422"
-addr="172.18.171.247:58422"
-cidr="192.168.0.0/24"
+our goal is to connect other two vpc via internal ip address. 
+
+### step1: build controller and edage
 
 ```
-
-参数意义与上述相同，通过以上配置之后，两边容器网络即可互通。
-
-### 跨VPC，跨云互联
-第二个场景，解决跨VPC云服务器之间互联，具体拓扑如下，这一场景主要解决两边VPC互联问题，在两边均可通过对端vpc访问。
-
-![vpc.jpg](vpc.jpg)
-
-左侧配置如下:
-
-```
-controller="controller_public_ip:8384"
-
-[local]
-listen_addr="172.18.171.245:58423"
-addr="public_ip:58423"
-cidr="172.18.0.0/16"
+./build.sh
 ```
 
-右侧配置如下:
+it will created dist folder, build, copy configuration file.
 
 ```
-controller="controller_public_ip:8384"
+dist
+├── controller
+├── controller.toml
+├── edage
+└── edage.toml
+```
 
-[local]
+### step2: deploy controller in cloud server
+
+controller.toml:
+
+```
 listen_addr=":58422"
-addr="public_ip58422"
-cidr="172.31.0.0/16"
-#cidr="192.168.150.0/24"
+api_addr=":12345"
+
+etcd = [
+    "127.0.0.1:2379"
+]
+
+
+[[edages]]
+name="sz-1"
+# VPC1 public ip
+host_addr = "$PIP1:58423"
+cidr = "172.18.0.0/16"
+
+[[edages]]
+name="hk-1"
+# VPC2 public ip
+host_addr = "$PIP2:58423"
+cidr = "172.31.0.0/16"
+
+[[edages]]
+name="gz-3"
+host_addr = "$PIP3:58423"
+cidr = "172.20.0.0/16"
 ```
 
-需要注意，左侧和右侧的cframe进程需要运行在网关，否则只能完成两个云服务器进行通信。
+replace `$PIP1`, `$PIP3`, `$PIP3` to your vpc public ip.
 
-## 最后
-如果您有更好的idea，或者需要解决的问题，欢迎提issue和pull request。
+### step3: deploy edage
+
+VPC1 edage.toml
+
+```
+controller="$CONTROLLER_PIP:58422"
+name = "sz-1"
+listen_addr=":58423"
+
+```
+
+VPC2 edage.toml
+
+```
+controller="$CONTROLLER_PIP:58422"
+name = "hk-1"
+listen_addr=":58423"
+```
+
+VPC3 edage.toml
+
+```
+ubuntu@VM-0-9-ubuntu:~$ cat edage/config.toml 
+controller="$CONTROLLER_PIP:58422"
+name = "gz-3"
+listen_addr=":58423"
+```
+
+replace `$CONTROLLER_PIP` with your controller public ip.
+
+### step3: add vpc route entry
+
+we need to add peers cidr to VPC route to make sure the traffic transfer to our edage node
+
+- in VPC1, add VPC2, VPC3 cidr to VPC route, nexthop to VPC1.edage instance
+- in VPC2, add VPC1, VPC3 cidr to VPC route, nexthop to VPC2.edage instance
+- in VPC3, add VPC1, VPC2 cidr to VPC route, nexthop to VPC3.edage instance
+
+### step4: test network connection
+Here are some testcases.
+
+- in VPC1, ping VPC2
+
+```
+ping 172.31.185.158
+ping 172.31.185.159
+```
+
+- in VPC1, ping VPC3
+
+```
+ping 172.20.0.9
+ping 172.20.0.13
+```
+
+- in VPC2, ping VPC1
+
+```
+ping 172.18.171.245
+ping 172.18.171.247
+```
+
+- in VPC2, ping VPC3
+
+```
+ping 172.20.0.9
+ping 172.20.0.13
+```
+
+- in VPC3, ping VPC1
+
+```
+ping 172.18.171.245
+ping 172.18.171.247
+```
+
+- in VPC3, ping VPC2
+
+```
+ping 172.31.185.158
+ping 172.31.185.159
+```
