@@ -1,5 +1,5 @@
 # cframe
-[Englist Readme](EN_README.md)
+[English Readme](EN_README.md)
 
 cframe是一个用于连接VPC的网络基础项目，使用cframe可以将同一云服务厂商，不同云服务厂商的VPC之间进行网络互通，VPC和VPC之间可以通过内网地址进行互联互通，保证数据安全，除此之外。
 
