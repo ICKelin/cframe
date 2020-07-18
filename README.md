@@ -1,16 +1,16 @@
 ## cframe
-xframe is a vpc peering product which is used connect different cloud provider(eg: aws, aliyun, tencent cloud).
+cframe is a vpc peering product which is used connect different cloud provider(eg: aws, aliyun, tencent cloud).
 
-## How is works
+## How it works
 cframe is a CUPS like project. it contains `controller` and `edage`.
 
-edage is our data plane, it gets other edages from controller, routes via distination ip and finally forwards packet to peer via UDP.
+edage is our data plane, it gets other edages from controller, routes, and finally forwards packet to peer via UDP.
 
 controller is our control plane, she export http api to users to configure edage and dispatch configuration to edage via tcp longlive connection.
 
 ![doc/images/cframe1.0.0](doc/images/cframe1.1.0.jpg)
 
-## Get started
+## Get start
 In this case, will will use cframe to connect aliyun and tencent cloud, we make 3 vpc connects via internal ip
 
 ### VPCs and cloud server
@@ -19,7 +19,7 @@ In this case, will will use cframe to connect aliyun and tencent cloud, we make 
 vpc cidr: 172.18.0.0/16
 
 | internal ip | role |
-|:--| :-- |:--|
+|:--| :-- |
 | 172.18.171.245 | edage + controller|
 | 172.18.171.247 | - |
 
@@ -122,7 +122,7 @@ listen_addr=":58423"
 
 replace `$CONTROLLER_PIP` with your controller public ip.
 
-### step3: add vpc route entry
+### step4: add vpc route entry
 
 we need to add peers cidr to VPC route to make sure the traffic transfer to our edage node
 
@@ -130,7 +130,7 @@ we need to add peers cidr to VPC route to make sure the traffic transfer to our 
 - in VPC2, add VPC1, VPC3 cidr to VPC route, nexthop to VPC2.edage instance
 - in VPC3, add VPC1, VPC2 cidr to VPC route, nexthop to VPC3.edage instance
 
-### step4: test network connection
+### step5: test network connection
 Here are some testcases.
 
 - in VPC1, ping VPC2
