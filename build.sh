@@ -1,3 +1,4 @@
+export GOOS=linux 
 go build -o dist/controller controller/*.go
 cp controller/config.toml dist/controller.toml
 
