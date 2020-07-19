@@ -5,12 +5,7 @@ etcd = [
     "127.0.0.1:2379"
 ]
 
-[[edages]]
-name="cn-wg-uat-102"
-host_addr = "10.210.25.137:58423"
-cidr = "172.21.0.1/24"
-
-[[edages]]
-name="cn-wg-uat-145"
-host_addr = "10.210.25.145:58423"
-cidr = "192.168.10.0/24"
+[log]
+level = "debug"
+path = "controller.log"
+days = 5

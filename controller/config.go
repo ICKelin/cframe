@@ -8,16 +8,16 @@ import (
 )
 
 type Config struct {
-	ApiAddr       string         `toml:"api_addr"`
-	ListenAddr    string         `toml:"listen_addr"`
-	Etcd          []string       `toml:"etcd"`
-	BuildInEdages []*EdageConfig `toml:"edages"`
+	ApiAddr    string   `toml:"api_addr"`
+	ListenAddr string   `toml:"listen_addr"`
+	Etcd       []string `toml:"etcd"`
+	Log        Log      `toml:"log"`
 }
 
-type EdageConfig struct {
-	Name     string `toml:"name"`
-	HostAddr string `toml:"host_addr"`
-	Cidr     string `toml:"cidr"`
+type Log struct {
+	Level string `toml:"level"`
+	Path  string `toml:"path"`
+	Days  int64  `toml:"days"`
 }
 
 func ParseConfig(path string) (*Config, error) {

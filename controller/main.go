@@ -13,33 +13,20 @@ func main() {
 	flgConf := flag.String("c", "", "config file path")
 	flag.Parse()
 
-	log.Init("./log/controller.log", "debug", 3)
 	conf, err := ParseConfig(*flgConf)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+
+	log.Init(conf.Log.Path, conf.Log.Level, conf.Log.Days)
 	log.Info("%v", conf)
 
 	// create etcd storage
 	store := edagemanager.NewEtcdStorage(conf.Etcd)
 
-	// create build in edages
+	// create edage manager
 	edageManager := edagemanager.New(store)
-	for _, edageConf := range conf.BuildInEdages {
-		edage := &edagemanager.Edage{
-			Name:     edageConf.Name,
-			HostAddr: edageConf.HostAddr,
-			Cidr:     edageConf.Cidr,
-		}
-
-		log.Info("create build in edage %v", edage)
-		if edageManager.VerifyCidr(edage.Cidr) == false {
-			log.Info("create edage %v fail,conflict exist\n", edage)
-			continue
-		}
-		edageManager.AddEdage(edage.Name, edage)
-	}
 
 	// create edage host manager
 	edagemanager.NewEdageHostManager(store)
