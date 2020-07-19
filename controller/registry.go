@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/ICKelin/cframe/codec"
-	"github.com/ICKelin/cframe/controller/edagemanager"
+	"github.com/ICKelin/cframe/pkg/edagemanager"
 	log "github.com/ICKelin/cframe/pkg/logs"
 )
 

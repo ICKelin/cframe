@@ -25,22 +25,12 @@ func main() {
 	store := edagemanager.NewEtcdStorage(conf.Etcd)
 
 	// create edage manager
-	edageManager := edagemanager.New(store)
+	edagemanager.New(store)
 
 	// create edage host manager
 	edagemanager.NewEdageHostManager(store)
 
-	r := NewRegistryServer(conf.ListenAddr)
-
-	// watch for edage delete/put
-	// tell registry edage change
-	go edageManager.Watch(
-		func(edg *edagemanager.Edage) {
-			r.DelEdage(edg)
-		},
-		func(edg *edagemanager.Edage) {
-			r.ModifyEdage(edg)
-		})
-
-	r.ListenAndServe()
+	// create api server
+	s := NewApiServer(conf.ApiAddr)
+	s.Run()
 }

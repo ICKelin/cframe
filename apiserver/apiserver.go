@@ -1,10 +1,10 @@
-package apiserver
+package main
 
 import (
 	"fmt"
 	"net/http"
 
-	"github.com/ICKelin/cframe/controller/edagemanager"
+	"github.com/ICKelin/cframe/pkg/edagemanager"
 	log "github.com/ICKelin/cframe/pkg/logs"
 	"github.com/gin-gonic/gin"
 )
@@ -13,7 +13,7 @@ type ApiServer struct {
 	addr string
 }
 
-func New(addr string) *ApiServer {
+func NewApiServer(addr string) *ApiServer {
 	return &ApiServer{
 		addr: addr,
 	}

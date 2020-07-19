@@ -1,4 +1,4 @@
-package apiserver
+package main
 
 type AddEdageForm struct {
 	Name     string `json:"name"`
