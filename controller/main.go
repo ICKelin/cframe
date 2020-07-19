@@ -49,5 +49,16 @@ func main() {
 	go s.Run()
 
 	r := NewRegistryServer(conf.ListenAddr)
+
+	// watch for edage delete/put
+	// tell registry edage change
+	go edageManager.Watch(
+		func(edg *edagemanager.Edage) {
+			r.DelEdage(edg)
+		},
+		func(edg *edagemanager.Edage) {
+			r.ModifyEdage(edg)
+		})
+
 	r.ListenAndServe()
 }

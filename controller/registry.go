@@ -81,19 +81,22 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 		return
 	}
 
-	edage.SetOnline()
-	defer edage.SetOffline()
-
 	log.Info("register success: %v", edage)
 
 	host := edage.HostAddr
+
 	onlineHosts := make([]*codec.Host, 0)
-	s.mu.Lock()
-	for _, sess := range s.sess {
-		if sess.host.HostAddr != host {
-			onlineHosts = append(onlineHosts, sess.host)
+	edages := edagemanager.GetEdages()
+	for _, edg := range edages {
+		if edg.HostAddr != host {
+			onlineHosts = append(onlineHosts, &codec.Host{
+				HostAddr: edg.HostAddr,
+				Cidr:     edg.Cidr,
+			})
 		}
 	}
+
+	s.mu.Lock()
 	s.sess[host] = &Session{
 		host: &codec.Host{
 			HostAddr: host,
@@ -116,12 +119,6 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 		log.Error("write json fail: %v", err)
 		return
 	}
-
-	// broadcast edage online to all onlined edages
-	s.broadCastOnline(edage)
-
-	// broadcast edage offline to all onlined edages
-	defer s.broadcastOffline(edage)
 
 	// keepalived...
 	fail := 0
@@ -170,7 +167,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	}
 }
 
-func (s *RegistryServer) broadCastOnline(edage *edagemanager.Edage) {
+func (s *RegistryServer) broadcastOnline(edage *edagemanager.Edage) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	for addr, host := range s.sess {
@@ -235,4 +232,21 @@ func (s *RegistryServer) state() {
 		}
 		s.mu.Unlock()
 	}
+}
+
+func (s *RegistryServer) DelEdage(edg *edagemanager.Edage) {
+	log.Info("delete edage: %v", edg)
+	s.broadcastOffline(edg)
+	// force edage connection offline
+	edgSess := s.sess[edg.HostAddr]
+	if edgSess != nil {
+		log.Info("force close edage connection: %v", edgSess.conn.RemoteAddr())
+		edgSess.conn.Close()
+
+	}
+}
+
+func (s *RegistryServer) ModifyEdage(edg *edagemanager.Edage) {
+	log.Info("modify edage: %v", edg)
+	s.broadcastOnline(edg)
 }

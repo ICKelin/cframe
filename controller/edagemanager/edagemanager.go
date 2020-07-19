@@ -1,12 +1,14 @@
 package edagemanager
 
 import (
+	"context"
 	"encoding/json"
 	"strconv"
 	"strings"
 
 	"github.com/ICKelin/cframe/pkg/ip"
 	log "github.com/ICKelin/cframe/pkg/logs"
+	"github.com/coreos/etcd/clientv3"
 )
 
 var (
@@ -29,6 +31,45 @@ func New(store *EtcdStorage) *EdageManager {
 	m.storage.DelPrefix(edagePrefix)
 	defaultEdageManager = m
 	return m
+}
+
+func (m *EdageManager) Watch(delfunc, putfunc func(edage *Edage)) {
+	chs := m.storage.cli.Watch(context.Background(), edagePrefix,
+		clientv3.WithPrefix(), clientv3.WithPrevKV())
+
+	for c := range chs {
+		for _, evt := range c.Events {
+			log.Info("type: %v", evt.Type)
+			log.Info("new: %v", evt.Kv)
+			log.Info("old: %v", evt.PrevKv)
+			switch evt.Type {
+			case clientv3.EventTypeDelete:
+				if delfunc != nil {
+					edage := Edage{}
+					err := json.Unmarshal(evt.PrevKv.Value, &edage)
+					if err != nil {
+						log.Info("json unmarshal fail: %v", err)
+						continue
+					}
+
+					delfunc(&edage)
+				}
+
+			case clientv3.EventTypePut:
+				if putfunc != nil {
+					edage := Edage{}
+					err := json.Unmarshal(evt.Kv.Value, &edage)
+					if err != nil {
+						log.Info("json unmarshal fail: %v", err)
+						continue
+					}
+
+					putfunc(&edage)
+				}
+			}
+		}
+	}
+
 }
 
 func (m *EdageManager) AddEdage(name string, edage *Edage) {
@@ -156,4 +197,12 @@ func GetEdages() []*Edage {
 		return nil
 	}
 	return defaultEdageManager.GetEdages()
+}
+
+func VerifyCidr(cidr string) bool {
+	if defaultEdageManager == nil {
+		return false
+	}
+
+	return defaultEdageManager.VerifyCidr(cidr)
 }
