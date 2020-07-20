@@ -97,7 +97,7 @@ func (s *Server) readLocal(lconn *net.UDPConn) {
 		dst := p.Dst()
 		log.Info("local tuple %s => %s\n", src, dst)
 
-		// report src ip as edage host ip
+		// report src ip as edge host ip
 		s.registry.Report(src)
 
 		peer, err := s.route(dst)

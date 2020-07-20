@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/ICKelin/cframe/pkg/edagemanager"
+	"github.com/ICKelin/cframe/pkg/edgemanager"
 	log "github.com/ICKelin/cframe/pkg/logs"
 )
 
@@ -22,24 +22,24 @@ func main() {
 	log.Info("%v", conf)
 
 	// create etcd storage
-	store := edagemanager.NewEtcdStorage(conf.Etcd)
+	store := edgemanager.NewEtcdStorage(conf.Etcd)
 
-	// create edage manager
-	edageManager := edagemanager.New(store)
+	// create edge manager
+	edgeManager := edgemanager.New(store)
 
-	// create edage host manager
-	edagemanager.NewEdageHostManager(store)
+	// create edge host manager
+	edgemanager.NewEdgeHostManager(store)
 
 	r := NewRegistryServer(conf.ListenAddr)
 
-	// watch for edage delete/put
-	// tell registry edage change
-	go edageManager.Watch(
-		func(edg *edagemanager.Edage) {
-			r.DelEdage(edg)
+	// watch for edge delete/put
+	// tell registry edge change
+	go edgeManager.Watch(
+		func(edg *edgemanager.Edge) {
+			r.DelEdge(edg)
 		},
-		func(edg *edagemanager.Edage) {
-			r.ModifyEdage(edg)
+		func(edg *edgemanager.Edge) {
+			r.ModifyEdge(edg)
 		})
 
 	r.ListenAndServe()

@@ -126,7 +126,7 @@ func (r *Registry) write(conn net.Conn) {
 			r.reporting = make(map[string]struct{})
 			r.mu.Unlock()
 
-			report := codec.ReportEdageHost{
+			report := codec.ReportEdgeHost{
 				HostIPs: q,
 			}
 

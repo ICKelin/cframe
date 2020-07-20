@@ -15,7 +15,7 @@ vpc 网段: 172.18.0.0/16
 
 | 内网ip | 角色 |
 |:--| :-- |
-| 172.18.171.245 | edage + controller|
+| 172.18.171.245 | edge + controller|
 | 172.18.171.247 | - |
 
 2. VPC2 阿里云香港
@@ -24,7 +24,7 @@ vpc 网段: 172.31.0.0/16
 
 | 内网ip | 角色 |
 |:--|:--|
-| 172.31.185.158 | edage |
+| 172.31.185.158 | edge |
 | 172.31.185.159 | - |
 
 3. VPC3 腾讯云广州
@@ -33,7 +33,7 @@ vpc cidr: 172.20.0.0/16
 
 | 内网ip | 角色 |
 |:--|:--|
-| 172.20.0.9  | edage |
+| 172.20.0.9  | edge |
 | 172.20.0.13 | - |
 
 ## 第一步： 构建项目
@@ -60,7 +60,7 @@ etcd = [
 
 ```
 
-controller需要指定etcd的endpoints地址，apiserver监听地址，与edage建立连接的tcp地址
+controller需要指定etcd的endpoints地址，apiserver监听地址，与edge建立连接的tcp地址
 
 2. aliyun-sz 节点配置
 
@@ -90,31 +90,31 @@ listen_addr=":58423"
 ```
 
 ### 运行应用
-参考上节 **云服务器信息** 当中的角色字段将controller和edage运行
+参考上节 **云服务器信息** 当中的角色字段将controller和edge运行
 
 ```
 ./controller -c config.toml
 
-./edage -c config.toml
+./edge -c config.toml
 ```
 
 
 程序启动之后，通过以下三个curl命令新增三个VPC信息以及CIDR信息。
 
 ```
-curl "http://127.0.0.1:12345/api-service/v1/edage/add" -X "POST" -d '{"name": "sz-1", "hostaddr": "$PIP1:58423", "cidr": "172.18.0.0/16"}' -H "Content-Type: application/json" 
+curl "http://127.0.0.1:12345/api-service/v1/edge/add" -X "POST" -d '{"name": "sz-1", "hostaddr": "$PIP1:58423", "cidr": "172.18.0.0/16"}' -H "Content-Type: application/json" 
 
-curl "http://127.0.0.1:12345/api-service/v1/edage/add" -X "POST" -d '{"name": "hk-1", "hostaddr": "$PIP2:58423", "cidr": "172.31.0.0/16"}' -H "Content-Type: application/json" 
+curl "http://127.0.0.1:12345/api-service/v1/edge/add" -X "POST" -d '{"name": "hk-1", "hostaddr": "$PIP2:58423", "cidr": "172.31.0.0/16"}' -H "Content-Type: application/json" 
 
-curl "http://127.0.0.1:12345/api-service/v1/edage/add" -X "POST" -d '{"name": "gz-3", "hostaddr": "$PIP3:58423", "cidr": "172.20.0.0/16"}' -H "Content-Type: application/json"
+curl "http://127.0.0.1:12345/api-service/v1/edge/add" -X "POST" -d '{"name": "gz-3", "hostaddr": "$PIP3:58423", "cidr": "172.20.0.0/16"}' -H "Content-Type: application/json"
 
 ```
 
 执行完成之后，通过api查询结果。
 
 ```
-1. 查询edage信息
-curl "http://127.0.0.1:12345/api-service/v1/edage/list"|jq
+1. 查询edge信息
+curl "http://127.0.0.1:12345/api-service/v1/edge/list"|jq
 [
   {
     "name": "sz-1",
@@ -144,7 +144,7 @@ curl "http://127.0.0.1:12345/api-service/v1/edage/list"|jq
 
 
 ### VPC路由配置
-在云服务厂商VPC配置下配置路由信息，需要将另外两个VPC的网段都加入到路由当中，下一跳指向所在VPC的edage节点实例。
+在云服务厂商VPC配置下配置路由信息，需要将另外两个VPC的网段都加入到路由当中，下一跳指向所在VPC的edge节点实例。
 
 具体参照云服务厂商文档:
 

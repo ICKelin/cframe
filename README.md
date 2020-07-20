@@ -13,9 +13,9 @@ cframe是一个用于连接VPC的网络基础项目，使用cframe可以将同�
 cframe包括两个角色：
 
 - controller
-- edage
+- edge
 
-controller也即是控制平面，维护全局路由表以及路由表下发。edage也称为边缘节点，也即是常说的数据平面。只负责根据controller的路由信息进行转发，选择正确的对端节点(peer)进行转发，转发协议目前采用的是UDP，后续可能考虑使用QUIC或者KCP这类ARQ协议。
+controller也即是控制平面，维护全局路由表以及路由表下发。edge也称为边缘节点，也即是常说的数据平面。只负责根据controller的路由信息进行转发，选择正确的对端节点(peer)进行转发，转发协议目前采用的是UDP，后续可能考虑使用QUIC或者KCP这类ARQ协议。
 
 ## 快速开始
 此处使用cframe连接三个VPC作为例子展示cframe的作用。

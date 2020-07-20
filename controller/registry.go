@@ -7,23 +7,23 @@ import (
 	"time"
 
 	"github.com/ICKelin/cframe/codec"
-	"github.com/ICKelin/cframe/pkg/edagemanager"
+	"github.com/ICKelin/cframe/pkg/edgemanager"
 	log "github.com/ICKelin/cframe/pkg/logs"
 )
 
-// registry server for edages
-// edages register information to registry server
+// registry server for edges
+// edges register information to registry server
 // and keep connection alive
-// once there is any edage online/offline
-// registry will notify onlined edages the new edages info
+// once there is any edge online/offline
+// registry will notify onlined edges the new edges info
 type RegistryServer struct {
 	// registry server listen tcp addr
 	// eg: 0.0.0.0:58422
 	addr string
 
-	// online edages
-	// key: edages host addr
-	// val: edages info and tcp connection
+	// online edges
+	// key: edges host addr
+	// val: edges info and tcp connection
 	mu   sync.Mutex
 	sess map[string]*Session
 }
@@ -71,23 +71,23 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 
 	log.Info("node register %v", reg)
 
-	// verify edage
-	// only if the edages is configured with api server
+	// verify edge
+	// only if the edges is configured with api server
 	// or controller build in configuration
-	// then the edages is valid
-	edage := edagemanager.GetEdage(reg.Name)
-	if edage == nil {
-		log.Error("get edage for %s fail\n", reg.Name)
+	// then the edges is valid
+	edge := edgemanager.GetEdge(reg.Name)
+	if edge == nil {
+		log.Error("get edge for %s fail\n", reg.Name)
 		return
 	}
 
-	log.Info("register success: %v", edage)
+	log.Info("register success: %v", edge)
 
-	host := edage.HostAddr
+	host := edge.HostAddr
 
 	onlineHosts := make([]*codec.Host, 0)
-	edages := edagemanager.GetEdages()
-	for _, edg := range edages {
+	edges := edgemanager.GetEdges()
+	for _, edg := range edges {
 		if edg.HostAddr != host {
 			onlineHosts = append(onlineHosts, &codec.Host{
 				HostAddr: edg.HostAddr,
@@ -100,7 +100,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	s.sess[host] = &Session{
 		host: &codec.Host{
 			HostAddr: host,
-			Cidr:     edage.Cidr,
+			Cidr:     edge.Cidr,
 		},
 		conn: conn,
 	}
@@ -111,7 +111,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 		s.mu.Unlock()
 	}()
 
-	// response current online edages
+	// response current online edges
 	err = codec.WriteJSON(conn, codec.CmdRegister, &codec.RegisterReply{
 		OnlineHost: onlineHosts,
 	})
@@ -144,8 +144,8 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 			}
 
 		case codec.CmdReport:
-			log.Info("receive report msg from edage: %s", edage.Name)
-			reportMsg := codec.ReportEdageHost{}
+			log.Info("receive report msg from edge: %s", edge.Name)
+			reportMsg := codec.ReportEdgeHost{}
 			err = json.Unmarshal(body, &reportMsg)
 			if err != nil {
 				log.Error("invalid report msg: %v", err)
@@ -153,11 +153,11 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 			}
 
 			for _, ip := range reportMsg.HostIPs {
-				host := &edagemanager.EdageHost{
+				host := &edgemanager.EdgeHost{
 					IP: ip,
 				}
 
-				edagemanager.AddedageHost(edage, host)
+				edgemanager.AddedgeHost(edge, host)
 			}
 		default:
 			log.Warn("unsupported cmd %d", header.Cmd())
@@ -167,25 +167,25 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	}
 }
 
-func (s *RegistryServer) broadcastOnline(edage *edagemanager.Edage) {
+func (s *RegistryServer) broadcastOnline(edge *edgemanager.Edge) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	for addr, host := range s.sess {
-		if addr == edage.HostAddr {
+		if addr == edge.HostAddr {
 			continue
 		}
 
-		go s.online(host.conn, edage)
+		go s.online(host.conn, edge)
 	}
 }
 
-func (s *RegistryServer) online(peer net.Conn, edage *edagemanager.Edage) {
+func (s *RegistryServer) online(peer net.Conn, edge *edgemanager.Edge) {
 	log.Info("[I] send online msg %v to %s",
-		edage, peer.RemoteAddr().String())
+		edge, peer.RemoteAddr().String())
 
 	obj := &codec.BroadcastOnlineMsg{
-		HostAddr: edage.HostAddr,
-		Cidr:     edage.Cidr,
+		HostAddr: edge.HostAddr,
+		Cidr:     edge.Cidr,
 	}
 
 	err := codec.WriteJSON(peer, codec.CmdAdd, obj)
@@ -194,26 +194,26 @@ func (s *RegistryServer) online(peer net.Conn, edage *edagemanager.Edage) {
 	}
 }
 
-func (s *RegistryServer) broadcastOffline(edage *edagemanager.Edage) {
+func (s *RegistryServer) broadcastOffline(edge *edgemanager.Edge) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	for addr, host := range s.sess {
-		if addr == edage.HostAddr {
+		if addr == edge.HostAddr {
 			continue
 		}
 
-		go s.offline(host.conn, edage)
+		go s.offline(host.conn, edge)
 	}
 }
 
-func (s *RegistryServer) offline(peer net.Conn, edage *edagemanager.Edage) {
+func (s *RegistryServer) offline(peer net.Conn, edge *edgemanager.Edge) {
 	log.Info("send offline msg %v to %s\n",
-		edage, peer.RemoteAddr().String())
+		edge, peer.RemoteAddr().String())
 
 	obj := &codec.BroadcastOfflineMsg{
-		HostAddr: edage.HostAddr,
-		Cidr:     edage.Cidr,
+		HostAddr: edge.HostAddr,
+		Cidr:     edge.Cidr,
 	}
 
 	err := codec.WriteJSON(peer, codec.CmdDel, obj)
@@ -228,25 +228,25 @@ func (s *RegistryServer) state() {
 	for range tick.C {
 		s.mu.Lock()
 		for _, sess := range s.sess {
-			log.Info("edage: %s cidr: %s", sess.host.HostAddr, sess.host.Cidr)
+			log.Info("edge: %s cidr: %s", sess.host.HostAddr, sess.host.Cidr)
 		}
 		s.mu.Unlock()
 	}
 }
 
-func (s *RegistryServer) DelEdage(edg *edagemanager.Edage) {
-	log.Info("delete edage: %v", edg)
+func (s *RegistryServer) DelEdge(edg *edgemanager.Edge) {
+	log.Info("delete edge: %v", edg)
 	s.broadcastOffline(edg)
-	// force edage connection offline
+	// force edge connection offline
 	edgSess := s.sess[edg.HostAddr]
 	if edgSess != nil {
-		log.Info("force close edage connection: %v", edgSess.conn.RemoteAddr())
+		log.Info("force close edge connection: %v", edgSess.conn.RemoteAddr())
 		edgSess.conn.Close()
 
 	}
 }
 
-func (s *RegistryServer) ModifyEdage(edg *edagemanager.Edage) {
-	log.Info("modify edage: %v", edg)
+func (s *RegistryServer) ModifyEdge(edg *edgemanager.Edge) {
+	log.Info("modify edge: %v", edg)
 	s.broadcastOnline(edg)
 }

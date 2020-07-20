@@ -1,5 +1,5 @@
 // codec defines protocol header, encode/decode
-// of edage and controller
+// of edge and controller
 // includes the following sections:
 //  1. header
 //		| 1byte ver | 1byte cmd | 2bytes bodylen | payload..... |
@@ -17,19 +17,19 @@ import (
 
 const (
 	_ = iota
-	// heartbeat between controller and edage
+	// heartbeat between controller and edge
 	CmdHeartbeat
 
-	// edage register to controller
+	// edge register to controller
 	CmdRegister
 
-	// controller tell edage that new edage join
+	// controller tell edge that new edge join
 	CmdAdd
 
-	// controller tell edage that edage leave
+	// controller tell edge that edge leave
 	CmdDel
 
-	// edage report subhost of it to controller
+	// edge report subhost of it to controller
 	CmdReport
 )
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ICKelin/cframe/pkg/edagemanager"
+	"github.com/ICKelin/cframe/pkg/edgemanager"
 	log "github.com/ICKelin/cframe/pkg/logs"
 	"github.com/gin-gonic/gin"
 )
@@ -21,18 +21,18 @@ func NewApiServer(addr string) *ApiServer {
 
 func (s *ApiServer) Run() {
 	eng := gin.New()
-	eng.POST("/api-service/v1/edage/add", s.addEdage)
-	eng.POST("/api-service/v1/edage/del", s.delEdage)
-	eng.GET("/api-service/v1/edage/list", s.getEdageList)
+	eng.POST("/api-service/v1/edge/add", s.addEdge)
+	eng.POST("/api-service/v1/edge/del", s.delEdge)
+	eng.GET("/api-service/v1/edge/list", s.getEdgeList)
 	eng.GET("/api-service/v1/topology", s.getTopology)
 	eng.Run(s.addr)
 }
 
-func (s *ApiServer) addEdage(ctx *gin.Context) {
-	addForm := AddEdageForm{}
+func (s *ApiServer) addEdge(ctx *gin.Context) {
+	addForm := AddEdgeForm{}
 	err := ctx.BindJSON(&addForm)
 	if err != nil {
-		log.Error("bind add edage form fail: %v", err)
+		log.Error("bind add edge form fail: %v", err)
 		ctx.JSON(http.StatusBadRequest, err)
 		return
 	}
@@ -44,27 +44,27 @@ func (s *ApiServer) addEdage(ctx *gin.Context) {
 	}
 
 	// verify cidr format and conflict
-	ok := edagemanager.VerifyCidr(addForm.Cidr)
+	ok := edgemanager.VerifyCidr(addForm.Cidr)
 	if !ok {
 		log.Error("verify cidr fail")
 		ctx.JSON(http.StatusBadRequest, fmt.Errorf("invalid cidr"))
 		return
 	}
 
-	edg := &edagemanager.Edage{
+	edg := &edgemanager.Edge{
 		Name:     addForm.Name,
 		HostAddr: addForm.HostAddr,
 		Cidr:     addForm.Cidr,
 	}
-	edagemanager.AddEdage(edg.Name, edg)
+	edgemanager.AddEdge(edg.Name, edg)
 	ctx.JSON(http.StatusOK, nil)
 }
 
-func (s *ApiServer) delEdage(ctx *gin.Context) {
-	delForm := DeleteEdageForm{}
+func (s *ApiServer) delEdge(ctx *gin.Context) {
+	delForm := DeleteEdgeForm{}
 	err := ctx.BindJSON(&delForm)
 	if err != nil {
-		log.Error("bind add edage form fail: %v", err)
+		log.Error("bind add edge form fail: %v", err)
 		ctx.JSON(http.StatusBadRequest, err)
 		return
 	}
@@ -75,26 +75,26 @@ func (s *ApiServer) delEdage(ctx *gin.Context) {
 		return
 	}
 
-	edagemanager.DelEdage(delForm.Name)
+	edgemanager.DelEdge(delForm.Name)
 	ctx.JSON(http.StatusOK, nil)
 }
 
-func (s *ApiServer) getEdageList(ctx *gin.Context) {
-	edages := edagemanager.GetEdages()
-	ctx.JSON(http.StatusOK, edages)
+func (s *ApiServer) getEdgeList(ctx *gin.Context) {
+	edges := edgemanager.GetEdges()
+	ctx.JSON(http.StatusOK, edges)
 }
 
 type topology struct {
-	EdageNode []*edagemanager.Edage     `json:"edage_node"`
-	EdageHost []*edagemanager.EdageHost `json:"edage_host"`
+	EdgeNode []*edgemanager.Edge     `json:"edge_node"`
+	EdgeHost []*edgemanager.EdgeHost `json:"edge_host"`
 }
 
 func (s *ApiServer) getTopology(ctx *gin.Context) {
-	edages := edagemanager.GetEdages()
-	hosts := edagemanager.GetEdageHosts()
+	edges := edgemanager.GetEdges()
+	hosts := edgemanager.GetEdgeHosts()
 	t := &topology{
-		EdageNode: edages,
-		EdageHost: hosts,
+		EdgeNode: edges,
+		EdgeHost: hosts,
 	}
 	ctx.JSON(http.StatusOK, t)
 }

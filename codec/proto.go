@@ -1,28 +1,28 @@
 // proto.go defines transfer protocol between
-// edage and controller
+// edge and controller
 // includes the following sections:
-//  1. edage register
-//  2. edage online
-//  3. edage offline
+//  1. edge register
+//  2. edge online
+//  3. edge offline
 //  @ICKelin 2020.07.05
 
 package codec
 
 import "encoding/json"
 
-// edage register req
+// edge register req
 type RegisterReq struct {
-	// edage name
+	// edge name
 	Name string
 }
 
-// edage host information
+// edge host information
 type Host struct {
 	HostAddr string
 	Cidr     string
 }
 
-// reply for edage register req
+// reply for edge register req
 type RegisterReply struct {
 	OnlineHost []*Host
 }
@@ -32,41 +32,41 @@ func (r *RegisterReply) String() string {
 	return string(b)
 }
 
-// broadcast edage online
-// once edage register success
-// controller will broadcast edage online msg
-// to all online edages.
+// broadcast edge online
+// once edge register success
+// controller will broadcast edge online msg
+// to all online edges.
 type BroadcastOnlineMsg struct {
-	// onlined edage host address(udp://ip:port)
+	// onlined edge host address(udp://ip:port)
 	HostAddr string
 
-	// offline edage network subnet(192.168.10.0/24)
+	// offline edge network subnet(192.168.10.0/24)
 	Cidr string
 }
 
-// broadcase edage offline
-// once edage keepalive faile
-// controller will broadcase edage offline msg
-// to all online edages
+// broadcase edge offline
+// once edge keepalive faile
+// controller will broadcase edge offline msg
+// to all online edges
 type BroadcastOfflineMsg struct {
-	// offlined edage host address
+	// offlined edge host address
 	HostAddr string
 
-	// offlined edage network subnet
+	// offlined edge network subnet
 	Cidr string
 }
 
-// edage report host
-// edage report host information
+// edge report host
+// edge report host information
 // to controller
 // controller get topology
 //  host1                    host1'
 //       \                  /
-//        edage1 ---- edage2
+//        edge1 ---- edge2
 //       /                  \
 //  host2                    host2'
 //
-type ReportEdageHost struct {
+type ReportEdgeHost struct {
 	HostIPs []string
 }
 

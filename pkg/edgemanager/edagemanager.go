@@ -1,4 +1,4 @@
-package edagemanager
+package edgemanager
 
 import (
 	"context"
@@ -12,28 +12,28 @@ import (
 )
 
 var (
-	defaultEdageManager *EdageManager
-	edagePrefix         = "/edages/"
+	defaultEdgeManager *EdgeManager
+	edgePrefix         = "/edges/"
 )
 
-type EdageManager struct {
+type EdgeManager struct {
 	storage *EtcdStorage
 }
 
-func New(store *EtcdStorage) *EdageManager {
-	if defaultEdageManager != nil {
-		return defaultEdageManager
+func New(store *EtcdStorage) *EdgeManager {
+	if defaultEdgeManager != nil {
+		return defaultEdgeManager
 	}
 
-	m := &EdageManager{
+	m := &EdgeManager{
 		storage: store,
 	}
-	defaultEdageManager = m
+	defaultEdgeManager = m
 	return m
 }
 
-func (m *EdageManager) Watch(delfunc, putfunc func(edage *Edage)) {
-	chs := m.storage.cli.Watch(context.Background(), edagePrefix,
+func (m *EdgeManager) Watch(delfunc, putfunc func(edge *Edge)) {
+	chs := m.storage.cli.Watch(context.Background(), edgePrefix,
 		clientv3.WithPrefix(), clientv3.WithPrevKV())
 
 	for c := range chs {
@@ -44,26 +44,26 @@ func (m *EdageManager) Watch(delfunc, putfunc func(edage *Edage)) {
 			switch evt.Type {
 			case clientv3.EventTypeDelete:
 				if delfunc != nil {
-					edage := Edage{}
-					err := json.Unmarshal(evt.PrevKv.Value, &edage)
+					edge := Edge{}
+					err := json.Unmarshal(evt.PrevKv.Value, &edge)
 					if err != nil {
 						log.Info("json unmarshal fail: %v", err)
 						continue
 					}
 
-					delfunc(&edage)
+					delfunc(&edge)
 				}
 
 			case clientv3.EventTypePut:
 				if putfunc != nil {
-					edage := Edage{}
-					err := json.Unmarshal(evt.Kv.Value, &edage)
+					edge := Edge{}
+					err := json.Unmarshal(evt.Kv.Value, &edge)
 					if err != nil {
 						log.Info("json unmarshal fail: %v", err)
 						continue
 					}
 
-					putfunc(&edage)
+					putfunc(&edge)
 				}
 			}
 		}
@@ -71,44 +71,44 @@ func (m *EdageManager) Watch(delfunc, putfunc func(edage *Edage)) {
 
 }
 
-func (m *EdageManager) AddEdage(name string, edage *Edage) {
-	m.storage.Set(edagePrefix+name, edage)
+func (m *EdgeManager) AddEdge(name string, edge *Edge) {
+	m.storage.Set(edgePrefix+name, edge)
 }
 
-func (m *EdageManager) DelEdage(name string) {
-	m.storage.Del(edagePrefix + name)
+func (m *EdgeManager) DelEdge(name string) {
+	m.storage.Del(edgePrefix + name)
 }
 
-func (m *EdageManager) GetEdage(name string) *Edage {
-	edg := Edage{}
-	err := m.storage.Get(edagePrefix+name, &edg)
+func (m *EdgeManager) GetEdge(name string) *Edge {
+	edg := Edge{}
+	err := m.storage.Get(edgePrefix+name, &edg)
 	if err != nil {
 		return nil
 	}
 	return &edg
 }
 
-func (m *EdageManager) GetEdages() []*Edage {
-	res, err := m.storage.List(edagePrefix)
+func (m *EdgeManager) GetEdges() []*Edge {
+	res, err := m.storage.List(edgePrefix)
 	if err != nil {
-		log.Error("list %s fail: %v", edagePrefix, err)
+		log.Error("list %s fail: %v", edgePrefix, err)
 		return nil
 	}
 
-	edages := make([]*Edage, 0)
+	edges := make([]*Edge, 0)
 	for _, val := range res {
-		edage := Edage{}
-		err := json.Unmarshal([]byte(val), &edage)
+		edge := Edge{}
+		err := json.Unmarshal([]byte(val), &edge)
 		if err != nil {
-			log.Error("unmarshal to edage fail: %v", err)
+			log.Error("unmarshal to edge fail: %v", err)
 			continue
 		}
-		edages = append(edages, &edage)
+		edges = append(edges, &edge)
 	}
-	return edages
+	return edges
 }
 
-func (m *EdageManager) VerifyCidr(cidr string) bool {
+func (m *EdgeManager) VerifyCidr(cidr string) bool {
 	b := true
 	return b
 }
@@ -119,7 +119,7 @@ func (m *EdageManager) VerifyCidr(cidr string) bool {
 // bip1 < eip2 < eip1 or
 // bip2 < bip1 < eip2
 // bip2 < eip1 < eip2
-func (m *EdageManager) verifyConflict(cidr1, cidr2 string) bool {
+func (m *EdgeManager) verifyConflict(cidr1, cidr2 string) bool {
 	sp := strings.Split(cidr1, "/")
 	if len(sp) != 2 {
 		log.Error("invalid cidr format: %s", cidr1)
@@ -170,38 +170,38 @@ func (m *EdageManager) verifyConflict(cidr1, cidr2 string) bool {
 	return !ipn1.Overlaps(ipn2)
 }
 
-func AddEdage(name string, edage *Edage) {
-	if defaultEdageManager == nil {
+func AddEdge(name string, edge *Edge) {
+	if defaultEdgeManager == nil {
 		return
 	}
-	defaultEdageManager.AddEdage(name, edage)
+	defaultEdgeManager.AddEdge(name, edge)
 }
 
-func DelEdage(name string) {
-	if defaultEdageManager == nil {
+func DelEdge(name string) {
+	if defaultEdgeManager == nil {
 		return
 	}
-	defaultEdageManager.DelEdage(name)
+	defaultEdgeManager.DelEdge(name)
 }
 
-func GetEdage(name string) *Edage {
-	if defaultEdageManager == nil {
+func GetEdge(name string) *Edge {
+	if defaultEdgeManager == nil {
 		return nil
 	}
-	return defaultEdageManager.GetEdage(name)
+	return defaultEdgeManager.GetEdge(name)
 }
 
-func GetEdages() []*Edage {
-	if defaultEdageManager == nil {
+func GetEdges() []*Edge {
+	if defaultEdgeManager == nil {
 		return nil
 	}
-	return defaultEdageManager.GetEdages()
+	return defaultEdgeManager.GetEdges()
 }
 
 func VerifyCidr(cidr string) bool {
-	if defaultEdageManager == nil {
+	if defaultEdgeManager == nil {
 		return false
 	}
 
-	return defaultEdageManager.VerifyCidr(cidr)
+	return defaultEdgeManager.VerifyCidr(cidr)
 }

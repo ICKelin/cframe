@@ -1,11 +1,11 @@
 package main
 
-type AddEdageForm struct {
+type AddEdgeForm struct {
 	Name     string `json:"name"`
 	HostAddr string `json:"hostaddr"`
 	Cidr     string `json:"cidr"`
 }
 
-type DeleteEdageForm struct {
+type DeleteEdgeForm struct {
 	Name string `json:"name"`
 }

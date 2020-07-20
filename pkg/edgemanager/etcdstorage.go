@@ -1,4 +1,4 @@
-package edagemanager
+package edgemanager
 
 import (
 	"context"

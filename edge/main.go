@@ -12,7 +12,7 @@ func main() {
 	confpath := flag.String("c", "", "config file")
 	flag.Parse()
 
-	log.Init("log/edage.log", "debug", 3)
+	log.Init("log/edge.log", "debug", 3)
 
 	cfg, err := ParseConfig(*confpath)
 	if err != nil {

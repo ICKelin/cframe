@@ -1,4 +1,4 @@
-package edagemanager
+package edgemanager
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ const (
 	StatusOnline
 )
 
-type Edage struct {
+type Edge struct {
 	Name     string `json:"name"`
 	Comment  string `json:"comment"`
 	Cidr     string `json:"cidr"`
@@ -17,7 +17,7 @@ type Edage struct {
 	Status   int    `json:"status"`
 }
 
-func (e *Edage) String() string {
+func (e *Edge) String() string {
 	return fmt.Sprintf("name: %s hostaddr: %s cidr: %s",
 		e.Name, e.HostAddr, e.Cidr)
 }
