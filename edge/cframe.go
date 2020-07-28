@@ -5,6 +5,8 @@ import (
 	"net"
 	"strings"
 
+	"github.com/xtaci/kcp-go"
+
 	"github.com/ICKelin/cframe/codec"
 	log "github.com/ICKelin/cframe/pkg/logs"
 )
@@ -23,7 +25,9 @@ type Server struct {
 }
 
 type peerConn struct {
-	conn *net.UDPConn
+	// conn *net.UDPConn
+	// conn *kcp.UDPSession
+	conn net.Conn
 	cidr string
 }
 
@@ -40,26 +44,43 @@ func (s *Server) SetRegistry(r *Registry) {
 }
 
 func (s *Server) ListenAndServe() error {
-	laddr, err := net.ResolveUDPAddr("udp", s.laddr)
+	// laddr, err := net.ResolveUDPAddr("udp", s.laddr)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// lconn, err := net.ListenUDP("udp", laddr)
+	// if err != nil {
+	// 	return err
+	// }
+	// defer lconn.Close()
+	lconn, err := kcp.Listen(s.laddr)
 	if err != nil {
 		return err
 	}
 
-	lconn, err := net.ListenUDP("udp", laddr)
-	if err != nil {
-		return err
-	}
-	defer lconn.Close()
-
-	go s.readLocal(lconn)
+	go s.readLocal()
 	s.readRemote(lconn)
 	return nil
 }
 
-func (s *Server) readRemote(lconn *net.UDPConn) {
+func (s *Server) readRemote(lconn net.Listener) {
+	for {
+		conn, err := lconn.Accept()
+		if err != nil {
+			log.Error("%v", err)
+			break
+		}
+
+		go s.handleClient(conn)
+	}
+}
+
+func (s *Server) handleClient(conn net.Conn) {
+	defer conn.Close()
 	buf := make([]byte, 1024*64)
 	for {
-		nr, _, err := lconn.ReadFromUDP(buf)
+		nr, err := conn.Read(buf)
 		if err != nil {
 			log.Error("%v", err)
 			return
@@ -79,7 +100,7 @@ func (s *Server) readRemote(lconn *net.UDPConn) {
 	}
 }
 
-func (s *Server) readLocal(lconn *net.UDPConn) {
+func (s *Server) readLocal() {
 	for {
 		buf, err := s.iface.Read()
 		if err != nil {
@@ -113,7 +134,7 @@ func (s *Server) readLocal(lconn *net.UDPConn) {
 	}
 }
 
-func (s *Server) route(dst string) (*net.UDPConn, error) {
+func (s *Server) route(dst string) (net.Conn, error) {
 	for _, p := range s.peerConns {
 		_, ipnet, err := net.ParseCIDR(p.cidr)
 		if err != nil {
@@ -185,13 +206,7 @@ func (s *Server) DelPeer(peer *codec.Host) {
 }
 
 func (s *Server) connectPeer(node *codec.Host) error {
-	raddr, err := net.ResolveUDPAddr("udp", node.HostAddr)
-	if err != nil {
-		log.Error("%v", err)
-		return err
-	}
-
-	conn, err := net.DialUDP("udp", nil, raddr)
+	conn, err := kcp.Dial(node.HostAddr)
 	if err != nil {
 		log.Error("%v", err)
 		return err
