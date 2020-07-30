@@ -1,9 +1,13 @@
 package main
 
 import (
+	"encoding/binary"
 	"fmt"
+	"io"
 	"net"
 	"strings"
+
+	"github.com/xtaci/kcp-go"
 
 	"github.com/ICKelin/cframe/codec"
 	log "github.com/ICKelin/cframe/pkg/logs"
@@ -15,7 +19,8 @@ type Server struct {
 	// server监听udp地址
 	laddr string
 
-	// 与其他宿主机的udp connect
+	// peers connection
+	// as a kcp client
 	peerConns map[string]*peerConn
 
 	// 虚拟设备接口
@@ -23,7 +28,9 @@ type Server struct {
 }
 
 type peerConn struct {
-	conn *net.UDPConn
+	// conn *net.UDPConn
+	// conn *kcp.UDPSession
+	conn net.Conn
 	cidr string
 }
 
@@ -40,26 +47,50 @@ func (s *Server) SetRegistry(r *Registry) {
 }
 
 func (s *Server) ListenAndServe() error {
-	laddr, err := net.ResolveUDPAddr("udp", s.laddr)
-	if err != nil {
-		return err
-	}
-
-	lconn, err := net.ListenUDP("udp", laddr)
+	lconn, err := kcp.ListenWithOptions(s.laddr, nil, 10, 3)
 	if err != nil {
 		return err
 	}
 	defer lconn.Close()
 
-	go s.readLocal(lconn)
+	go s.readLocal()
 	s.readRemote(lconn)
 	return nil
 }
 
-func (s *Server) readRemote(lconn *net.UDPConn) {
-	buf := make([]byte, 1024*64)
+func (s *Server) readRemote(lconn *kcp.Listener) {
 	for {
-		nr, _, err := lconn.ReadFromUDP(buf)
+		conn, err := lconn.AcceptKCP()
+		if err != nil {
+			log.Error("%v", err)
+			break
+		}
+
+		go s.handleClient(conn)
+	}
+}
+
+func (s *Server) handleClient(conn *kcp.UDPSession) {
+	conn.SetStreamMode(true)
+	conn.SetWriteDelay(false)
+	conn.SetNoDelay(1, 20, 2, 1)
+	conn.SetReadBuffer(4194304)
+	conn.SetWriteBuffer(4194304)
+
+	defer conn.Close()
+	lenbuf := make([]byte, 2)
+	for {
+		_, err := io.ReadFull(conn, lenbuf)
+		if err != nil {
+			log.Error("read full fail: %v", err)
+			return
+		}
+
+		length := binary.BigEndian.Uint16(lenbuf)
+		log.Debug("pkt size: %d", length)
+
+		buf := make([]byte, length)
+		nr, err := io.ReadFull(conn, buf)
 		if err != nil {
 			log.Error("%v", err)
 			return
@@ -79,15 +110,15 @@ func (s *Server) readRemote(lconn *net.UDPConn) {
 	}
 }
 
-func (s *Server) readLocal(lconn *net.UDPConn) {
+func (s *Server) readLocal() {
 	for {
-		buf, err := s.iface.Read()
+		pkt, err := s.iface.Read()
 		if err != nil {
 			log.Error("read iface error: %v", err)
 			continue
 		}
 
-		p := Packet(buf)
+		p := Packet(pkt)
 		if p.Invalid() {
 			log.Error("invalid ipv4 packet")
 			continue
@@ -106,6 +137,9 @@ func (s *Server) readLocal(lconn *net.UDPConn) {
 			continue
 		}
 
+		buf := make([]byte, 2)
+		binary.BigEndian.PutUint16(buf, uint16(len(pkt)))
+		buf = append(buf, pkt...)
 		_, err = peer.Write(buf)
 		if err != nil {
 			log.Error("[E] write to peer: ", err)
@@ -113,7 +147,7 @@ func (s *Server) readLocal(lconn *net.UDPConn) {
 	}
 }
 
-func (s *Server) route(dst string) (*net.UDPConn, error) {
+func (s *Server) route(dst string) (net.Conn, error) {
 	for _, p := range s.peerConns {
 		_, ipnet, err := net.ParseCIDR(p.cidr)
 		if err != nil {
@@ -185,18 +219,17 @@ func (s *Server) DelPeer(peer *codec.Host) {
 }
 
 func (s *Server) connectPeer(node *codec.Host) error {
-	raddr, err := net.ResolveUDPAddr("udp", node.HostAddr)
+	conn, err := kcp.DialWithOptions(node.HostAddr, nil, 10, 3)
 	if err != nil {
 		log.Error("%v", err)
 		return err
 	}
 
-	conn, err := net.DialUDP("udp", nil, raddr)
-	if err != nil {
-		log.Error("%v", err)
-		return err
-	}
-
+	conn.SetStreamMode(true)
+	conn.SetWriteDelay(false)
+	conn.SetNoDelay(1, 20, 2, 1)
+	conn.SetReadBuffer(4194304)
+	conn.SetWriteBuffer(4194304)
 	peer := &peerConn{
 		conn: conn,
 		cidr: node.Cidr,
