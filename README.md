@@ -3,9 +3,7 @@
 # cframe
 [English Readme](EN_README.md)
 
-cframe是一个用于连接VPC的网络基础项目，使用cframe可以将同一云服务厂商，不同云服务厂商的VPC之间进行网络互通，VPC和VPC之间可以通过内网地址进行互联互通，保证数据安全。
-
-理论上除了VPC互联之外，也可以将VPC和IDC机房网络打通，甚至是将多个办公室网络打通。
+cframe是一个用于连接公有云VPC，数据中心，企业分支的网络基础项目，通过cframe达到多点网络互联互通的目的，同时，为了解决海外公有云VPC/数据中心节点传输速度慢的的问题，cframe内部舍弃tcp传输，暂时使用kcp协议来进行。
 
 ![doc/images/cframe1.0.0](doc/images/cframe1.1.0.jpg)
 
