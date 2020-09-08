@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ICKelin/cframe/pkg/etcdstorage"
 	log "github.com/ICKelin/cframe/pkg/logs"
 )
 
@@ -19,7 +20,7 @@ var (
 
 type EdgeHost struct {
 	IP        string `json:"ip"`
-	EdgeName string `json:"edge_name"`
+	EdgeName  string `json:"edge_name"`
 	expiredIn time.Time
 }
 
@@ -28,10 +29,10 @@ func (h *EdgeHost) String() string {
 }
 
 type EdgeHostManager struct {
-	store *EtcdStorage
+	store *etcdstorage.Etcd
 }
 
-func NewEdgeHostManager(store *EtcdStorage) *EdgeHostManager {
+func NewEdgeHostManager(store *etcdstorage.Etcd) *EdgeHostManager {
 	if defaultEdgeHostManager != nil {
 		return defaultEdgeHostManager
 	}

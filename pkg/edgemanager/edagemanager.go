@@ -1,11 +1,11 @@
 package edgemanager
 
 import (
-	"context"
 	"encoding/json"
 	"strconv"
 	"strings"
 
+	"github.com/ICKelin/cframe/pkg/etcdstorage"
 	"github.com/ICKelin/cframe/pkg/ip"
 	log "github.com/ICKelin/cframe/pkg/logs"
 	"github.com/coreos/etcd/clientv3"
@@ -17,10 +17,10 @@ var (
 )
 
 type EdgeManager struct {
-	storage *EtcdStorage
+	storage *etcdstorage.Etcd
 }
 
-func New(store *EtcdStorage) *EdgeManager {
+func New(store *etcdstorage.Etcd) *EdgeManager {
 	if defaultEdgeManager != nil {
 		return defaultEdgeManager
 	}
@@ -33,9 +33,7 @@ func New(store *EtcdStorage) *EdgeManager {
 }
 
 func (m *EdgeManager) Watch(delfunc, putfunc func(edge *Edge)) {
-	chs := m.storage.cli.Watch(context.Background(), edgePrefix,
-		clientv3.WithPrefix(), clientv3.WithPrevKV())
-
+	chs := m.storage.Watch(edgePrefix)
 	for c := range chs {
 		for _, evt := range c.Events {
 			log.Info("type: %v", evt.Type)

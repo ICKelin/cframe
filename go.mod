@@ -7,16 +7,24 @@ replace github.com/coreos/go-systemd => github.com/coreos/go-systemd/v22 v22.0.0
 replace google.golang.org/grpc => google.golang.org/grpc v1.26.0
 
 require (
+	github.com/AlecAivazis/survey/v2 v2.1.1 // indirect
+	github.com/GoAdminGroup/go-admin v1.2.16 // indirect
+	github.com/GoAdminGroup/themes v0.0.39 // indirect
 	github.com/coreos/etcd v3.3.22+incompatible
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
-	github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f // indirect
 	github.com/gin-gonic/gin v1.6.3
+	github.com/gobuffalo/packr/v2 v2.8.0 // indirect
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/google/uuid v1.1.1 // indirect
+	github.com/jawher/mow.cli v1.2.0 // indirect
+	github.com/jteeuwen/go-bindata v3.0.7+incompatible // indirect
 	github.com/klauspost/reedsolomon v1.9.9 // indirect
 	github.com/pelletier/go-toml v1.8.0
+	github.com/schollz/progressbar v1.0.0 // indirect
 	github.com/songgao/water v0.0.0-20200317203138-2b4b6d7c09d8
+	github.com/tdewolff/minify v2.3.6+incompatible // indirect
+	github.com/tdewolff/parse v2.3.4+incompatible // indirect
 	github.com/templexxx/cpufeat v0.0.0-20180724012125-cef66df7f161 // indirect
 	github.com/templexxx/xor v0.0.0-20191217153810-f85b25db303b // indirect
 	github.com/tjfoc/gmsm v1.3.2 // indirect

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/ICKelin/cframe/pkg/edgemanager"
+	"github.com/ICKelin/cframe/pkg/etcdstorage"
 	log "github.com/ICKelin/cframe/pkg/logs"
 )
 
@@ -22,7 +23,7 @@ func main() {
 	log.Info("%v", conf)
 
 	// create etcd storage
-	store := edgemanager.NewEtcdStorage(conf.Etcd)
+	store := etcdstorage.NewEtcd(conf.Etcd)
 
 	// create edge manager
 	edgeManager := edgemanager.New(store)
