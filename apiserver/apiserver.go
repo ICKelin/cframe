@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ICKelin/cframe/pkg/access"
 	"github.com/ICKelin/cframe/pkg/edgemanager"
 	log "github.com/ICKelin/cframe/pkg/logs"
 	"github.com/gin-gonic/gin"
@@ -26,10 +25,6 @@ func (s *ApiServer) Run() {
 	eng.DELETE("/api-service/v1/edge/del", s.delEdge)
 	eng.GET("/api-service/v1/edge/list", s.getEdgeList)
 	eng.GET("/api-service/v1/topology", s.getTopology)
-
-	eng.POST("/api-service/v1/access/add", s.addAccess)
-	eng.DELETE("/api-service/v1/access/del", s.delAccess)
-	eng.GET("/api-service/v1/access/list", s.getAccessList)
 
 	eng.Run(s.addr)
 }
@@ -104,46 +99,4 @@ func (s *ApiServer) getTopology(ctx *gin.Context) {
 		EdgeHost: hosts,
 	}
 	ctx.JSON(http.StatusOK, t)
-}
-
-func (s *ApiServer) addAccess(ctx *gin.Context) {
-	var addAcForm AddAccessForm
-	err := ctx.BindJSON(&addAcForm)
-	if err != nil {
-		log.Error("bind add access form fail: %v", err)
-		ctx.JSON(http.StatusBadRequest, err)
-		return
-	}
-
-	// TODO: verify form
-	info := &access.AccessInfo{
-		CloudPlatform: access.CloudPlatform(addAcForm.Type),
-		AccessKey:     addAcForm.AccessKey,
-		AccessSecret:  addAcForm.AccessSecret,
-	}
-	access.Add(info)
-	ctx.JSON(http.StatusOK, nil)
-}
-
-func (s *ApiServer) delAccess(ctx *gin.Context) {
-	var delAcForm DeleteAccessForm
-	err := ctx.BindJSON(&delAcForm)
-	if err != nil {
-		log.Error("bind del access form fail: %v", err)
-		ctx.JSON(http.StatusBadRequest, err)
-		return
-	}
-
-	access.Del(access.CloudPlatform(delAcForm.Type))
-	ctx.JSON(http.StatusOK, nil)
-}
-
-func (s *ApiServer) getAccessList(ctx *gin.Context) {
-	l, err := access.GetAccessList()
-	if err != nil {
-		ctx.JSON(http.StatusOK, err)
-		return
-	}
-
-	ctx.JSON(http.StatusOK, l)
 }

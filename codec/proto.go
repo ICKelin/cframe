@@ -24,10 +24,7 @@ type Host struct {
 
 // reply for edge register req
 type RegisterReply struct {
-	OnlineHost   []*Host
-	Type         string
-	AccessKey    string
-	AccessSecret string
+	OnlineHost []*Host
 }
 
 func (r *RegisterReply) String() string {

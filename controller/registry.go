@@ -6,8 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ICKelin/cframe/pkg/access"
-
 	"github.com/ICKelin/cframe/codec"
 	"github.com/ICKelin/cframe/pkg/edgemanager"
 	log "github.com/ICKelin/cframe/pkg/logs"
@@ -83,15 +81,6 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 		return
 	}
 
-	// TODO: get cloud platform auth info
-	accessKey, accessSecret := "", ""
-	accessInfo, err := access.Get(access.CloudPlatform(edge.Type))
-	if err != nil {
-		log.Warn("get access info fail: %v", err)
-	} else {
-		accessKey, accessSecret = accessInfo.AccessKey, accessInfo.AccessSecret
-	}
-
 	log.Info("register success: %v", edge)
 
 	host := edge.HostAddr
@@ -124,10 +113,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 
 	// response current online edges
 	err = codec.WriteJSON(conn, codec.CmdRegister, &codec.RegisterReply{
-		OnlineHost:   onlineHosts,
-		Type:         edge.Type,
-		AccessKey:    accessKey,
-		AccessSecret: accessSecret,
+		OnlineHost: onlineHosts,
 	})
 	if err != nil {
 		log.Error("write json fail: %v", err)
