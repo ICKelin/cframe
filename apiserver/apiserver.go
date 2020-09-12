@@ -58,6 +58,7 @@ func (s *ApiServer) addEdge(ctx *gin.Context) {
 	}
 
 	edg := &edgemanager.Edge{
+		Type:     addForm.Type,
 		Name:     addForm.Name,
 		HostAddr: addForm.HostAddr,
 		Cidr:     addForm.Cidr,

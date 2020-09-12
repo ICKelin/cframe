@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/ICKelin/cframe/pkg/access"
+
 	"github.com/ICKelin/cframe/pkg/edgemanager"
 	"github.com/ICKelin/cframe/pkg/etcdstorage"
 	log "github.com/ICKelin/cframe/pkg/logs"
@@ -30,6 +32,9 @@ func main() {
 
 	// create edge host manager
 	edgemanager.NewEdgeHostManager(store)
+
+	// create access manager
+	access.NewAccessManager(store)
 
 	r := NewRegistryServer(conf.ListenAddr)
 

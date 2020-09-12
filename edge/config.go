@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 
 	"github.com/pelletier/go-toml"
 )
@@ -37,6 +38,14 @@ func ParseConfig(path string) (*Config, error) {
 
 	if len(cfg.Type) == 0 {
 		return nil, fmt.Errorf("type MUST configured")
+	}
+
+	if len(cfg.AccessKey) == 0 {
+		cfg.AccessKey = os.Getenv("access_key")
+	}
+
+	if len(cfg.AccessSecret) == 0 {
+		cfg.AccessSecret = os.Getenv("access_secret")
 	}
 
 	if cfg.AccessKey == "" ||

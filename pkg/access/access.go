@@ -45,6 +45,13 @@ func (m *AccessManager) Del(platform CloudPlatform) {
 	m.storage.Del(key)
 }
 
+func (m *AccessManager) Get(platform CloudPlatform) (*AccessInfo, error) {
+	key := fmt.Sprintf("%s/%s", accessPrefix, platform)
+	access := AccessInfo{}
+	err := m.storage.Get(key, &access)
+	return &access, err
+}
+
 func (m *AccessManager) GetAccessList() ([]*AccessInfo, error) {
 	kvs, err := m.storage.List(accessPrefix)
 	if err != nil {
@@ -72,6 +79,13 @@ func Del(platform CloudPlatform) {
 	if defaultManager != nil {
 		defaultManager.Del(platform)
 	}
+}
+
+func Get(platform CloudPlatform) (*AccessInfo, error) {
+	if defaultManager != nil {
+		defaultManager.Get(platform)
+	}
+	return nil, fmt.Errorf("access manager without initial")
 }
 
 func GetAccessList() ([]*AccessInfo, error) {
