@@ -13,6 +13,7 @@ require (
 	github.com/coreos/etcd v3.3.22+incompatible
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
+	github.com/denverdino/aliyungo v0.0.0-20200904063931-f045f3b6b751
 	github.com/gin-gonic/gin v1.6.3
 	github.com/gobuffalo/packr/v2 v2.8.0 // indirect
 	github.com/gogo/protobuf v1.3.1 // indirect

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/ICKelin/cframe/edge/vpc"
 	log "github.com/ICKelin/cframe/pkg/logs"
 )
 
@@ -29,8 +30,19 @@ func main() {
 	defer iface.Close()
 	iface.Up()
 
-	s := NewServer(cfg.ListenAddr, iface)
+	// create VPC Instance
+	accessKey := cfg.AccessKey
+	secret := cfg.AccessSecret
+	vpcInstance, err := vpc.GetVPCInstance(cfg.Type, accessKey, secret)
+	if err != nil {
+		log.Error("%v", err)
+		return
+	}
 
+	// create cframe udp server
+	s := NewServer(cfg.ListenAddr, iface, vpcInstance)
+
+	// create registry to get connect to controller
 	reg := NewRegistry(cfg.Controller, cfg.Name, s)
 	go func() {
 		err := reg.Run()

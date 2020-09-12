@@ -1,15 +1,12 @@
 package main
 
 import (
-	"encoding/binary"
 	"fmt"
-	"io"
 	"net"
 	"strings"
 
-	"github.com/xtaci/kcp-go"
-
 	"github.com/ICKelin/cframe/codec"
+	"github.com/ICKelin/cframe/edge/vpc"
 	log "github.com/ICKelin/cframe/pkg/logs"
 )
 
@@ -23,22 +20,25 @@ type Server struct {
 	// as a kcp client
 	peerConns map[string]*peerConn
 
-	// 虚拟设备接口
+	// tun device wrap
 	iface *Interface
+
+	vpcInstance vpc.IVPC
 }
 
 type peerConn struct {
-	// conn *net.UDPConn
+	conn *net.UDPConn
 	// conn *kcp.UDPSession
-	conn net.Conn
+	// conn net.Conn
 	cidr string
 }
 
-func NewServer(laddr string, iface *Interface) *Server {
+func NewServer(laddr string, iface *Interface, vpcInstance vpc.IVPC) *Server {
 	return &Server{
-		laddr:     laddr,
-		peerConns: make(map[string]*peerConn),
-		iface:     iface,
+		laddr:       laddr,
+		peerConns:   make(map[string]*peerConn),
+		iface:       iface,
+		vpcInstance: vpcInstance,
 	}
 }
 
@@ -47,7 +47,11 @@ func (s *Server) SetRegistry(r *Registry) {
 }
 
 func (s *Server) ListenAndServe() error {
-	lconn, err := kcp.ListenWithOptions(s.laddr, nil, 10, 3)
+	laddr, err := net.ResolveUDPAddr("udp", s.laddr)
+	if err != nil {
+		return err
+	}
+	lconn, err := net.ListenUDP("udp", laddr)
 	if err != nil {
 		return err
 	}
@@ -58,41 +62,12 @@ func (s *Server) ListenAndServe() error {
 	return nil
 }
 
-func (s *Server) readRemote(lconn *kcp.Listener) {
+func (s *Server) readRemote(lconn *net.UDPConn) {
+	buf := make([]byte, 1024*64)
 	for {
-		conn, err := lconn.AcceptKCP()
-		if err != nil {
-			log.Error("%v", err)
-			break
-		}
-
-		go s.handleClient(conn)
-	}
-}
-
-func (s *Server) handleClient(conn *kcp.UDPSession) {
-	conn.SetStreamMode(true)
-	conn.SetWriteDelay(false)
-	conn.SetNoDelay(1, 20, 2, 1)
-	conn.SetReadBuffer(4194304)
-	conn.SetWriteBuffer(4194304)
-
-	defer conn.Close()
-	lenbuf := make([]byte, 2)
-	for {
-		_, err := io.ReadFull(conn, lenbuf)
+		nr, _, err := lconn.ReadFromUDP(buf)
 		if err != nil {
 			log.Error("read full fail: %v", err)
-			return
-		}
-
-		length := binary.BigEndian.Uint16(lenbuf)
-		log.Debug("pkt size: %d", length)
-
-		buf := make([]byte, length)
-		nr, err := io.ReadFull(conn, buf)
-		if err != nil {
-			log.Error("%v", err)
 			return
 		}
 
@@ -137,10 +112,7 @@ func (s *Server) readLocal() {
 			continue
 		}
 
-		buf := make([]byte, 2)
-		binary.BigEndian.PutUint16(buf, uint16(len(pkt)))
-		buf = append(buf, pkt...)
-		_, err = peer.Write(buf)
+		_, err = peer.Write(pkt)
 		if err != nil {
 			log.Error("[E] write to peer: ", err)
 		}
@@ -179,16 +151,23 @@ func (s *Server) route(dst string) (net.Conn, error) {
 func (s *Server) AddPeer(peer *codec.Host) {
 	s.DelPeer(peer)
 	log.Info("add peer: ", peer)
-	// if _, ok := s.peerConns[peer.Cidr]; ok {
-	// 	log.Printf("host %s already added\n", peer.HostAddr)
-	// 	return
-	// }
 
-	err := s.connectPeer(peer)
+	// add vpc route entry
+	// route to current instance
+	err := s.vpcInstance.CreateRoute(peer.Cidr)
+	if err != nil {
+		log.Error("create vpc route entry fail: %v", err)
+		return
+	}
+
+	// connect to peer
+	err = s.connectPeer(peer)
 	if err != nil {
 		log.Error("add peer %v fail: %v", peer, err)
 	}
 
+	// add local route
+	// route to tun device
 	out, err := execCmd("route", []string{"add", "-net",
 		peer.Cidr, "dev", s.iface.tun.Name()})
 	if err != nil {
@@ -200,6 +179,7 @@ func (s *Server) AddPeer(peer *codec.Host) {
 	}
 	log.Info("route add -net %s dev %s, %s %v\n",
 		peer.Cidr, s.iface.tun.Name(), out, err)
+
 }
 
 func (s *Server) AddPeers(peers []*codec.Host) {
@@ -219,17 +199,17 @@ func (s *Server) DelPeer(peer *codec.Host) {
 }
 
 func (s *Server) connectPeer(node *codec.Host) error {
-	conn, err := kcp.DialWithOptions(node.HostAddr, nil, 10, 3)
+	raddr, err := net.ResolveUDPAddr("udp", node.HostAddr)
+	if err != nil {
+		return err
+	}
+
+	conn, err := net.DialUDP("udp", nil, raddr)
 	if err != nil {
 		log.Error("%v", err)
 		return err
 	}
 
-	conn.SetStreamMode(true)
-	conn.SetWriteDelay(false)
-	conn.SetNoDelay(1, 20, 2, 1)
-	conn.SetReadBuffer(4194304)
-	conn.SetWriteBuffer(4194304)
 	peer := &peerConn{
 		conn: conn,
 		cidr: node.Cidr,

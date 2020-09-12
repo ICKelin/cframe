@@ -1,5 +1,4 @@
 listen_addr=":58422"
-api_addr=":12345"
 
 etcd = [
     "127.0.0.1:2379"
@@ -7,5 +6,5 @@ etcd = [
 
 [log]
 level = "debug"
-path = "controller.log"
+path = "log/controller.log"
 days = 5

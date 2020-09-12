@@ -7,9 +7,12 @@ import (
 )
 
 type Config struct {
-	Name       string `toml:"name"`
-	Controller string `toml:"controller"`
-	ListenAddr string `toml:"listen_addr"`
+	Name         string `toml:"name"`
+	Controller   string `toml:"controller"`
+	ListenAddr   string `toml:"listen_addr"`
+	Type         string `toml:"type"`
+	AccessKey    string `toml:"access_key"`
+	AccessSecret string `toml:"access_secret"`
 }
 
 func ParseConfig(path string) (*Config, error) {
