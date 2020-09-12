@@ -2,22 +2,19 @@ module github.com/ICKelin/cframe
 
 go 1.13
 
-replace github.com/coreos/go-systemd => github.com/coreos/go-systemd/v22 v22.0.0
-
 replace google.golang.org/grpc => google.golang.org/grpc v1.26.0
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.1.1 // indirect
 	github.com/GoAdminGroup/go-admin v1.2.16 // indirect
 	github.com/GoAdminGroup/themes v0.0.39 // indirect
+	github.com/coredns/coredns v1.7.0
 	github.com/coreos/etcd v3.3.22+incompatible
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
 	github.com/denverdino/aliyungo v0.0.0-20200904063931-f045f3b6b751
 	github.com/gin-gonic/gin v1.6.3
 	github.com/gobuffalo/packr/v2 v2.8.0 // indirect
-	github.com/gogo/protobuf v1.3.1 // indirect
-	github.com/google/uuid v1.1.1 // indirect
 	github.com/jawher/mow.cli v1.2.0 // indirect
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible // indirect
 	github.com/klauspost/reedsolomon v1.9.9 // indirect
@@ -33,5 +30,5 @@ require (
 	github.com/xtaci/kcp-go v5.4.20+incompatible
 	go.uber.org/zap v1.15.0 // indirect
 	google.golang.org/genproto v0.0.0-20200711021454-869866162049 // indirect
-	google.golang.org/grpc v1.27.0
+	google.golang.org/grpc v1.29.1
 )

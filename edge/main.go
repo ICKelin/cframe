@@ -13,13 +13,12 @@ func main() {
 	confpath := flag.String("c", "", "config file")
 	flag.Parse()
 
-	log.Init("log/edge.log", "debug", 3)
-
 	cfg, err := ParseConfig(*confpath)
 	if err != nil {
 		fmt.Printf("parse config fali: %v\n", err)
 		return
 	}
+	log.Init(cfg.Log.Path, cfg.Log.Level, cfg.Log.Days)
 
 	iface, err := NewInterface()
 	if err != nil {

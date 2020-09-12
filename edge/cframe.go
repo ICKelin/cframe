@@ -17,7 +17,6 @@ type Server struct {
 	laddr string
 
 	// peers connection
-	// as a kcp client
 	peerConns map[string]*peerConn
 
 	// tun device wrap
@@ -101,7 +100,7 @@ func (s *Server) readLocal() {
 
 		src := p.Src()
 		dst := p.Dst()
-		log.Info("local tuple %s => %s\n", src, dst)
+		log.Debug("local tuple %s => %s\n", src, dst)
 
 		// report src ip as edge host ip
 		s.registry.Report(src)
