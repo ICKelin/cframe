@@ -2,6 +2,7 @@ package edgemanager
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -69,25 +70,29 @@ func (m *EdgeManager) Watch(delfunc, putfunc func(edge *Edge)) {
 
 }
 
-func (m *EdgeManager) AddEdge(name string, edge *Edge) {
-	m.storage.Set(edgePrefix+name, edge)
+func (m *EdgeManager) AddEdge(username, name string, edge *Edge) {
+	key := fmt.Sprintf("%s%s/%s", edgePrefix, username, name)
+	m.storage.Set(key, edge)
 }
 
-func (m *EdgeManager) DelEdge(name string) {
-	m.storage.Del(edgePrefix + name)
+func (m *EdgeManager) DelEdge(username, name string) {
+	key := fmt.Sprintf("%s%s/%s", edgePrefix, username, name)
+	m.storage.Del(key)
 }
 
-func (m *EdgeManager) GetEdge(name string) *Edge {
+func (m *EdgeManager) GetEdge(username, name string) *Edge {
+	key := fmt.Sprintf("%s%s/%s", edgePrefix, username, name)
 	edg := Edge{}
-	err := m.storage.Get(edgePrefix+name, &edg)
+	err := m.storage.Get(key, &edg)
 	if err != nil {
 		return nil
 	}
 	return &edg
 }
 
-func (m *EdgeManager) GetEdges() []*Edge {
-	res, err := m.storage.List(edgePrefix)
+func (m *EdgeManager) GetEdges(username string) []*Edge {
+	key := fmt.Sprintf("%s%s", edgePrefix, username)
+	res, err := m.storage.List(key)
 	if err != nil {
 		log.Error("list %s fail: %v", edgePrefix, err)
 		return nil
@@ -168,32 +173,32 @@ func (m *EdgeManager) verifyConflict(cidr1, cidr2 string) bool {
 	return !ipn1.Overlaps(ipn2)
 }
 
-func AddEdge(name string, edge *Edge) {
+func AddEdge(username, name string, edge *Edge) {
 	if defaultEdgeManager == nil {
 		return
 	}
-	defaultEdgeManager.AddEdge(name, edge)
+	defaultEdgeManager.AddEdge(username, name, edge)
 }
 
-func DelEdge(name string) {
+func DelEdge(username, name string) {
 	if defaultEdgeManager == nil {
 		return
 	}
-	defaultEdgeManager.DelEdge(name)
+	defaultEdgeManager.DelEdge(username, name)
 }
 
-func GetEdge(name string) *Edge {
+func GetEdge(username, name string) *Edge {
 	if defaultEdgeManager == nil {
 		return nil
 	}
-	return defaultEdgeManager.GetEdge(name)
+	return defaultEdgeManager.GetEdge(username, name)
 }
 
-func GetEdges() []*Edge {
+func GetEdges(username string) []*Edge {
 	if defaultEdgeManager == nil {
 		return nil
 	}
-	return defaultEdgeManager.GetEdges()
+	return defaultEdgeManager.GetEdges(username)
 }
 
 func VerifyCidr(cidr string) bool {

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ICKelin/cframe/codec"
+	"github.com/ICKelin/cframe/pkg/auth"
 	"github.com/ICKelin/cframe/pkg/edgemanager"
 	log "github.com/ICKelin/cframe/pkg/logs"
 )
@@ -71,11 +72,17 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 
 	log.Info("node register %v", reg)
 
+	user, err := auth.GetUserInfo(reg.AccessKey, reg.SecretKey)
+	if err != nil {
+		log.Error("%v", err)
+		return
+	}
+
 	// verify edge
 	// only if the edges is configured with api server
 	// or controller build in configuration
 	// then the edges is valid
-	edge := edgemanager.GetEdge(reg.Name)
+	edge := edgemanager.GetEdge(user.Username, reg.Name)
 	if edge == nil {
 		log.Error("get edge for %s fail\n", reg.Name)
 		return
@@ -86,7 +93,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	host := edge.HostAddr
 
 	onlineHosts := make([]*codec.Host, 0)
-	edges := edgemanager.GetEdges()
+	edges := edgemanager.GetEdges(user.Username)
 	for _, edg := range edges {
 		if edg.HostAddr != host {
 			onlineHosts = append(onlineHosts, &codec.Host{

@@ -30,8 +30,14 @@ func main() {
 	iface.Up()
 
 	// create VPC Instance
-	accessKey := cfg.AccessKey
-	secret := cfg.AccessSecret
+	accessKey := ""
+	secret := ""
+	if cfg.Type == "ali-vpc" {
+		accessKey = cfg.AliVPCConfig.AccessKey
+		secret = cfg.AliVPCConfig.AccessSecret
+	}
+	log.Debug("%s %s", accessKey, secret)
+
 	vpcInstance, err := vpc.GetVPCInstance(cfg.Type, accessKey, secret)
 	if err != nil {
 		log.Error("%v", err)

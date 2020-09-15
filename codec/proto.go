@@ -13,7 +13,9 @@ import "encoding/json"
 // edge register req
 type RegisterReq struct {
 	// edge name
-	Name string
+	Name      string
+	AccessKey string
+	SecretKey string
 }
 
 // edge host information

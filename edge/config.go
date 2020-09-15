@@ -3,19 +3,28 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 
 	"github.com/pelletier/go-toml"
 )
 
 type Config struct {
-	Name         string `toml:"name"`
-	Controller   string `toml:"controller"`
-	ListenAddr   string `toml:"listen_addr"`
-	Type         string `toml:"type"`
+	Name         string       `toml:"name"`
+	Controller   string       `toml:"controller"`
+	ListenAddr   string       `toml:"listen_addr"`
+	Type         string       `toml:"type"`
+	AuthConfig   AuthConfig   `toml:"cframe_auth"`
+	AliVPCConfig AliVPCConfig `toml:"alivpc"`
+	Log          Log          `toml:"log"`
+}
+
+type AuthConfig struct {
+	AccessKey string `toml:"cframe_key"`
+	SecretKey string `toml:"cframe_secret"`
+}
+
+type AliVPCConfig struct {
 	AccessKey    string `toml:"access_key"`
 	AccessSecret string `toml:"access_secret"`
-	Log          Log    `toml:"log"`
 }
 
 type Log struct {
@@ -40,18 +49,18 @@ func ParseConfig(path string) (*Config, error) {
 		return nil, fmt.Errorf("type MUST configured")
 	}
 
-	if len(cfg.AccessKey) == 0 {
-		cfg.AccessKey = os.Getenv("access_key")
-	}
+	// if len(cfg.AccessKey) == 0 {
+	// 	cfg.AccessKey = os.Getenv("access_key")
+	// }
 
-	if len(cfg.AccessSecret) == 0 {
-		cfg.AccessSecret = os.Getenv("access_secret")
-	}
+	// if len(cfg.AccessSecret) == 0 {
+	// 	cfg.AccessSecret = os.Getenv("access_secret")
+	// }
 
-	if cfg.AccessKey == "" ||
-		cfg.AccessSecret == "" {
-		return nil, fmt.Errorf("access_key and secrect_key MUST configured")
-	}
+	// if cfg.AccessKey == "" ||
+	// 	cfg.AccessSecret == "" {
+	// 	return nil, fmt.Errorf("access_key and secrect_key MUST configured")
+	// }
 
 	return &cfg, nil
 }

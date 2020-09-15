@@ -70,6 +70,7 @@ func (r *Registry) run() error {
 
 	reply := &codec.RegisterReply{}
 	codec.ReadJSON(conn, reply)
+	log.Debug("%v", reply)
 	r.server.AddPeers(reply.OnlineHost)
 
 	go r.read(conn)
