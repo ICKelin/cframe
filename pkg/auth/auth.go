@@ -24,8 +24,13 @@ type AuthManager struct {
 	store *etcdstorage.Etcd
 }
 
-func NewAuthManager() *AuthManager {
-	return &AuthManager{}
+func NewAuthManager(store *etcdstorage.Etcd) *AuthManager {
+	if authManager != nil {
+		return authManager
+	}
+	m := &AuthManager{store}
+	authManager = m
+	return m
 }
 
 func (m *AuthManager) Create(accessKey, secretKey string, user *UserInfo) {

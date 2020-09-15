@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/ICKelin/cframe/pkg/access"
+	"github.com/ICKelin/cframe/pkg/auth"
 
 	"github.com/ICKelin/cframe/pkg/edgemanager"
 	"github.com/ICKelin/cframe/pkg/etcdstorage"
@@ -35,6 +36,9 @@ func main() {
 
 	// create access manager
 	access.NewAccessManager(store)
+
+	// create auth manager
+	auth.NewAuthManager(store)
 
 	r := NewRegistryServer(conf.ListenAddr)
 

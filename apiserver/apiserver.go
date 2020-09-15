@@ -26,6 +26,9 @@ func (s *ApiServer) Run() {
 	eng.GET("/api-service/v1/edge/list", s.getEdgeList)
 	eng.GET("/api-service/v1/topology", s.getTopology)
 
+	eng.POST("/api-service/v1/signup", nil)
+	eng.POST("/api-service/v1/signin", nil)
+
 	eng.Run(s.addr)
 }
 
@@ -100,3 +103,7 @@ func (s *ApiServer) getTopology(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, t)
 }
+
+func (s *ApiServer) signup(ctx *gin.Context) {}
+
+func (s *ApiServer) signin(ctx *gin.Context) {}

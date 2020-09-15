@@ -37,7 +37,6 @@ func (s *Etcd) Set(key string, val interface{}) {
 func (s *Etcd) SetWithExpiration(key string, val interface{},
 	exp time.Duration) error {
 	b, _ := json.Marshal(val)
-	// minimum lease TTL is 5-second
 	resp, err := s.cli.Grant(context.TODO(), int64(exp.Seconds()))
 	if err != nil {
 		return err
