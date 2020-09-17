@@ -2,22 +2,20 @@ package auth
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/ICKelin/cframe/pkg/etcdstorage"
 )
 
 var (
-	authPrefix  = "/auth"
-	authManager *AuthManager
+	authPrefix    = "/auth"
+	tokenPrefix   = "/token"
+	defaultExpire = time.Hour * 3
+	authManager   *AuthManager
 )
 
-type UserInfo struct {
-	// user access key
-	AccessKey string
-	// user access secret
-	SecretKey string
-	Username  string
-	Password  string
+type Token struct {
+	Username string
 }
 
 type AuthManager struct {
@@ -33,21 +31,58 @@ func NewAuthManager(store *etcdstorage.Etcd) *AuthManager {
 	return m
 }
 
-func (m *AuthManager) Create(accessKey, secretKey string, user *UserInfo) {
-	key := fmt.Sprintf("%s/%s/%s", authPrefix, accessKey, secretKey)
-	m.store.Set(key, user)
+// create user secret key
+func (m *AuthManager) CreateSecret(secretKey string, user *UserInfo) error {
+	key := fmt.Sprintf("%s/%s", authPrefix, secretKey)
+	return m.store.Set(key, user)
 }
 
-func (m *AuthManager) GetUserInfo(accessKey, secretKey string) (*UserInfo, error) {
+// set user signin token
+func (m *AuthManager) SetUserToken(token string, userInfo *UserInfo) error {
+	key := fmt.Sprintf("%s/%s", tokenPrefix, token)
+	return m.store.SetWithExpiration(key, userInfo, defaultExpire)
+}
+
+// get user info by secret key
+func (m *AuthManager) GetAuth(secretKey string) (*UserInfo, error) {
 	user := UserInfo{}
-	key := fmt.Sprintf("%s/%s/%s", authPrefix, accessKey, secretKey)
+	key := fmt.Sprintf("%s/%s", authPrefix, secretKey)
 	err := m.store.Get(key, &user)
 	return &user, err
 }
 
-func GetUserInfo(accessKey, secretKey string) (*UserInfo, error) {
+// get user info by signin token
+func (m *AuthManager) GetUserByToken(token string) (*UserInfo, error) {
+	key := fmt.Sprintf("%s/%s", tokenPrefix, token)
+	userInfo := UserInfo{}
+	err := m.store.Get(key, &userInfo)
+	return &userInfo, err
+}
+
+func GetAuth(secretKey string) (*UserInfo, error) {
 	if authManager == nil {
 		return nil, fmt.Errorf("auth manager without initial")
 	}
-	return authManager.GetUserInfo(accessKey, secretKey)
+	return authManager.GetAuth(secretKey)
+}
+
+func GetUserByToken(token string) (*UserInfo, error) {
+	if authManager == nil {
+		return nil, fmt.Errorf("auth manager without initial")
+	}
+	return authManager.GetUserByToken(token)
+}
+
+func CreateSecret(secretKey string, userInfo *UserInfo) error {
+	if authManager == nil {
+		return fmt.Errorf("auth manager without initial")
+	}
+	return authManager.CreateSecret(secretKey, userInfo)
+}
+
+func SetUserToken(token string, userInfo *UserInfo) error {
+	if authManager == nil {
+		return fmt.Errorf("auth manager without initial")
+	}
+	return authManager.SetUserToken(token, userInfo)
 }

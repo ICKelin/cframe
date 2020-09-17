@@ -29,9 +29,10 @@ func NewEtcd(endpoints []string) *Etcd {
 	}
 }
 
-func (s *Etcd) Set(key string, val interface{}) {
+func (s *Etcd) Set(key string, val interface{}) error {
 	b, _ := json.Marshal(val)
-	s.cli.Put(context.Background(), key, string(b))
+	_, err := s.cli.Put(context.Background(), key, string(b))
+	return err
 }
 
 func (s *Etcd) SetWithExpiration(key string, val interface{},

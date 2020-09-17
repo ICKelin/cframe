@@ -12,13 +12,12 @@ type Config struct {
 	Controller   string       `toml:"controller"`
 	ListenAddr   string       `toml:"listen_addr"`
 	Type         string       `toml:"type"`
-	AuthConfig   AuthConfig   `toml:"cframe_auth"`
+	SecretKey    string       `toml:"cframe_secret"`
 	AliVPCConfig AliVPCConfig `toml:"alivpc"`
 	Log          Log          `toml:"log"`
 }
 
 type AuthConfig struct {
-	AccessKey string `toml:"cframe_key"`
 	SecretKey string `toml:"cframe_secret"`
 }
 

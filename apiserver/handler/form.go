@@ -1,4 +1,4 @@
-package main
+package handler
 
 type AddEdgeForm struct {
 	Type     string `json:"type"`
@@ -11,12 +11,12 @@ type DeleteEdgeForm struct {
 	Name string `json:"name"`
 }
 
-type AddAccessForm struct {
-	Type         string `json:"type"`
-	AccessKey    string `json:"access_key"`
-	AccessSecret string `json:"access_secret"`
+type SignupForm struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
-type DeleteAccessForm struct {
-	Type string `json:"type"`
+type SigninForm struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
 }

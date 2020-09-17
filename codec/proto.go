@@ -14,7 +14,6 @@ import "encoding/json"
 type RegisterReq struct {
 	// edge name
 	Name      string
-	AccessKey string
 	SecretKey string
 }
 

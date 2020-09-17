@@ -72,7 +72,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 
 	log.Info("node register %v", reg)
 
-	user, err := auth.GetUserInfo(reg.AccessKey, reg.SecretKey)
+	user, err := auth.GetAuth(reg.SecretKey)
 	if err != nil {
 		log.Error("%v", err)
 		return
