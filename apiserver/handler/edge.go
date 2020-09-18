@@ -13,12 +13,13 @@ type EdgeHandler struct {
 }
 
 func (h *EdgeHandler) Run(eng *gin.Engine) {
-	eng.Use(h.MidAuth)
+	group := eng.Group("/api-service/v1/edge")
+	group.Use(h.MidAuth)
 	{
 		eng.POST("/api-service/v1/edge/add", h.addEdge)
 		eng.DELETE("/api-service/v1/edge/del", h.delEdge)
 		eng.GET("/api-service/v1/edge/list", h.getEdgeList)
-		eng.GET("/api-service/v1/topology", h.getTopology)
+		eng.GET("/api-service/v1/edge/topology", h.getTopology)
 	}
 
 }
