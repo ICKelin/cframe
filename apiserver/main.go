@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/ICKelin/cframe/pkg/access"
+	"github.com/ICKelin/cframe/pkg/auth"
 	"github.com/ICKelin/cframe/pkg/edgemanager"
 	"github.com/ICKelin/cframe/pkg/etcdstorage"
 	log "github.com/ICKelin/cframe/pkg/logs"
@@ -34,6 +35,12 @@ func main() {
 
 	// create access manager
 	access.NewAccessManager(store)
+
+	// create user manager
+	auth.NewUserManager(store)
+
+	// create auth/token manager
+	auth.NewAuthManager(store)
 
 	// create api server
 	s := NewApiServer(conf.ApiAddr)

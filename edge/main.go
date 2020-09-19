@@ -48,7 +48,7 @@ func main() {
 	s := NewServer(cfg.ListenAddr, iface, vpcInstance)
 
 	// create registry to get connect to controller
-	reg := NewRegistry(cfg.Controller, cfg.Name, s)
+	reg := NewRegistry(cfg.Controller, cfg.Name, cfg.SecretKey, s)
 	go func() {
 		err := reg.Run()
 		if err != nil {

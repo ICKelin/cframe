@@ -54,4 +54,17 @@ func (h *BaseHandler) MidAuth(ctx *gin.Context) {
 	}
 
 	ctx.Set("username", userInfo.Username)
+	ctx.Set("userInfo", userInfo)
+}
+
+func (h *BaseHandler) GetUsername(ctx *gin.Context) string {
+	obj, _ := ctx.Get("username")
+	username, _ := obj.(string)
+	return username
+}
+
+func (h *BaseHandler) GetUserInfo(ctx *gin.Context) *auth.UserInfo {
+	obj, _ := ctx.Get("userInfo")
+	userInfo, _ := obj.(*auth.UserInfo)
+	return userInfo
 }

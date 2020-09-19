@@ -13,6 +13,7 @@ import (
 type Registry struct {
 	srv    string
 	name   string
+	secret string
 	server *Server
 
 	//heart beat channel
@@ -29,10 +30,11 @@ type Registry struct {
 	reporting   map[string]struct{}
 }
 
-func NewRegistry(srv, name string, s *Server) *Registry {
+func NewRegistry(srv, name, secret string, s *Server) *Registry {
 	return &Registry{
 		srv:         srv,
 		name:        name,
+		secret:      secret,
 		server:      s,
 		hbchan:      make(chan struct{}),
 		reportchan:  make(chan struct{}),
@@ -60,7 +62,8 @@ func (r *Registry) run() error {
 	defer conn.Close()
 
 	reg := codec.RegisterReq{
-		Name: r.name,
+		Name:      r.name,
+		SecretKey: r.secret,
 	}
 	err = codec.WriteJSON(conn, codec.CmdRegister, &reg)
 	if err != nil {

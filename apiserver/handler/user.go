@@ -1,11 +1,13 @@
 package handler
 
 import (
+	"encoding/base64"
 	"net/http"
 
 	"github.com/ICKelin/cframe/pkg/auth"
 	log "github.com/ICKelin/cframe/pkg/logs"
 	"github.com/gin-gonic/gin"
+	uuid "github.com/satori/go.uuid"
 )
 
 type UserHandler struct {
@@ -13,8 +15,14 @@ type UserHandler struct {
 }
 
 func (h *UserHandler) Run(eng *gin.Engine) {
-	eng.POST("/api-service/v1/signup", h.signup)
-	eng.POST("/api-service/v1/signin", h.signin)
+	group := eng.Group("/api-service/v1/user")
+	group.POST("/signup", h.signup)
+	group.POST("/signin", h.signin)
+
+	group.Use(h.MidAuth)
+	{
+		group.GET("/profile", h.getUserInfo)
+	}
 }
 
 func (h *UserHandler) signup(ctx *gin.Context) {
@@ -22,6 +30,8 @@ func (h *UserHandler) signup(ctx *gin.Context) {
 	if ok := h.BindAndValidate(ctx, &f); !ok {
 		return
 	}
+
+	// TODO: verify user exist
 
 	// create user info
 	user, err := auth.CreateUser(f.Username, f.Password)
@@ -54,7 +64,8 @@ func (h *UserHandler) signin(ctx *gin.Context) {
 		return
 	}
 
-	token := ""
+	uniq := uuid.NewV4()
+	token := base64.StdEncoding.EncodeToString(uniq.Bytes())
 	err = auth.SetUserToken(token, userInfo)
 	if err != nil {
 		log.Error("%v", err)
@@ -62,4 +73,9 @@ func (h *UserHandler) signin(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, token)
+}
+
+func (h *UserHandler) getUserInfo(ctx *gin.Context) {
+	userInfo := h.GetUserInfo(ctx)
+	h.Response(ctx, userInfo, nil)
 }

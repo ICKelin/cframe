@@ -16,17 +16,16 @@ func (h *EdgeHandler) Run(eng *gin.Engine) {
 	group := eng.Group("/api-service/v1/edge")
 	group.Use(h.MidAuth)
 	{
-		eng.POST("/api-service/v1/edge/add", h.addEdge)
-		eng.DELETE("/api-service/v1/edge/del", h.delEdge)
-		eng.GET("/api-service/v1/edge/list", h.getEdgeList)
-		eng.GET("/api-service/v1/edge/topology", h.getTopology)
+		group.POST("/add", h.addEdge)
+		group.DELETE("/del", h.delEdge)
+		group.GET("/list", h.getEdgeList)
+		group.GET("/topology", h.getTopology)
 	}
 
 }
 
 func (h *EdgeHandler) addEdge(ctx *gin.Context) {
 	username := ctx.GetString("username")
-
 	addForm := AddEdgeForm{}
 	if ok := h.BindAndValidate(ctx, &addForm); !ok {
 		return
@@ -75,7 +74,8 @@ type topology struct {
 }
 
 func (h *EdgeHandler) getTopology(ctx *gin.Context) {
-	username := ctx.GetString("username")
+	username := h.GetUsername(ctx)
+	log.Debug("get topology for user %s", username)
 
 	edges := edgemanager.GetEdges(username)
 	hosts := edgemanager.GetEdgeHosts()
