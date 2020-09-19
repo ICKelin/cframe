@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/base64"
-	"net/http"
 
 	"github.com/ICKelin/cframe/pkg/auth"
 	log "github.com/ICKelin/cframe/pkg/logs"
@@ -37,7 +36,7 @@ func (h *UserHandler) signup(ctx *gin.Context) {
 	user, err := auth.CreateUser(f.Username, f.Password)
 	if err != nil {
 		log.Error("%v", err)
-		ctx.JSON(http.StatusOK, err)
+		h.Response(ctx, nil, err)
 		return
 	}
 
@@ -45,10 +44,15 @@ func (h *UserHandler) signup(ctx *gin.Context) {
 	err = auth.CreateSecret(user.SecretKey, user)
 	if err != nil {
 		log.Error("%v", err)
-		ctx.JSON(http.StatusOK, err)
+		h.Response(ctx, nil, err)
 		return
 	}
-	ctx.JSON(http.StatusOK, user)
+	h.Response(ctx, user, err)
+}
+
+type SignInResponse struct {
+	Token    string
+	Username string
 }
 
 func (h *UserHandler) signin(ctx *gin.Context) {
@@ -60,7 +64,7 @@ func (h *UserHandler) signin(ctx *gin.Context) {
 	userInfo, err := auth.GetUser(f.Username, f.Password)
 	if err != nil {
 		log.Error("%v", err)
-		ctx.JSON(http.StatusOK, err)
+		h.Response(ctx, nil, err)
 		return
 	}
 
@@ -69,10 +73,15 @@ func (h *UserHandler) signin(ctx *gin.Context) {
 	err = auth.SetUserToken(token, userInfo)
 	if err != nil {
 		log.Error("%v", err)
-		ctx.JSON(http.StatusOK, err)
+		h.Response(ctx, nil, err)
 		return
 	}
-	ctx.JSON(http.StatusOK, token)
+
+	signinResp := &SignInResponse{
+		Token:    token,
+		Username: f.Username,
+	}
+	h.Response(ctx, signinResp, nil)
 }
 
 func (h *UserHandler) getUserInfo(ctx *gin.Context) {

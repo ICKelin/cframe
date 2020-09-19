@@ -7,6 +7,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	CODE_SUCC = 20000
+	CODE_FAIL = 50000
+)
+
 type ResponseBody struct {
 	Code    int         `json:"code"`
 	Message string      `json:"message"`
@@ -26,13 +31,13 @@ func (h *BaseHandler) BindAndValidate(ctx *gin.Context, obj interface{}) bool {
 
 func (h *BaseHandler) Response(ctx *gin.Context, data interface{}, err error) {
 	body := &ResponseBody{
-		Code:    0,
+		Code:    CODE_SUCC,
 		Message: "success",
 		Data:    data,
 	}
 
 	if err != nil {
-		body.Code = 99999
+		body.Code = CODE_FAIL
 		body.Message = err.Error()
 		body.Data = nil
 	}
