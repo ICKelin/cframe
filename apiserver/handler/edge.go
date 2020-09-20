@@ -17,7 +17,7 @@ func (h *EdgeHandler) Run(eng *gin.Engine) {
 	group.Use(h.MidAuth)
 	{
 		group.POST("/add", h.addEdge)
-		group.DELETE("/del", h.delEdge)
+		group.POST("/del", h.delEdge)
 		group.GET("/list", h.getEdgeList)
 		group.GET("/topology", h.getTopology)
 	}
