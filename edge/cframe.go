@@ -151,16 +151,19 @@ func (s *Server) AddPeer(peer *codec.Host) {
 	s.DelPeer(peer)
 	log.Info("add peer: ", peer)
 
-	// add vpc route entry
-	// route to current instance
-	err := s.vpcInstance.CreateRoute(peer.Cidr)
-	if err != nil {
-		log.Error("create vpc route entry fail: %v", err)
-		return
+	// not idc gateway
+	if s.vpcInstance != nil {
+		// add vpc route entry
+		// route to current instance
+		err := s.vpcInstance.CreateRoute(peer.Cidr)
+		if err != nil {
+			log.Error("create vpc route entry fail: %v", err)
+			return
+		}
 	}
 
 	// connect to peer
-	err = s.connectPeer(peer)
+	err := s.connectPeer(peer)
 	if err != nil {
 		log.Error("add peer %v fail: %v", peer, err)
 	}

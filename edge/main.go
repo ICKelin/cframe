@@ -41,7 +41,7 @@ func main() {
 	vpcInstance, err := vpc.GetVPCInstance(cfg.Type, accessKey, secret)
 	if err != nil {
 		log.Error("%v", err)
-		return
+		// return
 	}
 
 	// create cframe udp server
