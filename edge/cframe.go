@@ -45,6 +45,12 @@ func (s *Server) SetRegistry(r *Registry) {
 	s.registry = r
 }
 
+func (s *Server) SetVPCInstance(vpcInstance vpc.IVPC) {
+	if s.vpcInstance == nil {
+		s.vpcInstance = vpcInstance
+	}
+}
+
 func (s *Server) ListenAndServe() error {
 	laddr, err := net.ResolveUDPAddr("udp", s.laddr)
 	if err != nil {
@@ -100,7 +106,6 @@ func (s *Server) readLocal() {
 
 		src := p.Src()
 		dst := p.Dst()
-		log.Debug("local tuple %s => %s\n", src, dst)
 
 		// report src ip as edge host ip
 		s.registry.Report(src)
@@ -111,6 +116,7 @@ func (s *Server) readLocal() {
 			continue
 		}
 
+		// TODO: append authorize key
 		_, err = peer.Write(pkt)
 		if err != nil {
 			log.Error("[E] write to peer: ", err)
@@ -147,7 +153,7 @@ func (s *Server) route(dst string) (net.Conn, error) {
 	return nil, fmt.Errorf("no route")
 }
 
-func (s *Server) AddPeer(peer *codec.Host) {
+func (s *Server) AddPeer(peer *codec.Edge) {
 	s.DelPeer(peer)
 	log.Info("add peer: ", peer)
 
@@ -184,13 +190,13 @@ func (s *Server) AddPeer(peer *codec.Host) {
 
 }
 
-func (s *Server) AddPeers(peers []*codec.Host) {
+func (s *Server) AddPeers(peers []*codec.Edge) {
 	for _, p := range peers {
 		s.AddPeer(p)
 	}
 }
 
-func (s *Server) DelPeer(peer *codec.Host) {
+func (s *Server) DelPeer(peer *codec.Edge) {
 	log.Info("del peer: ", peer)
 	s.disconnPeer(peer.Cidr)
 
@@ -200,8 +206,8 @@ func (s *Server) DelPeer(peer *codec.Host) {
 		peer.Cidr, s.iface.tun.Name(), out, err)
 }
 
-func (s *Server) connectPeer(node *codec.Host) error {
-	raddr, err := net.ResolveUDPAddr("udp", node.HostAddr)
+func (s *Server) connectPeer(node *codec.Edge) error {
+	raddr, err := net.ResolveUDPAddr("udp", node.ListenAddr)
 	if err != nil {
 		return err
 	}

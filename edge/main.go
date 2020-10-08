@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ICKelin/cframe/edge/vpc"
 	log "github.com/ICKelin/cframe/pkg/logs"
 )
 
@@ -29,26 +28,23 @@ func main() {
 	defer iface.Close()
 	iface.Up()
 
-	// create VPC Instance
-	accessKey := ""
-	secret := ""
-	if cfg.Type == "ali-vpc" {
-		accessKey = cfg.AliVPCConfig.AccessKey
-		secret = cfg.AliVPCConfig.AccessSecret
-	}
-	log.Debug("%s %s", accessKey, secret)
-
-	vpcInstance, err := vpc.GetVPCInstance(cfg.Type, accessKey, secret)
-	if err != nil {
-		log.Error("%v", err)
-		// return
-	}
-
 	// create cframe udp server
-	s := NewServer(cfg.ListenAddr, iface, vpcInstance)
+	// just hard code listen address once without env var
+	lisAddr := ":58423"
+	lis := os.Getenv("listen")
+	if len(lis) > 0 {
+		lisAddr = lis
+	}
+	s := NewServer(lisAddr, iface, nil)
 
 	// create registry to get connect to controller
-	reg := NewRegistry(cfg.Controller, cfg.Name, cfg.SecretKey, s)
+	// just hard code controller address once without env var
+	ctrlAddr := "demo.notr.tech:58422"
+	ctrl := os.Getenv("controller")
+	if len(ctrl) > 0 {
+		ctrlAddr = ctrl
+	}
+	reg := NewRegistry(ctrlAddr, cfg.SecretKey, s)
 	go func() {
 		err := reg.Run()
 		if err != nil {

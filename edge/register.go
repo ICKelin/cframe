@@ -2,17 +2,19 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net"
 	"sync"
 	"time"
 
 	"github.com/ICKelin/cframe/codec"
+	"github.com/ICKelin/cframe/edge/vpc"
+
 	log "github.com/ICKelin/cframe/pkg/logs"
 )
 
 type Registry struct {
 	srv    string
-	name   string
 	secret string
 	server *Server
 
@@ -30,10 +32,9 @@ type Registry struct {
 	reporting   map[string]struct{}
 }
 
-func NewRegistry(srv, name, secret string, s *Server) *Registry {
+func NewRegistry(srv, secret string, s *Server) *Registry {
 	return &Registry{
 		srv:         srv,
-		name:        name,
 		secret:      secret,
 		server:      s,
 		hbchan:      make(chan struct{}),
@@ -62,7 +63,6 @@ func (r *Registry) run() error {
 	defer conn.Close()
 
 	reg := codec.RegisterReq{
-		Name:      r.name,
 		SecretKey: r.secret,
 	}
 	err = codec.WriteJSON(conn, codec.CmdRegister, &reg)
@@ -74,7 +74,18 @@ func (r *Registry) run() error {
 	reply := &codec.RegisterReply{}
 	codec.ReadJSON(conn, reply)
 	log.Debug("%v", reply)
-	r.server.AddPeers(reply.OnlineHost)
+	if reply.CSPInfo == nil {
+		log.Error("get csp fail: %v", reply)
+		return fmt.Errorf("get csp fail")
+	}
+
+	r.server.AddPeers(reply.EdgeList)
+	instance, err := vpc.GetVPCInstance(reply.CSPInfo.CspType, reply.CSPInfo.AccessKey, reply.CSPInfo.AccessSecret)
+	if err != nil {
+		log.Error("unsupported vpc %v", reply.CSPInfo.CspType)
+		return err
+	}
+	r.server.SetVPCInstance(instance)
 
 	go r.read(conn)
 	r.write(conn)
@@ -164,9 +175,9 @@ func (r *Registry) read(conn net.Conn) {
 				log.Error("invalid online msg %v", err)
 				continue
 			}
-			r.server.AddPeer(&codec.Host{
-				HostAddr: online.HostAddr,
-				Cidr:     online.Cidr,
+			r.server.AddPeer(&codec.Edge{
+				ListenAddr: online.ListenAddr,
+				Cidr:       online.Cidr,
 			})
 
 		case codec.CmdDel:
@@ -177,9 +188,9 @@ func (r *Registry) read(conn net.Conn) {
 				log.Error("invalid offline msg %v ", err)
 				continue
 			}
-			r.server.DelPeer(&codec.Host{
-				HostAddr: offline.HostAddr,
-				Cidr:     offline.Cidr,
+			r.server.DelPeer(&codec.Edge{
+				ListenAddr: offline.ListenAddr,
+				Cidr:       offline.Cidr,
 			})
 		}
 	}
