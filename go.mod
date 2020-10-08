@@ -15,6 +15,7 @@ require (
 	github.com/denverdino/aliyungo v0.0.0-20200904063931-f045f3b6b751
 	github.com/gin-gonic/gin v1.6.3
 	github.com/gobuffalo/packr/v2 v2.8.0 // indirect
+	github.com/golang/protobuf v1.4.2
 	github.com/jawher/mow.cli v1.2.0 // indirect
 	github.com/jteeuwen/go-bindata v3.0.7+incompatible // indirect
 	github.com/klauspost/reedsolomon v1.9.9 // indirect
@@ -34,4 +35,5 @@ require (
 	go.uber.org/zap v1.15.0 // indirect
 	google.golang.org/genproto v0.0.0-20200711021454-869866162049 // indirect
 	google.golang.org/grpc v1.29.1
+	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22
 )

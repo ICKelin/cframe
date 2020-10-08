@@ -1,22 +1,39 @@
 package handler
 
+// edge
 type AddEdgeForm struct {
-	Type     string `json:"type"`
-	Name     string `json:"name"`
-	HostAddr string `json:"hostaddr"`
-	Cidr     string `json:"cidr"`
+	CSPType    int    `json:"csptype"`
+	Name       string `json:"name"`
+	PublicIP   string `json:"hostaddr"`
+	Cidr       string `json:"cidr"`
+	ListenAddr string `json:"listenAddr"`
+	Comment    string `json:"comment"`
 }
 
-type DeleteEdgeForm struct {
+type DelEdgeForm struct {
 	Name string `json:"name"`
 }
 
+// user
 type SignupForm struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+	Email    string `json:"email"`
+	About    string `json:"about"`
 }
 
 type SigninForm struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+}
+
+// csp
+type AddCSPForm struct {
+	CSPType      int    `json:"csptype"`
+	AccessKey    string `json:"accessKey"`
+	AccessSecret string `json:"accessSecret"`
+}
+
+type DelCSPForm struct {
+	CSPType int `json:"csptype"`
 }

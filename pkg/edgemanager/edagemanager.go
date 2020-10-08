@@ -72,7 +72,10 @@ func (m *EdgeManager) Watch(delfunc, putfunc func(edge *Edge)) {
 
 func (m *EdgeManager) AddEdge(username, name string, edge *Edge) {
 	key := fmt.Sprintf("%s%s/%s", edgePrefix, username, name)
-	m.storage.Set(key, edge)
+	e := m.storage.Set(key, edge)
+	if e != nil {
+		log.Error("add edge fail: %v", e)
+	}
 }
 
 func (m *EdgeManager) DelEdge(username, name string) {

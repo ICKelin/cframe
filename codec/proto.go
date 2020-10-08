@@ -8,7 +8,11 @@
 
 package codec
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"github.com/ICKelin/cframe/codec/proto"
+)
 
 // edge register req
 type RegisterReq struct {
@@ -17,15 +21,22 @@ type RegisterReq struct {
 	SecretKey string
 }
 
-// edge host information
-type Host struct {
-	HostAddr string
-	Cidr     string
+// edge information
+type Edge struct {
+	ListenAddr string
+	Cidr       string
+}
+
+type CSPInfo struct {
+	CspType      proto.CSPType
+	AccessKey    string
+	AccessSecret string
 }
 
 // reply for edge register req
 type RegisterReply struct {
-	OnlineHost []*Host
+	EdgeList []*Edge
+	CSPInfo  *CSPInfo
 }
 
 func (r *RegisterReply) String() string {
@@ -38,8 +49,8 @@ func (r *RegisterReply) String() string {
 // controller will broadcast edge online msg
 // to all online edges.
 type BroadcastOnlineMsg struct {
-	// onlined edge host address(udp://ip:port)
-	HostAddr string
+	// onlined edge listen address(udp://ip:port)
+	ListenAddr string
 
 	// offline edge network subnet(192.168.10.0/24)
 	Cidr string
@@ -51,7 +62,7 @@ type BroadcastOnlineMsg struct {
 // to all online edges
 type BroadcastOfflineMsg struct {
 	// offlined edge host address
-	HostAddr string
+	ListenAddr string
 
 	// offlined edge network subnet
 	Cidr string

@@ -4,10 +4,6 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/ICKelin/cframe/pkg/access"
-	"github.com/ICKelin/cframe/pkg/auth"
-	"github.com/ICKelin/cframe/pkg/edgemanager"
-	"github.com/ICKelin/cframe/pkg/etcdstorage"
 	log "github.com/ICKelin/cframe/pkg/logs"
 )
 
@@ -24,25 +20,7 @@ func main() {
 	log.Init(conf.Log.Path, conf.Log.Level, conf.Log.Days)
 	log.Info("%v", conf)
 
-	// create etcd storage
-	store := etcdstorage.NewEtcd(conf.Etcd)
-
-	// create edge manager
-	edgemanager.New(store)
-
-	// create edge host manager
-	edgemanager.NewEdgeHostManager(store)
-
-	// create access manager
-	access.NewAccessManager(store)
-
-	// create user manager
-	auth.NewUserManager(store)
-
-	// create auth/token manager
-	auth.NewAuthManager(store)
-
 	// create api server
-	s := NewApiServer(conf.ApiAddr)
+	s := NewApiServer(conf.ApiAddr, conf.UserCenterAddr, conf.CtrlAddr)
 	s.Run()
 }
