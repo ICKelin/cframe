@@ -1,15 +1,17 @@
 package main
 
 import (
-	"encoding/json"
+	"context"
 	"net"
 	"sync"
 	"time"
 
 	"github.com/ICKelin/cframe/codec"
-	"github.com/ICKelin/cframe/pkg/auth"
+	"github.com/ICKelin/cframe/codec/proto"
+	"github.com/ICKelin/cframe/controller/models"
 	"github.com/ICKelin/cframe/pkg/edgemanager"
 	log "github.com/ICKelin/cframe/pkg/logs"
+	"gopkg.in/mgo.v2/bson"
 )
 
 // registry server for edges
@@ -23,21 +25,33 @@ type RegistryServer struct {
 	addr string
 
 	// online edges
-	// key: edges host addr
-	// val: edges info and tcp connection
+	// key: edge listen addr
+	// val: edge info and tcp connection
 	mu   sync.Mutex
 	sess map[string]*Session
+
+	// edge manager, query edge info from db
+	edgeManager *models.EdgeManager
+
+	// csp manager, query cloud service provicer from db
+	cspManager *models.CSPManager
+
+	// user manager rpc client
+	userCli proto.UserServiceClient
 }
 
 type Session struct {
-	host *codec.Host
+	edge *codec.Edge
 	conn net.Conn
 }
 
-func NewRegistryServer(addr string) *RegistryServer {
+func NewRegistryServer(addr string, cli proto.UserServiceClient) *RegistryServer {
 	return &RegistryServer{
-		addr: addr,
-		sess: make(map[string]*Session),
+		addr:        addr,
+		sess:        make(map[string]*Session),
+		edgeManager: models.GetEdgeManager(),
+		cspManager:  models.GetCSPManager(),
+		userCli:     cli,
 	}
 }
 
@@ -71,56 +85,98 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	}
 
 	log.Info("node register %v", reg)
+	remoteAddr := conn.RemoteAddr().String()
+	remoteIP, _, _ := net.SplitHostPort(remoteAddr)
 
-	user, err := auth.GetAuth(reg.SecretKey)
+	// verify secret key
+	req := &proto.GetUserBySecretReq{
+		Secret: reg.SecretKey,
+	}
+	reply, err := s.userCli.GetUserBySecret(context.Background(), req)
 	if err != nil {
-		log.Error("%v", err)
+		log.Error("get user by secret %sfail: %v", reg.SecretKey, err)
+		return
+	}
+	if reply.Code != 0 {
+		log.Error("get user by secret fail <%d>%s", reply.Code, reply.Message)
 		return
 	}
 
-	// verify edge
-	// only if the edges is configured with api server
-	// or controller build in configuration
-	// then the edges is valid
-	edge := edgemanager.GetEdge(user.Username, reg.Name)
-	if edge == nil {
-		log.Error("get edge for %s fail\n", reg.Name)
+	user := reply.UserInfo
+	if !bson.IsObjectIdHex(user.UserId) {
+		log.Error("invalid userId %s", user.UserId)
+		return
+	}
+	userObjectId := bson.ObjectIdHex(user.UserId)
+
+	log.Info("user info: %v", user)
+
+	// verify edge node
+	edgelist, err := s.edgeManager.GetEdgeList(userObjectId)
+	if err != nil {
+		log.Error("get edge list fail: %v", err)
 		return
 	}
 
-	log.Info("register success: %v", edge)
-
-	host := edge.HostAddr
-
-	onlineHosts := make([]*codec.Host, 0)
-	edges := edgemanager.GetEdges(user.Username)
-	for _, edg := range edges {
-		if edg.HostAddr != host {
-			onlineHosts = append(onlineHosts, &codec.Host{
-				HostAddr: edg.HostAddr,
-				Cidr:     edg.Cidr,
-			})
+	find := false
+	var curEdge *models.EdgeInfo
+	otherEdge := make([]*models.EdgeInfo, 0)
+	for _, edge := range edgelist {
+		if edge.PublicIP == remoteIP {
+			find = true
+			curEdge = edge
+			continue
 		}
+
+		otherEdge = append(otherEdge, edge)
+	}
+	if !find {
+		log.Error("verify edge for ip %s fail, %s", remoteIP, user.UserId)
+		return
+	}
+
+	// get csp info
+	csp, err := s.cspManager.GetCSP(userObjectId, curEdge.CSPType)
+	if err != nil {
+		log.Error("get csp fail: %v", err)
+		return
+	}
+
+	log.Debug("csp info: %v", csp)
+
+	log.Info("register success: %v", curEdge)
+
+	edges := make([]*codec.Edge, 0)
+	for _, edg := range otherEdge {
+		edges = append(edges, &codec.Edge{
+			ListenAddr: edg.ListenAddr,
+			Cidr:       edg.Cidr,
+		})
 	}
 
 	s.mu.Lock()
-	s.sess[host] = &Session{
-		host: &codec.Host{
-			HostAddr: host,
-			Cidr:     edge.Cidr,
+	s.sess[curEdge.ListenAddr] = &Session{
+		edge: &codec.Edge{
+			ListenAddr: curEdge.ListenAddr,
+			Cidr:       curEdge.Cidr,
 		},
 		conn: conn,
 	}
 	s.mu.Unlock()
 	defer func() {
 		s.mu.Lock()
-		delete(s.sess, host)
+		delete(s.sess, curEdge.ListenAddr)
 		s.mu.Unlock()
 	}()
 
 	// response current online edges
 	err = codec.WriteJSON(conn, codec.CmdRegister, &codec.RegisterReply{
-		OnlineHost: onlineHosts,
+		EdgeList: edges,
+		CSPInfo: &codec.CSPInfo{
+			CspType:      csp.CSPType,
+			AccessKey:    csp.AccessKey,
+			AccessSecret: csp.SecretKey,
+		},
 	})
 	if err != nil {
 		log.Error("write json fail: %v", err)
@@ -131,7 +187,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	fail := 0
 	hb := codec.Heartbeat{}
 	for {
-		header, body, err := codec.Read(conn)
+		header, _, err := codec.Read(conn)
 		if err != nil {
 			log.Error("read fail: %v", err)
 			fail += 1
@@ -149,23 +205,11 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 			if err != nil {
 				log.Error("write json fail: %v", err)
 			}
+			s.edgeManager.UpdateActive(userObjectId, curEdge.Name, time.Now())
 
 		case codec.CmdReport:
-			log.Info("receive report msg from edge: %s", edge.Name)
-			reportMsg := codec.ReportEdgeHost{}
-			err = json.Unmarshal(body, &reportMsg)
-			if err != nil {
-				log.Error("invalid report msg: %v", err)
-				continue
-			}
-
-			for _, ip := range reportMsg.HostIPs {
-				host := &edgemanager.EdgeHost{
-					IP: ip,
-				}
-
-				edgemanager.AddedgeHost(edge, host)
-			}
+			log.Info("receive report msg from edge: %s", curEdge.Comment)
+			// TODO:
 		default:
 			log.Warn("unsupported cmd %d", header.Cmd())
 		}
@@ -178,7 +222,7 @@ func (s *RegistryServer) broadcastOnline(edge *edgemanager.Edge) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	for addr, host := range s.sess {
-		if addr == edge.HostAddr {
+		if addr == edge.ListenAddr {
 			continue
 		}
 
@@ -191,8 +235,8 @@ func (s *RegistryServer) online(peer net.Conn, edge *edgemanager.Edge) {
 		edge, peer.RemoteAddr().String())
 
 	obj := &codec.BroadcastOnlineMsg{
-		HostAddr: edge.HostAddr,
-		Cidr:     edge.Cidr,
+		ListenAddr: edge.ListenAddr,
+		Cidr:       edge.Cidr,
 	}
 
 	err := codec.WriteJSON(peer, codec.CmdAdd, obj)
@@ -206,7 +250,7 @@ func (s *RegistryServer) broadcastOffline(edge *edgemanager.Edge) {
 	defer s.mu.Unlock()
 
 	for addr, host := range s.sess {
-		if addr == edge.HostAddr {
+		if addr == edge.ListenAddr {
 			continue
 		}
 
@@ -219,8 +263,8 @@ func (s *RegistryServer) offline(peer net.Conn, edge *edgemanager.Edge) {
 		edge, peer.RemoteAddr().String())
 
 	obj := &codec.BroadcastOfflineMsg{
-		HostAddr: edge.HostAddr,
-		Cidr:     edge.Cidr,
+		ListenAddr: edge.ListenAddr,
+		Cidr:       edge.Cidr,
 	}
 
 	err := codec.WriteJSON(peer, codec.CmdDel, obj)
@@ -235,7 +279,7 @@ func (s *RegistryServer) state() {
 	for range tick.C {
 		s.mu.Lock()
 		for _, sess := range s.sess {
-			log.Info("edge: %s cidr: %s", sess.host.HostAddr, sess.host.Cidr)
+			log.Info("edge: %s cidr: %s", sess.edge.ListenAddr, sess.edge.Cidr)
 		}
 		s.mu.Unlock()
 	}
@@ -245,7 +289,7 @@ func (s *RegistryServer) DelEdge(edg *edgemanager.Edge) {
 	log.Info("delete edge: %v", edg)
 	s.broadcastOffline(edg)
 	// force edge connection offline
-	edgSess := s.sess[edg.HostAddr]
+	edgSess := s.sess[edg.ListenAddr]
 	if edgSess != nil {
 		log.Info("force close edge connection: %v", edgSess.conn.RemoteAddr())
 		edgSess.conn.Close()
