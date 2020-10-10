@@ -9,7 +9,7 @@ message EdgeInfo {
 	string userId  = 2;       
 	CSPType cspType    = 3;    
 	string publicIP = 4;      
-	string listenAddr    = 5;
+	int32 publicPort    = 5;
 	string cidr          = 6; 
     string comment       = 7; 
     int64 activeAt = 8;
