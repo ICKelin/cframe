@@ -187,7 +187,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	fail := 0
 	hb := codec.Heartbeat{}
 	for {
-		header, _, err := codec.Read(conn)
+		header, body, err := codec.Read(conn)
 		if err != nil {
 			log.Error("read fail: %v", err)
 			fail += 1
@@ -208,7 +208,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 			s.edgeManager.UpdateActive(userObjectId, curEdge.Name, time.Now())
 
 		case codec.CmdReport:
-			log.Info("receive report msg from edge: %s", curEdge.Comment)
+			log.Info("receive report from edge: %s %s", curEdge.Comment, string(body))
 			// TODO:
 		default:
 			log.Warn("unsupported cmd %d", header.Cmd())

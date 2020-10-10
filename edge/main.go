@@ -35,7 +35,7 @@ func main() {
 	if len(lis) > 0 {
 		lisAddr = lis
 	}
-	s := NewServer(lisAddr, iface, nil)
+	s := NewServer(lisAddr, cfg.SecretKey, iface, nil)
 
 	// create registry to get connect to controller
 	// just hard code controller address once without env var

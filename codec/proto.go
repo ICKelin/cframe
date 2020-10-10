@@ -78,8 +78,12 @@ type BroadcastOfflineMsg struct {
 //       /                  \
 //  host2                    host2'
 //
-type ReportEdgeHost struct {
-	HostIPs []string
+type ReportMsg struct {
+	Timestamp  int64
+	CPU        int32
+	Mem        int32
+	TrafficIn  int64
+	TrafficOut int64
 }
 
 type Heartbeat struct{}

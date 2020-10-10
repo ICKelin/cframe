@@ -46,7 +46,6 @@ func NewRegistry(srv, secret string, s *Server) *Registry {
 
 func (r *Registry) Run() error {
 	go r.heartbeat()
-	go r.report()
 	for {
 		r.run()
 		time.Sleep(time.Second * 3)
@@ -79,13 +78,13 @@ func (r *Registry) run() error {
 		return fmt.Errorf("get csp fail")
 	}
 
-	r.server.AddPeers(reply.EdgeList)
 	instance, err := vpc.GetVPCInstance(reply.CSPInfo.CspType, reply.CSPInfo.AccessKey, reply.CSPInfo.AccessSecret)
 	if err != nil {
 		log.Error("unsupported vpc %v", reply.CSPInfo.CspType)
 		return err
 	}
 	r.server.SetVPCInstance(instance)
+	r.server.AddPeers(reply.EdgeList)
 
 	go r.read(conn)
 	r.write(conn)
@@ -93,26 +92,14 @@ func (r *Registry) run() error {
 }
 
 func (r *Registry) heartbeat() {
-	tick := time.NewTicker(time.Second * 3)
-	defer tick.Stop()
-
-	for range tick.C {
-		r.hbchan <- struct{}{}
-	}
-}
-
-func (r *Registry) report() {
 	tick := time.NewTicker(time.Second * 10)
 	defer tick.Stop()
 
 	for range tick.C {
-		timeout := time.NewTicker(time.Second * 3)
 		select {
-		case r.reportchan <- struct{}{}:
-		case <-timeout.C:
-			log.Warn("report channel timeout")
+		case r.hbchan <- struct{}{}:
+		default:
 		}
-		timeout.Stop()
 	}
 }
 
@@ -130,21 +117,7 @@ func (r *Registry) write(conn net.Conn) {
 				return
 			}
 		case <-r.reportchan:
-			r.mu.Lock()
-			if len(r.reportQueue) <= 0 {
-				r.mu.Unlock()
-				continue
-			}
-			q := make([]string, len(r.reportQueue))
-			copy(q, r.reportQueue)
-			r.reportQueue = r.reportQueue[:0]
-			r.reporting = make(map[string]struct{})
-			r.mu.Unlock()
-
-			report := codec.ReportEdgeHost{
-				HostIPs: q,
-			}
-
+			report := ResetStat()
 			conn.SetWriteDeadline(time.Now().Add(time.Second * 30))
 			err := codec.WriteJSON(conn, codec.CmdReport, report)
 			if err != nil {
@@ -194,27 +167,4 @@ func (r *Registry) read(conn net.Conn) {
 			})
 		}
 	}
-}
-
-// add report to report channel
-func (r *Registry) Report(ip string) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	if _, ok := r.reporting[ip]; ok {
-		return
-	}
-
-	ipv4 := net.ParseIP(ip)
-	if ipv4.To4() == nil {
-		log.Warn("ignore invalid ip %s", ip)
-		return
-	}
-
-	if ipv4.IsLoopback() || ipv4.Equal(net.IPv4zero) {
-		return
-	}
-
-	log.Info("add report ip %s", ip)
-	r.reportQueue = append(r.reportQueue, ip)
-	r.reporting[ip] = struct{}{}
 }
