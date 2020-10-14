@@ -5,593 +5,100 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Login</title>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="assets/vendor/bootstrap/css/bootstrap.min.css">
     <link href="assets/vendor/fonts/circular-std/style.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/libs/css/style.css">
     <link rel="stylesheet" href="assets/vendor/fonts/fontawesome/css/fontawesome-all.css">
-    <link rel="stylesheet" href="assets/vendor/charts/chartist-bundle/chartist.css">
-    <link rel="stylesheet" href="assets/vendor/charts/morris-bundle/morris.css">
-    <link rel="stylesheet" href="assets/vendor/fonts/material-design-iconic-font/css/materialdesignicons.min.css">
-    <link rel="stylesheet" href="assets/vendor/charts/c3charts/c3.css">
-    <link rel="stylesheet" href="assets/vendor/fonts/flag-icon-css/flag-icon.min.css">
-    <title>cframe后台管理系统</title>
+    <style>
+    html,
+    body {
+        height: 100%;
+    }
+
+    body {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-align: center;
+        align-items: center;
+        padding-top: 40px;
+        padding-bottom: 40px;
+    }
+    </style>
 </head>
 
 <body>
-    <div class="dashboard-main-wrapper" id="app">
-        <div class="dashboard-header">
-            <nav class="navbar navbar-expand-lg bg-white fixed-top">
-                <a class="navbar-brand" href="index.html">cframe后台管理系统</a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-            </nav>
-        </div>
-
-        <div class="nav-left-sidebar sidebar-dark">
-            <div class="menu-list">
-                <nav class="navbar navbar-expand-lg navbar-light">
-                    <a class="d-xl-none d-lg-none" href="#">Dashboard</a>
-                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
-                    <div class="collapse navbar-collapse" id="navbarNav">
-                        <ul class="navbar-nav flex-column">
-                            <li class="nav-item">
-                                <a class="nav-link" href="#" onclick="moveTo('overview')">概览</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#"  onclick="moveTo('cloud_connect')">VPC虚拟网关管理</a>
-                            </li>
-                            <!-- <li class="nav-item">
-                                <a class="nav-link" href="#"  onclick="moveTo('stat')">全局监控告警</a>
-                            </li> -->
-                            <li class="nav-item">
-                                <a class="nav-link" href="#"  onclick="moveTo('csp')">云服务授权管理</a>
-                            </li>
-                        </ul>
-                    </div>
-                </nav>
+    <div class="splash-container" id="app">
+        <div class="card ">
+            <div class="card-header text-center"><span class="splash-description">cframe后台管理登录</span></div>
+            <div class="card-body">
+                <div class="form-group">
+                    <input class="form-control form-control-lg" v-model="loginForm.username"type="text" placeholder="用户名" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <input class="form-control form-control-lg" v-model="loginForm.password" type="password" placeholder="密码">
+                </div>
+                <button  class="btn btn-primary btn-lg btn-block" v-on:click="login()">登录</button>
             </div>
-        </div>
-
-        <!-- 概览 -->
-        <div class="dashboard-wrapper" id="overview">
-            <div class="dashboard-ecommerce">
-                <div class="container-fluid dashboard-content ">
-                    <div class="row">
-                        <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 col-12">
-                            <div class="card border-3 border-top border-top-primary">
-                                <div class="card-body text-center">
-                                    <h5 class="text-muted">VPC虚拟网关</h5>
-                                    <div class="metric-value d-inline-block">
-                                        <h1 class="mb-1" v-text="edgeMeta.size"></h1>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 col-12">
-                            <div class="card border-3 border-top border-top-primary">
-                                <div class="card-body text-center">
-                                    <h5 class="text-muted">公有云厂商数量</h5>
-                                    <div class="metric-value d-inline-block">
-                                        <h1 class="mb-1" v-text="cspMeta.size"></h1>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 col-12">
-                            <div class="card border-3 border-top border-top-primary">
-                                <div class="card-body text-center">
-                                    <h5 class="text-muted">累计流量</h5>
-                                    <div class="metric-value d-inline-block">
-                                        <h1 class="mb-1">/</h1>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                            <div class="card">
-                                <h5 class="card-header">VPC虚拟网关</h5>
-                                <div class="card-body">
-                                    <table class="table table-striped">
-                                        <thead>
-                                            <tr>
-                                                <th scope="col">#</th>
-                                                <th scope="col">云厂商</th>
-                                                <th scope="col">名称</th>
-                                                <th scope="col">公网ip</th>
-                                                <th scope="col">vpc ip地址块</th>
-                                                <th scope="col">描述</th>
-                                                <th scope="col">上次心跳时间</th>
-                                                <th scope="col">健康状态</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr v-for="edge in edgeMeta.edgelist">
-                                                <th scope="row">1</th>
-                                                <td v-text="cspDetail[edge.cspType]"></td>
-                                                <td v-text="edge.name"></td>
-                                                <td v-text="edge.publicIP"></td>
-                                                <td v-text="edge.cidr"></td>
-                                                <td v-text="edge.comment"></td>
-                                                <td v-if="edge.activeAt == 0">-</td>
-                                                <td v-else v-text="Date.parse(new Date())/1000 - edge.activeAt + '秒前'"></td>
-
-                                                <td v-if="Date.parse(new Date())/1000 - edge.activeAt < 30"><span class="badge badge-success">健康</span></td>
-                                                <td v-else-if="Date.parse(new Date())/1000 - edge.activeAt < 60"><span class="badge badge-warning">告警</span></td>
-                                                <td v-else><span class="badge badge-danger">已停止</span></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                            <div class="card">
-                                <h5 class="card-header">云服务授权列表</h5>
-                                <div class="card-body">
-                                    <table class="table table-striped">
-                                        <thead>
-                                            <tr>
-                                                <th scope="col">#</th>
-                                                <th scope="col">云厂商</th>
-                                                <th scope="col">access key</th>
-                                                <th scope="col">secret key</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr v-for="csp in cspMeta.csplist">
-                                                <th scope="row">1</th>
-                                                <td v-text="cspDetail[csp.cspType]"></td>
-                                                <td v-text="csp.accessKey"></td>
-                                                <td v-text="csp.accessSecret"></td>
-                                            </tr>
-                                           
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <div class="card-footer bg-white p-0  ">
+                <div class="card-footer-item card-footer-item-bordered">
+                    <a href="#" class="footer-link">注册</a></div>
+                <div class="card-footer-item card-footer-item-bordered">
+                    <a href="#" class="footer-link">忘记密码</a>
                 </div>
             </div>
-           
-        </div>
-
-        <!-- 多云互联配置 -->
-        <div class="dashboard-wrapper" id="cloud_connect" style="display:none">
-            <div class="dashboard-ecommerce">
-                <div class="container-fluid dashboard-content ">
-                    <div class="row">
-                        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                            <div class="card">
-                                <h5 class="card-header">虚拟网关列表</h5>
-                                <div class="card-body">
-                                    <table class="table table-striped">
-                                        <thead>
-                                            <tr>
-                                                <th scope="col">#</th>
-                                                <th scope="col">云厂商</th>
-                                                <th scope="col">名称</th>
-                                                <th scope="col">公网ip</th>
-                                                <th scope="col">VPC地址段</th>
-                                                <th scope="col">描述</th>
-                                                <th scope="col">操作</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr v-for="edge in edgeMeta.edgelist">
-                                                <th scope="row">1</th>
-                                                <td v-text="cspDetail[edge.cspType]"></td>
-                                                <td v-text="edge.name"></td>
-                                                <td v-text="edge.publicIP"></td>
-                                                <td v-text="edge.cidr"></td>
-                                                <td v-text="edge.comment"></td>
-                                                <td>
-                                                    <button class="btn btn-space btn-secondary" v-on:click=delEdge(edge.name)>停用</button>
-                                                    <!-- <a href="" class="btn btn-space btn-primary">监控</a> -->
-                                                </td>                                            
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div class="col col-sm-10 col-lg-9 offset-sm-1 offset-lg-0">
-                                    <button class="btn btn-space btn-primary" v-on:click="edgeMeta.showAddForm=true">新增</button>
-                                </div>
-                            </div>
-                            <div class="card" v-show="edgeMeta.showAddForm">
-                                <h5 class="card-header">新增edge节点</h5>
-                                <div class="card-body">
-                                    <div class="form-group row">
-                                        <label class="col-3 col-lg-2 col-form-label text-right">名称</label>
-                                        <div class="col-9 col-lg-10">
-                                            <input required="" v-model="edgeMeta.addEdgeForm.name"placeholder="名称" class="form-control">
-                                        </div>
-                                    </div>
-                                    <div class="form-group row">
-                                        <label  class="col-3 col-lg-2 col-form-label text-right">公网ip</label>
-                                        <div class="col-9 col-lg-10">
-                                            <input required="" v-model="edgeMeta.addEdgeForm.hostaddr" placeholder="公网ip" class="form-control">
-                                        </div>
-                                    </div>
-                                    <div class="form-group row">
-                                        <label class="col-3 col-lg-2 col-form-label text-right">监听地址</label>
-                                        <div class="col-9 col-lg-10">
-                                            <input required="" v-model="edgeMeta.addEdgeForm.listenAddr" placeholder="监听地址(对外提供)" class="form-control">
-                                        </div>
-                                    </div>
-                                    <div class="form-group row">
-                                        <label class="col-3 col-lg-2 col-form-label text-right">VPC地址段</label>
-                                        <div class="col-9 col-lg-10">
-                                            <input required="" v-model="edgeMeta.addEdgeForm.cidr" data-parsley-type="url" placeholder="vpc地址段" class="form-control">
-                                        </div>
-                                    </div>
-                                    <div class="form-group row">
-                                        <label class="col-3 col-lg-2 col-form-label text-right">描述</label>
-                                        <div class="col-9 col-lg-10">
-                                            <input required="" v-model="edgeMeta.addEdgeForm.comment" data-parsley-type="url" placeholder="描述" class="form-control">
-                                        </div>
-                                    </div>
-                                    <div class="form-group row">
-                                        <div class="col-sm-6 col-md-4 offset-2">
-                                            <label class="custom-control custom-radio custom-control-inline">
-                                                <input type="radio" checked="" value="1" v-model="edgeMeta.addEdgeForm.csptype"  class="custom-control-input"><span class="custom-control-label">阿里云</span>
-                                            </label>
-                                            <label class="custom-control custom-radio custom-control-inline">
-                                                <input type="radio" value="2" v-model="edgeMeta.addEdgeForm.csptype" class="custom-control-input"><span class="custom-control-label">腾讯云</span>
-                                            </label>
-                                            <label class="custom-control custom-radio custom-control-inline">
-                                                <input type="radio" value="3" v-model="edgeMeta.addEdgeForm.csptype" class="custom-control-input"><span class="custom-control-label">亚马逊云(AWS)</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="row pt-2 pt-sm-5 mt-1">
-                                        <div class="col-sm-6 pl-0">
-                                            <p class="text-right">
-                                                <button class="btn btn-space btn-primary" v-on:click="addEdge">确认</button>
-                                                <button class="btn btn-space btn-secondary" v-on:click="edgeMeta.showAddForm=false">取消</button>
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-           
-        </div>
-
-        <!-- 云服务厂商管理 -->
-        <div class="dashboard-wrapper" id="csp" style="display: none;">
-            <div class="dashboard-ecommerce">
-                <div class="container-fluid dashboard-content ">
-                    <div class="row">
-                        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                            <div class="card">
-                                <h5 class="card-header">云服务授权列表</h5>
-                                <div class="card-body">
-                                    <table class="table table-striped">
-                                        <thead>
-                                            <tr>
-                                                <th scope="col">#</th>
-                                                <th scope="col">云厂商</th>
-                                                <th scope="col">access key</th>
-                                                <th scope="col">secret key</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="csp-body">
-                                            <tr v-for="csp in cspMeta.csplist">
-                                                <th scope="row">1</th>
-                                                <td v-text="cspDetail[csp.cspType]"></td>
-                                                <td v-text="csp.accessKey"></td>
-                                                <td v-text="csp.accessSecret"></td>
-                                                <td><button class="btn btn-space btn-secondary" v-on:click="delCSP(csp.cspType)">移除</button></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div class="col col-sm-10 col-lg-9 offset-sm-1 offset-lg-0">
-                                    <button class="btn btn-space btn-primary" v-on:click="cspMeta.showAddForm=true">新增</button>
-                                </div>
-                            </div>
-
-                            <div class="card" v-show="cspMeta.showAddForm">
-                                <h5 class="card-header">新增云服务授权</h5>
-                                <div class="card-body">
-                                    <div class="form-group row">
-                                        <label  class="col-3 col-lg-2 col-form-label text-right">access key</label>
-                                        <div class="col-9 col-lg-10">
-                                            <input required="" v-model="cspMeta.addCSPForm.accessKey" placeholder="access key" class="form-control">
-                                        </div>
-                                    </div>
-                                    <div class="form-group row">
-                                        <label class="col-3 col-lg-2 col-form-label text-right">secret key</label>
-                                        <div class="col-9 col-lg-10">
-                                            <input required="" v-model="cspMeta.addCSPForm.accessSecret" placeholder="secret key" class="form-control">
-                                        </div>
-                                    </div>
-                                    <div class="form-group row">
-                                        <div class="col-sm-6 col-md-4 offset-2">
-                                            <label class="custom-control custom-radio custom-control-inline">
-                                                <input type="radio" checked="" value="1" v-model="cspMeta.addCSPForm.csptype"  class="custom-control-input"><span class="custom-control-label">阿里云</span>
-                                            </label>
-                                            <label class="custom-control custom-radio custom-control-inline">
-                                                <input type="radio" value="2" v-model="cspMeta.addCSPForm.csptype" class="custom-control-input"><span class="custom-control-label">腾讯云</span>
-                                            </label>
-                                            <label class="custom-control custom-radio custom-control-inline">
-                                                <input type="radio" value="3" v-model="cspMeta.addCSPForm.csptype" class="custom-control-input"><span class="custom-control-label">亚马逊云(AWS)</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="row pt-2 pt-sm-5 mt-1">
-                                        <div class="col-sm-6 pl-0">
-                                            <p class="text-right">
-                                                <button class="btn btn-space btn-primary" v-on:click="addCSP">确认</button>
-                                                <button class="btn btn-space btn-secondary" v-on:click="cspMeta.showAddForm=false">取消</button>
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-           
         </div>
     </div>
+  
     <!-- ============================================================== -->
-    <!-- end main wrapper  -->
+    <!-- end login page  -->
     <!-- ============================================================== -->
     <!-- Optional JavaScript -->
-    <!-- jquery 3.3.1 -->
     <script src="assets/vendor/jquery/jquery-3.3.1.min.js"></script>
-    <!-- bootstap bundle js -->
     <script src="assets/vendor/bootstrap/js/bootstrap.bundle.js"></script>
-    <!-- slimscroll js -->
-    <script src="assets/vendor/slimscroll/jquery.slimscroll.js"></script>
-    <!-- main js -->
-    <script src="assets/libs/js/main-js.js"></script>
-    <!-- sparkline js -->
-    <script src="assets/vendor/charts/sparkline/jquery.sparkline.js"></script>
-    <!-- morris js -->
-    <script src="assets/vendor/charts/morris-bundle/raphael.min.js"></script>
-    <script src="assets/vendor/charts/morris-bundle/morris.js"></script>
-    <!-- chart c3 js -->
-    <script src="assets/libs/js/dashboard-ecommerce.js"></script>
-
 
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue"></script>
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
-
     <script>
-        current ="overview"
-        function moveTo(target) {
-            if (current != "") {
-                document.getElementById(current).style.display="none"
-            }
-            document.getElementById(target).style.display="block"
-            current = target
-        }
-    </script>
-
-    <script>
-        var app = new Vue({
+         var app = new Vue({
             el: '#app',
             data: {
-                edgeMeta: {
-                    size: 0,
-                    showAddForm: false,
-                    edgelist: [],
-                    addEdgeForm:{
-                        "csptype": 0,
-                        "name": "",
-                        "hostaddr":"",
-                        "listenAddr": "",
-                        "cidr": "",
-                        "comment": "",
-                        "activeAy": 0
-                    },
-                },
-                cspMeta: {
-                    size: 0,
-                    showAddForm: false,
-                    csplist: [],
-                    addCSPForm: {
-                        "csptype": 0,
-                        "accessKey": "",
-                        "accessSecret": ""
-                    }
-                },
-                userMeta: {
-                    authorizeForm: {
-                        username: "",
-                        password: "",
-                    },
-                    userid: "",
-                    accessToken: ""
+                loginForm: {
+                    username: "",
+                    password: ""
                 },
                 apiMeta: {
                     baseUrl: "http://demo.notr.tech/api-service/v1"
                 },
-                cspDetail: {
-                    0: "未知",
-                    1: "阿里云",
-                    2: "腾讯云",
-                    3: "亚马逊(AWS)"
-                }
             },
             methods: {
-                getEdgelist: function() {
-                    var accessToken = this.userMeta.accessToken
-                    var baseUrl = this.apiMeta.baseUrl
-                    var p = this
-                    axios({
-                        method: "get",
-                        url: baseUrl+"/edge/list",
-                        headers: {
-                            "Access-Token": accessToken,
-                        }
-                    })
-                    .then(function(response) {
-                        var body = response.data
-                        p.edgeMeta.size = body.data.length
-                        p.edgeMeta.edgelist = body.data
-                    })
-                },
-                delEdge: function(name) {
-                    var accessToken = this.userMeta.accessToken
-                    var baseUrl = this.apiMeta.baseUrl
-                    var p = this
-                    axios({
-                        method: "post",
-                        url: baseUrl+"/edge/del",
-                        headers: {
-                            "Access-Token": accessToken,
-                        },
-                        data: {
-                            "name": name,
-                        }
-                    })
-                    .then(function(response) {
-                        p.getEdgelist()  
-                    })
-                },
-                addEdge: function() {
-                    console.log(this.edgeMeta.addEdgeForm)
-                    var accessToken = this.userMeta.accessToken
-                    var baseUrl = this.apiMeta.baseUrl
-                    
-                    if (this.edgeMeta.addEdgeForm.csptype == 0) {
-                        alert("非法云服务厂商")
-                        return
-                    }
-                    
-                    this.edgeMeta.addEdgeForm.csptype = parseInt(this.edgeMeta.addEdgeForm.csptype)
-                    var p = this
-                    axios({
-                        method: "post",
-                        url: baseUrl+"/edge/add",
-                        headers: {
-                            "Access-Token": accessToken,
-                        },
-                        data: p.edgeMeta.addEdgeForm
-                    })
-                    .then(function(response) {
-                        var body = response.data
-                        if (body.code != 20000) {
-                            alert("新增edge节点错误: ", body.message)
-                            return
-                        }
-                        p.edgeMeta.showAddForm = false
-                        p.getEdgelist()
-                    })
-                },
-                getCSPlist: function() {
-                    var accessToken = this.userMeta.accessToken
-                    var baseUrl = this.apiMeta.baseUrl
-                    var p = this
-                    axios({
-                        method: "get",
-                        url: baseUrl+"/csp/list",
-                        headers: {
-                            "Access-Token": accessToken,
-                        }
-                    })
-                    .then(function(response) {
-                        var body = response.data
-                        p.cspMeta.size = body.data.length
-                        p.cspMeta.csplist = body.data
-                    })
-                },
-                delCSP: function(csptype) {
-                    var accessToken = this.userMeta.accessToken
-                    var baseUrl = this.apiMeta.baseUrl
-                    var p = this
-                    axios({
-                        method: "post",
-                        url: baseUrl+"/csp/del",
-                        headers: {
-                            "Access-Token": accessToken,
-                        },
-                        data: {
-                            "csptype": csptype,
-                        }
-                    })
-                    .then(function(response) {
-                        p.getCSPlist()
-                    })
-                },
-                addCSP: function() {
-                    console.log(this.cspMeta.addCSPForm)
-                    var accessToken = this.userMeta.accessToken
-                    var baseUrl = this.apiMeta.baseUrl
-                    
-                    if (this.cspMeta.addCSPForm.csptype == 0) {
-                        alert("非法云服务厂商")
-                        return
-                    }
-                    
-                    this.cspMeta.addCSPForm.csptype = parseInt(this.cspMeta.addCSPForm.csptype)
-                    var p = this
-                    axios({
-                        method: "post",
-                        url: baseUrl+"/csp/add",
-                        headers: {
-                            "Access-Token": accessToken,
-                        },
-                        data: p.cspMeta.addCSPForm
-                    })
-                    .then(function(response) {
-                        var body = response.data
-                        console.log(body)
-                        if (body.code != 20000) {
-                            alert("新增云服务授权信息失败: " + body.message)
-                            return
-                        }
-                        p.cspMeta.showAddForm = false
-                        p.getCSPlist()
-                    })
-                },
-
-                authorize: function() {
+                login: function() {
+                    console.log(this.loginForm)
                     var baseUrl = this.apiMeta.baseUrl
                     var p = this
                     axios({
                         method: "post",
                         url: baseUrl+"/user/signin",
-                        data: p.userMeta.authorizeForm
+                        data: p.loginForm
                     })
                     .then(function(response) {
-                        var body = response.data
+                        body = response.data
                         if (body.code != 20000) {
-                            alert("登录失败: " + body.message)
+                            alert("登录失败:" + body.message)
                             return
                         }
+
+
                         Cookies.set("accessToken", body.data.token);
                         Cookies.set("userId", body.data.userId)
+                        window.location.href="dashboard.html"
                     })
                 }
-
             }
         })
 
-        app.getEdgelist()
-        app.getCSPlist()
-        // app.authorize()
-
-        setInterval("load()", 1000*10)
-        load = function() {
-            app.getEdgelist()
-            app.getCSPlist()
-        }
-        
     </script>
 </body>
  

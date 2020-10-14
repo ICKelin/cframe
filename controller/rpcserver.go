@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net"
+	"time"
 
 	"github.com/ICKelin/cframe/pkg/edgemanager"
 
@@ -17,6 +19,7 @@ type RPCServer struct {
 	addr        string
 	edgeManager *models.EdgeManager
 	cspManager  *models.CSPManager
+	statManager *models.StatManager
 }
 
 func NewRPCServer(addr string) *RPCServer {
@@ -24,6 +27,7 @@ func NewRPCServer(addr string) *RPCServer {
 		addr:        addr,
 		edgeManager: models.GetEdgeManager(),
 		cspManager:  models.GetCSPManager(),
+		statManager: models.GetStatManager(),
 	}
 }
 
@@ -58,7 +62,7 @@ func (s *RPCServer) GetEdgeList(ctx context.Context,
 			CspType:    edge.CSPType,
 			PublicIP:   edge.PublicIP,
 			Cidr:       edge.Cidr,
-			ListenAddr: edge.ListenAddr,
+			PublicPort: edge.PublicPort,
 			Comment:    edge.Comment,
 			UserId:     req.UserId,
 			Name:       edge.Name,
@@ -94,7 +98,7 @@ func (s *RPCServer) AddEdge(ctx context.Context,
 		CSPType:    req.CspType,
 		PublicIP:   req.PublicIP,
 		Cidr:       req.Cidr,
-		ListenAddr: req.ListenAddr,
+		PublicPort: req.PublicPort,
 		Comment:    req.Comment,
 	}
 
@@ -108,7 +112,7 @@ func (s *RPCServer) AddEdge(ctx context.Context,
 		Name:       req.Name,
 		Comment:    edgeInfo.Comment,
 		Cidr:       edgeInfo.Cidr,
-		ListenAddr: edgeInfo.ListenAddr,
+		ListenAddr: fmt.Sprintf("%s:%d", edgeInfo.PublicIP, edgeInfo.PublicPort),
 		Type:       edgeInfo.CSPType,
 	})
 
@@ -119,7 +123,7 @@ func (s *RPCServer) AddEdge(ctx context.Context,
 			UserId:     r.UserId.Hex(),
 			PublicIP:   r.PublicIP,
 			Cidr:       r.Cidr,
-			ListenAddr: r.ListenAddr,
+			PublicPort: r.PublicPort,
 			Comment:    r.Comment,
 		},
 	}, nil
@@ -220,4 +224,41 @@ func (s *RPCServer) DelCSP(ctx context.Context,
 	}
 
 	return &proto.DelCSPReply{}, nil
+}
+
+func (s *RPCServer) GetStat(ctx context.Context,
+	req *proto.GetStatReq) (*proto.GetStatReply, error) {
+	badReq := &proto.GetStatReply{Code: 40000, Message: "Bad Param"}
+	if !bson.IsObjectIdHex(req.UserId) {
+		return badReq, nil
+	}
+
+	if req.Count <= 0 || req.Count > 100 {
+		req.Count = 100
+	}
+
+	if req.From <= 0 {
+		req.From = time.Now().Unix()
+	}
+
+	log.Debug("get stat with req: %v", req)
+	mstats, err := s.statManager.GetUserStat(bson.ObjectIdHex(req.UserId),
+		req.EdgeName, req.From, int(req.Count), int(req.Direction))
+	if err != nil {
+		return &proto.GetStatReply{Code: 50000, Message: err.Error()}, nil
+	}
+
+	stats := make([]*proto.Stat, 0)
+	for _, s := range mstats {
+		stats = append(stats, &proto.Stat{
+			UserId:     req.UserId,
+			EdgeName:   req.EdgeName,
+			Timestamp:  s.Timestamp,
+			Cpu:        s.CPU,
+			Mem:        s.Mem,
+			TrafficIn:  s.TrafficIn,
+			TrafficOut: s.TrafficOut,
+		})
+	}
+	return &proto.GetStatReply{Stats: stats}, nil
 }

@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"net"
 	"sync"
 	"time"
@@ -36,6 +38,9 @@ type RegistryServer struct {
 	// csp manager, query cloud service provicer from db
 	cspManager *models.CSPManager
 
+	// stat manager
+	statManager *models.StatManager
+
 	// user manager rpc client
 	userCli proto.UserServiceClient
 }
@@ -51,6 +56,7 @@ func NewRegistryServer(addr string, cli proto.UserServiceClient) *RegistryServer
 		sess:        make(map[string]*Session),
 		edgeManager: models.GetEdgeManager(),
 		cspManager:  models.GetCSPManager(),
+		statManager: models.GetStatManager(),
 		userCli:     cli,
 	}
 }
@@ -149,15 +155,16 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	edges := make([]*codec.Edge, 0)
 	for _, edg := range otherEdge {
 		edges = append(edges, &codec.Edge{
-			ListenAddr: edg.ListenAddr,
+			ListenAddr: fmt.Sprintf("%s:%d", edg.PublicIP, edg.PublicPort),
 			Cidr:       edg.Cidr,
 		})
 	}
 
 	s.mu.Lock()
-	s.sess[curEdge.ListenAddr] = &Session{
+	curEdgeAddr := fmt.Sprintf("%s:%d", curEdge.PublicIP, curEdge.PublicPort)
+	s.sess[curEdgeAddr] = &Session{
 		edge: &codec.Edge{
-			ListenAddr: curEdge.ListenAddr,
+			ListenAddr: curEdgeAddr,
 			Cidr:       curEdge.Cidr,
 		},
 		conn: conn,
@@ -165,7 +172,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	s.mu.Unlock()
 	defer func() {
 		s.mu.Lock()
-		delete(s.sess, curEdge.ListenAddr)
+		delete(s.sess, curEdgeAddr)
 		s.mu.Unlock()
 	}()
 
@@ -209,7 +216,17 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 
 		case codec.CmdReport:
 			log.Info("receive report from edge: %s %s", curEdge.Comment, string(body))
-			// TODO:
+			stat := codec.ReportMsg{}
+			json.Unmarshal(body, &stat)
+
+			s.statManager.AddStat(&models.Stat{
+				UserId:     userObjectId,
+				EdgeName:   curEdge.Name,
+				TrafficIn:  stat.TrafficIn,
+				TrafficOut: stat.TrafficOut,
+				Timestamp:  stat.Timestamp,
+			})
+
 		default:
 			log.Warn("unsupported cmd %d", header.Cmd())
 		}

@@ -14,7 +14,7 @@ type EdgeInfo struct {
 	UserId         bson.ObjectId `json:"userId" bson:"userId"`
 	CSPType        proto.CSPType `json:"csptype" bson:"csptype"`
 	PublicIP       string        `json:"publicIp" bson:"puslicIp"`
-	ListenAddr     string        `json:"listenAddr" bson:"listenAddr"`
+	PublicPort     int32         `json:"publicPort" bson:"publicPort"`
 	Cidr           string        `json:"cidr" bson:"cidr"`
 	Comment        string        `json:"comment" bson:"comment"`
 	ActiveAt       int64         `json:"activeAt" bson:"activeAt"`

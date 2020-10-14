@@ -6,12 +6,19 @@ type AddEdgeForm struct {
 	Name       string `json:"name"`
 	PublicIP   string `json:"hostaddr"`
 	Cidr       string `json:"cidr"`
-	ListenAddr string `json:"listenAddr"`
+	PublicPort int32  `json:"publicPort"`
 	Comment    string `json:"comment"`
 }
 
 type DelEdgeForm struct {
 	Name string `json:"name"`
+}
+
+type GetStatForm struct {
+	Name      string `json:"name"`
+	From      int64  `json:"from"`
+	Count     int32  `json:"to"`
+	Direction int32  `json:"direction"`
 }
 
 // user

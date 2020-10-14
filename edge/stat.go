@@ -2,6 +2,7 @@ package main
 
 import (
 	"sync/atomic"
+	"time"
 
 	"github.com/ICKelin/cframe/codec"
 )
@@ -19,6 +20,8 @@ func AddTrafficOut(traffic int64) {
 
 func ResetStat() *codec.ReportMsg {
 	p := msg
+	p.Timestamp = time.Now().Unix()
 	msg = &codec.ReportMsg{}
+
 	return p
 }

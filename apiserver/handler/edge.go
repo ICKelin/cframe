@@ -20,6 +20,7 @@ func NewEdgeHandler(userCli proto.UserServiceClient, ctrl proto.ControllerServic
 		ctrlCli:     ctrl,
 	}
 }
+
 func (h *EdgeHandler) Run(eng *gin.Engine) {
 	group := eng.Group("/api-service/v1/edge")
 	group.Use(h.MidAuth)
@@ -27,8 +28,8 @@ func (h *EdgeHandler) Run(eng *gin.Engine) {
 		group.POST("/add", h.addEdge)
 		group.GET("/list", h.getEdgeList)
 		group.POST("/del", h.delEdge)
+		group.POST("/stat", h.getEdgeStat)
 	}
-
 }
 
 func (h *EdgeHandler) addEdge(ctx *gin.Context) {
@@ -45,7 +46,7 @@ func (h *EdgeHandler) addEdge(ctx *gin.Context) {
 		Name:       addForm.Name,
 		PublicIP:   addForm.PublicIP,
 		Cidr:       addForm.Cidr,
-		ListenAddr: addForm.ListenAddr,
+		PublicPort: addForm.PublicPort,
 		CspType:    proto.CSPType(addForm.CSPType),
 		Comment:    addForm.Comment,
 	})
@@ -108,4 +109,34 @@ func (h *EdgeHandler) delEdge(ctx *gin.Context) {
 		return
 	}
 	h.Response(ctx, nil, nil)
+}
+
+func (h *EdgeHandler) getEdgeStat(ctx *gin.Context) {
+	userId := h.GetUserId(ctx)
+	log.Debug("get edge stat for user %s", userId)
+	f := GetStatForm{}
+	if ok := h.BindAndValidate(ctx, &f); !ok {
+		return
+	}
+
+	reply, err := h.ctrlCli.GetStat(context.Background(), &proto.GetStatReq{
+		UserId:    userId,
+		EdgeName:  f.Name,
+		From:      f.From,
+		Count:     f.Count,
+		Direction: f.Direction,
+	})
+
+	if err != nil {
+		log.Error("get edge stat rpc fail: %v", err)
+		h.Response(ctx, nil, err)
+		return
+	}
+
+	if reply.Code != 0 {
+		log.Error("get edge stat fail: %d %s", reply.Code, reply.Message)
+		h.Response(ctx, nil, fmt.Errorf("<%d>%s", reply.Code, reply.Message))
+		return
+	}
+	h.Response(ctx, reply.Stats, nil)
 }

@@ -56,14 +56,14 @@ func (CSPType) EnumDescriptor() ([]byte, []int) {
 }
 
 type EdgeInfo struct {
-	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	UserId               string   `protobuf:"bytes,2,opt,name=userId,proto3" json:"userId,omitempty"`
-	CspType              CSPType  `protobuf:"varint,3,opt,name=cspType,proto3,enum=controller.CSPType" json:"cspType,omitempty"`
-	PublicIP             string   `protobuf:"bytes,4,opt,name=publicIP,proto3" json:"publicIP,omitempty"`
-	PublicPort           int32    `protobuf:"varint,5,opt,name=publicPort,proto3" json:"publicPort,omitempty"`
-	Cidr                 string   `protobuf:"bytes,6,opt,name=cidr,proto3" json:"cidr,omitempty"`
-	Comment              string   `protobuf:"bytes,7,opt,name=comment,proto3" json:"comment,omitempty"`
-	ActiveAt             int64    `protobuf:"varint,8,opt,name=activeAt,proto3" json:"activeAt,omitempty"`
+	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name"`
+	UserId               string   `protobuf:"bytes,2,opt,name=userId,proto3" json:"userId"`
+	CspType              CSPType  `protobuf:"varint,3,opt,name=cspType,proto3,enum=controller.CSPType" json:"cspType"`
+	PublicIP             string   `protobuf:"bytes,4,opt,name=publicIP,proto3" json:"publicIP"`
+	PublicPort           int32    `protobuf:"varint,5,opt,name=publicPort,proto3" json:"publicPort"`
+	Cidr                 string   `protobuf:"bytes,6,opt,name=cidr,proto3" json:"cidr"`
+	Comment              string   `protobuf:"bytes,7,opt,name=comment,proto3" json:"comment"`
+	ActiveAt             int64    `protobuf:"varint,8,opt,name=activeAt,proto3" json:"activeAt"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -151,9 +151,9 @@ func (m *EdgeInfo) GetActiveAt() int64 {
 }
 
 type CSPInfo struct {
-	CspType              CSPType  `protobuf:"varint,1,opt,name=cspType,proto3,enum=controller.CSPType" json:"cspType,omitempty"`
-	AccessKey            string   `protobuf:"bytes,2,opt,name=accessKey,proto3" json:"accessKey,omitempty"`
-	AccessSecret         string   `protobuf:"bytes,3,opt,name=accessSecret,proto3" json:"accessSecret,omitempty"`
+	CspType              CSPType  `protobuf:"varint,1,opt,name=cspType,proto3,enum=controller.CSPType" json:"cspType"`
+	AccessKey            string   `protobuf:"bytes,2,opt,name=accessKey,proto3" json:"accessKey"`
+	AccessSecret         string   `protobuf:"bytes,3,opt,name=accessSecret,proto3" json:"accessSecret"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -205,8 +205,95 @@ func (m *CSPInfo) GetAccessSecret() string {
 	return ""
 }
 
+type Stat struct {
+	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId"`
+	EdgeName             string   `protobuf:"bytes,2,opt,name=edgeName,proto3" json:"edgeName"`
+	Cpu                  int64    `protobuf:"varint,3,opt,name=cpu,proto3" json:"cpu"`
+	Mem                  int64    `protobuf:"varint,4,opt,name=mem,proto3" json:"mem"`
+	TrafficIn            int64    `protobuf:"varint,5,opt,name=trafficIn,proto3" json:"trafficIn"`
+	TrafficOut           int64    `protobuf:"varint,6,opt,name=trafficOut,proto3" json:"trafficOut"`
+	Timestamp            int64    `protobuf:"varint,7,opt,name=timestamp,proto3" json:"timestamp"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Stat) Reset()         { *m = Stat{} }
+func (m *Stat) String() string { return proto.CompactTextString(m) }
+func (*Stat) ProtoMessage()    {}
+func (*Stat) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ed7f10298fa1d90f, []int{2}
+}
+
+func (m *Stat) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Stat.Unmarshal(m, b)
+}
+func (m *Stat) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Stat.Marshal(b, m, deterministic)
+}
+func (m *Stat) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Stat.Merge(m, src)
+}
+func (m *Stat) XXX_Size() int {
+	return xxx_messageInfo_Stat.Size(m)
+}
+func (m *Stat) XXX_DiscardUnknown() {
+	xxx_messageInfo_Stat.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Stat proto.InternalMessageInfo
+
+func (m *Stat) GetUserId() string {
+	if m != nil {
+		return m.UserId
+	}
+	return ""
+}
+
+func (m *Stat) GetEdgeName() string {
+	if m != nil {
+		return m.EdgeName
+	}
+	return ""
+}
+
+func (m *Stat) GetCpu() int64 {
+	if m != nil {
+		return m.Cpu
+	}
+	return 0
+}
+
+func (m *Stat) GetMem() int64 {
+	if m != nil {
+		return m.Mem
+	}
+	return 0
+}
+
+func (m *Stat) GetTrafficIn() int64 {
+	if m != nil {
+		return m.TrafficIn
+	}
+	return 0
+}
+
+func (m *Stat) GetTrafficOut() int64 {
+	if m != nil {
+		return m.TrafficOut
+	}
+	return 0
+}
+
+func (m *Stat) GetTimestamp() int64 {
+	if m != nil {
+		return m.Timestamp
+	}
+	return 0
+}
+
 type GetEdgeListReq struct {
-	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId,omitempty"`
+	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -216,7 +303,7 @@ func (m *GetEdgeListReq) Reset()         { *m = GetEdgeListReq{} }
 func (m *GetEdgeListReq) String() string { return proto.CompactTextString(m) }
 func (*GetEdgeListReq) ProtoMessage()    {}
 func (*GetEdgeListReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed7f10298fa1d90f, []int{2}
+	return fileDescriptor_ed7f10298fa1d90f, []int{3}
 }
 
 func (m *GetEdgeListReq) XXX_Unmarshal(b []byte) error {
@@ -245,9 +332,9 @@ func (m *GetEdgeListReq) GetUserId() string {
 }
 
 type GetEdgeListReply struct {
-	Code                 int32       `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
-	Message              string      `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
-	Edges                []*EdgeInfo `protobuf:"bytes,3,rep,name=edges,proto3" json:"edges,omitempty"`
+	Code                 int32       `protobuf:"varint,1,opt,name=code,proto3" json:"code"`
+	Message              string      `protobuf:"bytes,2,opt,name=message,proto3" json:"message"`
+	Edges                []*EdgeInfo `protobuf:"bytes,3,rep,name=edges,proto3" json:"edges"`
 	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
 	XXX_unrecognized     []byte      `json:"-"`
 	XXX_sizecache        int32       `json:"-"`
@@ -257,7 +344,7 @@ func (m *GetEdgeListReply) Reset()         { *m = GetEdgeListReply{} }
 func (m *GetEdgeListReply) String() string { return proto.CompactTextString(m) }
 func (*GetEdgeListReply) ProtoMessage()    {}
 func (*GetEdgeListReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed7f10298fa1d90f, []int{3}
+	return fileDescriptor_ed7f10298fa1d90f, []int{4}
 }
 
 func (m *GetEdgeListReply) XXX_Unmarshal(b []byte) error {
@@ -300,13 +387,13 @@ func (m *GetEdgeListReply) GetEdges() []*EdgeInfo {
 }
 
 type AddEdgeReq struct {
-	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	UserId               string   `protobuf:"bytes,2,opt,name=userId,proto3" json:"userId,omitempty"`
-	CspType              CSPType  `protobuf:"varint,3,opt,name=cspType,proto3,enum=controller.CSPType" json:"cspType,omitempty"`
-	PublicIP             string   `protobuf:"bytes,4,opt,name=publicIP,proto3" json:"publicIP,omitempty"`
-	PublicPort           int32    `protobuf:"varint,5,opt,name=publicPort,proto3" json:"publicPort,omitempty"`
-	Cidr                 string   `protobuf:"bytes,6,opt,name=cidr,proto3" json:"cidr,omitempty"`
-	Comment              string   `protobuf:"bytes,7,opt,name=comment,proto3" json:"comment,omitempty"`
+	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name"`
+	UserId               string   `protobuf:"bytes,2,opt,name=userId,proto3" json:"userId"`
+	CspType              CSPType  `protobuf:"varint,3,opt,name=cspType,proto3,enum=controller.CSPType" json:"cspType"`
+	PublicIP             string   `protobuf:"bytes,4,opt,name=publicIP,proto3" json:"publicIP"`
+	PublicPort           int32    `protobuf:"varint,5,opt,name=publicPort,proto3" json:"publicPort"`
+	Cidr                 string   `protobuf:"bytes,6,opt,name=cidr,proto3" json:"cidr"`
+	Comment              string   `protobuf:"bytes,7,opt,name=comment,proto3" json:"comment"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -316,7 +403,7 @@ func (m *AddEdgeReq) Reset()         { *m = AddEdgeReq{} }
 func (m *AddEdgeReq) String() string { return proto.CompactTextString(m) }
 func (*AddEdgeReq) ProtoMessage()    {}
 func (*AddEdgeReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed7f10298fa1d90f, []int{4}
+	return fileDescriptor_ed7f10298fa1d90f, []int{5}
 }
 
 func (m *AddEdgeReq) XXX_Unmarshal(b []byte) error {
@@ -387,9 +474,9 @@ func (m *AddEdgeReq) GetComment() string {
 }
 
 type AddEdgeReply struct {
-	Code                 int32     `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
-	Message              string    `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
-	Data                 *EdgeInfo `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
+	Code                 int32     `protobuf:"varint,1,opt,name=code,proto3" json:"code"`
+	Message              string    `protobuf:"bytes,2,opt,name=message,proto3" json:"message"`
+	Data                 *EdgeInfo `protobuf:"bytes,3,opt,name=data,proto3" json:"data"`
 	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
 	XXX_unrecognized     []byte    `json:"-"`
 	XXX_sizecache        int32     `json:"-"`
@@ -399,7 +486,7 @@ func (m *AddEdgeReply) Reset()         { *m = AddEdgeReply{} }
 func (m *AddEdgeReply) String() string { return proto.CompactTextString(m) }
 func (*AddEdgeReply) ProtoMessage()    {}
 func (*AddEdgeReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed7f10298fa1d90f, []int{5}
+	return fileDescriptor_ed7f10298fa1d90f, []int{6}
 }
 
 func (m *AddEdgeReply) XXX_Unmarshal(b []byte) error {
@@ -442,8 +529,8 @@ func (m *AddEdgeReply) GetData() *EdgeInfo {
 }
 
 type DelEdgeReq struct {
-	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId,omitempty"`
-	EdgeName             string   `protobuf:"bytes,2,opt,name=edgeName,proto3" json:"edgeName,omitempty"`
+	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId"`
+	EdgeName             string   `protobuf:"bytes,2,opt,name=edgeName,proto3" json:"edgeName"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -453,7 +540,7 @@ func (m *DelEdgeReq) Reset()         { *m = DelEdgeReq{} }
 func (m *DelEdgeReq) String() string { return proto.CompactTextString(m) }
 func (*DelEdgeReq) ProtoMessage()    {}
 func (*DelEdgeReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed7f10298fa1d90f, []int{6}
+	return fileDescriptor_ed7f10298fa1d90f, []int{7}
 }
 
 func (m *DelEdgeReq) XXX_Unmarshal(b []byte) error {
@@ -489,8 +576,8 @@ func (m *DelEdgeReq) GetEdgeName() string {
 }
 
 type DelEdgeReply struct {
-	Code                 int32    `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
-	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	Code                 int32    `protobuf:"varint,1,opt,name=code,proto3" json:"code"`
+	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -500,7 +587,7 @@ func (m *DelEdgeReply) Reset()         { *m = DelEdgeReply{} }
 func (m *DelEdgeReply) String() string { return proto.CompactTextString(m) }
 func (*DelEdgeReply) ProtoMessage()    {}
 func (*DelEdgeReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed7f10298fa1d90f, []int{7}
+	return fileDescriptor_ed7f10298fa1d90f, []int{8}
 }
 
 func (m *DelEdgeReply) XXX_Unmarshal(b []byte) error {
@@ -536,7 +623,7 @@ func (m *DelEdgeReply) GetMessage() string {
 }
 
 type GetCSPListReq struct {
-	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId,omitempty"`
+	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -546,7 +633,7 @@ func (m *GetCSPListReq) Reset()         { *m = GetCSPListReq{} }
 func (m *GetCSPListReq) String() string { return proto.CompactTextString(m) }
 func (*GetCSPListReq) ProtoMessage()    {}
 func (*GetCSPListReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed7f10298fa1d90f, []int{8}
+	return fileDescriptor_ed7f10298fa1d90f, []int{9}
 }
 
 func (m *GetCSPListReq) XXX_Unmarshal(b []byte) error {
@@ -575,9 +662,9 @@ func (m *GetCSPListReq) GetUserId() string {
 }
 
 type GetCSPListReply struct {
-	Code                 int32      `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
-	Message              string     `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
-	CspInfo              []*CSPInfo `protobuf:"bytes,3,rep,name=cspInfo,proto3" json:"cspInfo,omitempty"`
+	Code                 int32      `protobuf:"varint,1,opt,name=code,proto3" json:"code"`
+	Message              string     `protobuf:"bytes,2,opt,name=message,proto3" json:"message"`
+	CspInfo              []*CSPInfo `protobuf:"bytes,3,rep,name=cspInfo,proto3" json:"cspInfo"`
 	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
 	XXX_unrecognized     []byte     `json:"-"`
 	XXX_sizecache        int32      `json:"-"`
@@ -587,7 +674,7 @@ func (m *GetCSPListReply) Reset()         { *m = GetCSPListReply{} }
 func (m *GetCSPListReply) String() string { return proto.CompactTextString(m) }
 func (*GetCSPListReply) ProtoMessage()    {}
 func (*GetCSPListReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed7f10298fa1d90f, []int{9}
+	return fileDescriptor_ed7f10298fa1d90f, []int{10}
 }
 
 func (m *GetCSPListReply) XXX_Unmarshal(b []byte) error {
@@ -630,10 +717,10 @@ func (m *GetCSPListReply) GetCspInfo() []*CSPInfo {
 }
 
 type AddCSPReq struct {
-	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId,omitempty"`
-	CspType              CSPType  `protobuf:"varint,2,opt,name=cspType,proto3,enum=controller.CSPType" json:"cspType,omitempty"`
-	AccessKey            string   `protobuf:"bytes,3,opt,name=accessKey,proto3" json:"accessKey,omitempty"`
-	AccessSecret         string   `protobuf:"bytes,4,opt,name=accessSecret,proto3" json:"accessSecret,omitempty"`
+	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId"`
+	CspType              CSPType  `protobuf:"varint,2,opt,name=cspType,proto3,enum=controller.CSPType" json:"cspType"`
+	AccessKey            string   `protobuf:"bytes,3,opt,name=accessKey,proto3" json:"accessKey"`
+	AccessSecret         string   `protobuf:"bytes,4,opt,name=accessSecret,proto3" json:"accessSecret"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -643,7 +730,7 @@ func (m *AddCSPReq) Reset()         { *m = AddCSPReq{} }
 func (m *AddCSPReq) String() string { return proto.CompactTextString(m) }
 func (*AddCSPReq) ProtoMessage()    {}
 func (*AddCSPReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed7f10298fa1d90f, []int{10}
+	return fileDescriptor_ed7f10298fa1d90f, []int{11}
 }
 
 func (m *AddCSPReq) XXX_Unmarshal(b []byte) error {
@@ -693,9 +780,9 @@ func (m *AddCSPReq) GetAccessSecret() string {
 }
 
 type AddCSPReply struct {
-	Code                 int32    `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
-	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
-	Data                 *CSPInfo `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
+	Code                 int32    `protobuf:"varint,1,opt,name=code,proto3" json:"code"`
+	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message"`
+	Data                 *CSPInfo `protobuf:"bytes,3,opt,name=data,proto3" json:"data"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -705,7 +792,7 @@ func (m *AddCSPReply) Reset()         { *m = AddCSPReply{} }
 func (m *AddCSPReply) String() string { return proto.CompactTextString(m) }
 func (*AddCSPReply) ProtoMessage()    {}
 func (*AddCSPReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed7f10298fa1d90f, []int{11}
+	return fileDescriptor_ed7f10298fa1d90f, []int{12}
 }
 
 func (m *AddCSPReply) XXX_Unmarshal(b []byte) error {
@@ -748,8 +835,8 @@ func (m *AddCSPReply) GetData() *CSPInfo {
 }
 
 type DelCSPReq struct {
-	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId,omitempty"`
-	CspType              CSPType  `protobuf:"varint,2,opt,name=cspType,proto3,enum=controller.CSPType" json:"cspType,omitempty"`
+	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId"`
+	CspType              CSPType  `protobuf:"varint,2,opt,name=cspType,proto3,enum=controller.CSPType" json:"cspType"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -759,7 +846,7 @@ func (m *DelCSPReq) Reset()         { *m = DelCSPReq{} }
 func (m *DelCSPReq) String() string { return proto.CompactTextString(m) }
 func (*DelCSPReq) ProtoMessage()    {}
 func (*DelCSPReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed7f10298fa1d90f, []int{12}
+	return fileDescriptor_ed7f10298fa1d90f, []int{13}
 }
 
 func (m *DelCSPReq) XXX_Unmarshal(b []byte) error {
@@ -795,8 +882,8 @@ func (m *DelCSPReq) GetCspType() CSPType {
 }
 
 type DelCSPReply struct {
-	Code                 int32    `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
-	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	Code                 int32    `protobuf:"varint,1,opt,name=code,proto3" json:"code"`
+	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -806,7 +893,7 @@ func (m *DelCSPReply) Reset()         { *m = DelCSPReply{} }
 func (m *DelCSPReply) String() string { return proto.CompactTextString(m) }
 func (*DelCSPReply) ProtoMessage()    {}
 func (*DelCSPReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed7f10298fa1d90f, []int{13}
+	return fileDescriptor_ed7f10298fa1d90f, []int{14}
 }
 
 func (m *DelCSPReply) XXX_Unmarshal(b []byte) error {
@@ -841,10 +928,137 @@ func (m *DelCSPReply) GetMessage() string {
 	return ""
 }
 
+type GetStatReq struct {
+	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId"`
+	EdgeName             string   `protobuf:"bytes,2,opt,name=edgeName,proto3" json:"edgeName"`
+	From                 int64    `protobuf:"varint,3,opt,name=from,proto3" json:"from"`
+	Count                int32    `protobuf:"varint,4,opt,name=count,proto3" json:"count"`
+	Direction            int32    `protobuf:"varint,5,opt,name=direction,proto3" json:"direction"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *GetStatReq) Reset()         { *m = GetStatReq{} }
+func (m *GetStatReq) String() string { return proto.CompactTextString(m) }
+func (*GetStatReq) ProtoMessage()    {}
+func (*GetStatReq) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ed7f10298fa1d90f, []int{15}
+}
+
+func (m *GetStatReq) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetStatReq.Unmarshal(m, b)
+}
+func (m *GetStatReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetStatReq.Marshal(b, m, deterministic)
+}
+func (m *GetStatReq) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetStatReq.Merge(m, src)
+}
+func (m *GetStatReq) XXX_Size() int {
+	return xxx_messageInfo_GetStatReq.Size(m)
+}
+func (m *GetStatReq) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetStatReq.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetStatReq proto.InternalMessageInfo
+
+func (m *GetStatReq) GetUserId() string {
+	if m != nil {
+		return m.UserId
+	}
+	return ""
+}
+
+func (m *GetStatReq) GetEdgeName() string {
+	if m != nil {
+		return m.EdgeName
+	}
+	return ""
+}
+
+func (m *GetStatReq) GetFrom() int64 {
+	if m != nil {
+		return m.From
+	}
+	return 0
+}
+
+func (m *GetStatReq) GetCount() int32 {
+	if m != nil {
+		return m.Count
+	}
+	return 0
+}
+
+func (m *GetStatReq) GetDirection() int32 {
+	if m != nil {
+		return m.Direction
+	}
+	return 0
+}
+
+type GetStatReply struct {
+	Code                 int32    `protobuf:"varint,1,opt,name=code,proto3" json:"code"`
+	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message"`
+	Stats                []*Stat  `protobuf:"bytes,3,rep,name=stats,proto3" json:"stats"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *GetStatReply) Reset()         { *m = GetStatReply{} }
+func (m *GetStatReply) String() string { return proto.CompactTextString(m) }
+func (*GetStatReply) ProtoMessage()    {}
+func (*GetStatReply) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ed7f10298fa1d90f, []int{16}
+}
+
+func (m *GetStatReply) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetStatReply.Unmarshal(m, b)
+}
+func (m *GetStatReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetStatReply.Marshal(b, m, deterministic)
+}
+func (m *GetStatReply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetStatReply.Merge(m, src)
+}
+func (m *GetStatReply) XXX_Size() int {
+	return xxx_messageInfo_GetStatReply.Size(m)
+}
+func (m *GetStatReply) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetStatReply.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetStatReply proto.InternalMessageInfo
+
+func (m *GetStatReply) GetCode() int32 {
+	if m != nil {
+		return m.Code
+	}
+	return 0
+}
+
+func (m *GetStatReply) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *GetStatReply) GetStats() []*Stat {
+	if m != nil {
+		return m.Stats
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterEnum("controller.CSPType", CSPType_name, CSPType_value)
 	proto.RegisterType((*EdgeInfo)(nil), "controller.EdgeInfo")
 	proto.RegisterType((*CSPInfo)(nil), "controller.CSPInfo")
+	proto.RegisterType((*Stat)(nil), "controller.Stat")
 	proto.RegisterType((*GetEdgeListReq)(nil), "controller.GetEdgeListReq")
 	proto.RegisterType((*GetEdgeListReply)(nil), "controller.GetEdgeListReply")
 	proto.RegisterType((*AddEdgeReq)(nil), "controller.AddEdgeReq")
@@ -857,52 +1071,63 @@ func init() {
 	proto.RegisterType((*AddCSPReply)(nil), "controller.AddCSPReply")
 	proto.RegisterType((*DelCSPReq)(nil), "controller.DelCSPReq")
 	proto.RegisterType((*DelCSPReply)(nil), "controller.DelCSPReply")
+	proto.RegisterType((*GetStatReq)(nil), "controller.GetStatReq")
+	proto.RegisterType((*GetStatReply)(nil), "controller.GetStatReply")
 }
 
 func init() { proto.RegisterFile("controller.proto", fileDescriptor_ed7f10298fa1d90f) }
 
 var fileDescriptor_ed7f10298fa1d90f = []byte{
-	// 633 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xdc, 0x55, 0xdd, 0x6e, 0xd3, 0x4c,
-	0x10, 0x8d, 0xe3, 0xc4, 0x4e, 0x26, 0xfd, 0xfa, 0x99, 0x05, 0x8a, 0x31, 0x15, 0x8a, 0xf6, 0xa6,
-	0x56, 0xa5, 0x16, 0xa9, 0xdc, 0xf1, 0x23, 0x11, 0xd2, 0x52, 0x45, 0x54, 0xc1, 0xb5, 0x91, 0x90,
-	0xb8, 0x73, 0xed, 0x6d, 0x14, 0xc9, 0x89, 0x8d, 0xbd, 0xad, 0x14, 0x9e, 0x83, 0x4b, 0x5e, 0x8a,
-	0xe7, 0xe0, 0x25, 0xd0, 0xee, 0xfa, 0x67, 0x1d, 0x25, 0x14, 0x4b, 0x5c, 0x71, 0xe5, 0x9d, 0xb3,
-	0x33, 0xbb, 0x67, 0xce, 0xcc, 0xac, 0xc1, 0x08, 0xe2, 0x25, 0x4d, 0xe3, 0x28, 0x22, 0xe9, 0x71,
-	0x92, 0xc6, 0x34, 0x46, 0x50, 0x21, 0xf8, 0xa7, 0x02, 0xbd, 0xb3, 0x70, 0x46, 0x26, 0xcb, 0xeb,
-	0x18, 0x21, 0xe8, 0x2c, 0xfd, 0x05, 0x31, 0x95, 0xa1, 0x62, 0xf7, 0x5d, 0xbe, 0x46, 0x7b, 0xa0,
-	0xdd, 0x64, 0x24, 0x9d, 0x84, 0x66, 0x9b, 0xa3, 0xb9, 0x85, 0x8e, 0x40, 0x0f, 0xb2, 0xe4, 0xe3,
-	0x2a, 0x21, 0xa6, 0x3a, 0x54, 0xec, 0xdd, 0x93, 0xfb, 0xc7, 0xd2, 0x45, 0x63, 0xcf, 0x61, 0x5b,
-	0x6e, 0xe1, 0x83, 0x2c, 0xe8, 0x25, 0x37, 0x57, 0xd1, 0x3c, 0x98, 0x38, 0x66, 0x87, 0x1f, 0x54,
-	0xda, 0xe8, 0x29, 0x80, 0x58, 0x3b, 0x71, 0x4a, 0xcd, 0xee, 0x50, 0xb1, 0xbb, 0xae, 0x84, 0x30,
-	0x5a, 0xc1, 0x3c, 0x4c, 0x4d, 0x4d, 0xd0, 0x62, 0x6b, 0x64, 0x82, 0x1e, 0xc4, 0x8b, 0x05, 0x59,
-	0x52, 0x53, 0xe7, 0x70, 0x61, 0xb2, 0x9b, 0xfc, 0x80, 0xce, 0x6f, 0xc9, 0x88, 0x9a, 0xbd, 0xa1,
-	0x62, 0xab, 0x6e, 0x69, 0xe3, 0xaf, 0xa0, 0x8f, 0x3d, 0x87, 0xe7, 0x2a, 0xf1, 0x57, 0xfe, 0x80,
-	0xff, 0x3e, 0xf4, 0xfd, 0x20, 0x20, 0x59, 0xf6, 0x9e, 0xac, 0x72, 0x25, 0x2a, 0x00, 0x61, 0xd8,
-	0x11, 0x86, 0x47, 0x82, 0x94, 0x50, 0xae, 0x48, 0xdf, 0xad, 0x61, 0xd8, 0x86, 0xdd, 0x73, 0x42,
-	0x99, 0xd6, 0x17, 0xf3, 0x8c, 0xba, 0xe4, 0x8b, 0x24, 0xad, 0x22, 0x4b, 0x8b, 0x23, 0x30, 0x6a,
-	0x9e, 0x49, 0xb4, 0xe2, 0x1a, 0xc4, 0xa1, 0xe0, 0xda, 0x75, 0xf9, 0x9a, 0x69, 0xb0, 0x20, 0x59,
-	0xe6, 0xcf, 0x48, 0xce, 0xa8, 0x30, 0xd1, 0x21, 0x74, 0x49, 0x38, 0x23, 0x99, 0xa9, 0x0e, 0x55,
-	0x7b, 0x70, 0xf2, 0x40, 0x4e, 0xad, 0xa8, 0xb6, 0x2b, 0x5c, 0xf0, 0x0f, 0x05, 0x60, 0x14, 0x86,
-	0x0c, 0x66, 0xa4, 0xfe, 0x85, 0x1e, 0xc0, 0xd7, 0xb0, 0x53, 0xa6, 0xd4, 0x5c, 0x3d, 0x1b, 0x3a,
-	0xa1, 0x4f, 0x7d, 0x9e, 0xd3, 0x36, 0xf1, 0xb8, 0x07, 0x7e, 0x03, 0x70, 0x4a, 0xa2, 0x42, 0xba,
-	0x2d, 0xf5, 0x64, 0x79, 0x33, 0xa9, 0xa7, 0x4c, 0x56, 0x71, 0x55, 0x69, 0xe3, 0x57, 0xb0, 0x53,
-	0x9e, 0xd0, 0x98, 0x29, 0x3e, 0x80, 0xff, 0xce, 0x09, 0x1d, 0x7b, 0xce, 0x5d, 0x2d, 0xb5, 0x84,
-	0xff, 0x65, 0xc7, 0xe6, 0x9a, 0x88, 0x52, 0xb3, 0xd4, 0xf3, 0x9e, 0x5a, 0x2f, 0x35, 0x57, 0xa5,
-	0xf0, 0xc1, 0xdf, 0x14, 0xe8, 0x8f, 0xc2, 0x70, 0xec, 0x39, 0xbf, 0x13, 0x46, 0xea, 0x9f, 0x76,
-	0xd3, 0x19, 0x54, 0xef, 0x9a, 0xc1, 0xce, 0x86, 0x19, 0x0c, 0x61, 0x50, 0xb0, 0x6a, 0x2e, 0xc1,
-	0x41, 0xad, 0x2d, 0x36, 0xe6, 0x2f, 0xba, 0xc2, 0x85, 0xfe, 0x29, 0x89, 0xfe, 0x6a, 0xee, 0xf8,
-	0x25, 0x0c, 0x8a, 0x33, 0x1b, 0x33, 0x3f, 0x3c, 0xe2, 0xcf, 0x1e, 0xd7, 0xb0, 0x07, 0x9d, 0xe9,
-	0x87, 0xe9, 0x99, 0xd1, 0x42, 0x3a, 0xa8, 0xa3, 0x8b, 0x89, 0xa1, 0x20, 0x0d, 0xda, 0x97, 0x97,
-	0x46, 0x9b, 0x03, 0x9f, 0x3c, 0x43, 0x3d, 0xf9, 0xae, 0xc2, 0xbd, 0x71, 0xc9, 0xc5, 0x23, 0xe9,
-	0xed, 0x3c, 0x20, 0x68, 0x02, 0x03, 0xe9, 0x55, 0x42, 0x96, 0x4c, 0xb7, 0xfe, 0xb0, 0x59, 0xfb,
-	0x5b, 0xf7, 0x92, 0x68, 0x85, 0x5b, 0xe8, 0x35, 0xe8, 0xf9, 0x78, 0xa2, 0x3d, 0xd9, 0xb5, 0x7a,
-	0x86, 0x2c, 0x73, 0x23, 0x5e, 0x86, 0xe7, 0x33, 0x53, 0x0f, 0xaf, 0x46, 0xb1, 0x1e, 0x2e, 0x0f,
-	0x18, 0x6e, 0xa1, 0x77, 0x00, 0xd5, 0x2c, 0xa0, 0xc7, 0x6b, 0x5c, 0xab, 0x61, 0xb2, 0x9e, 0x6c,
-	0xdb, 0x12, 0xe7, 0xbc, 0x00, 0x4d, 0x34, 0x13, 0x7a, 0xb8, 0x46, 0x56, 0x94, 0xde, 0x7a, 0xb4,
-	0x09, 0x2e, 0x63, 0x45, 0x39, 0xeb, 0xb1, 0x65, 0xdb, 0xd4, 0x63, 0xa5, 0xca, 0xe3, 0xd6, 0xdb,
-	0xde, 0x67, 0xed, 0x19, 0xff, 0x91, 0x5f, 0x69, 0xfc, 0xf3, 0xfc, 0x57, 0x00, 0x00, 0x00, 0xff,
-	0xff, 0xe4, 0xf8, 0xab, 0xb1, 0xe3, 0x07, 0x00, 0x00,
+	// 781 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xdc, 0x56, 0x5b, 0x6e, 0xd3, 0x40,
+	0x14, 0x8d, 0xe3, 0x3c, 0x6f, 0x42, 0x31, 0x43, 0x29, 0x26, 0x54, 0x28, 0x9a, 0x0f, 0x1a, 0x55,
+	0x6a, 0x91, 0xca, 0x1f, 0x0f, 0x89, 0x90, 0x96, 0x2a, 0xa2, 0x6a, 0x53, 0x1b, 0x09, 0x89, 0x3f,
+	0xd7, 0x9e, 0x54, 0x96, 0xfc, 0xc2, 0x9e, 0x54, 0x0a, 0x2b, 0x60, 0x01, 0xac, 0x86, 0x5d, 0xf0,
+	0xcd, 0x12, 0xd8, 0x04, 0x9a, 0x19, 0x3f, 0xc6, 0x55, 0x42, 0x71, 0xc5, 0x17, 0x5f, 0x9d, 0x7b,
+	0x3c, 0x77, 0xe6, 0xde, 0x73, 0xcf, 0x9c, 0x06, 0x34, 0x3b, 0x0c, 0x68, 0x1c, 0x7a, 0x1e, 0x89,
+	0xf7, 0xa3, 0x38, 0xa4, 0x21, 0x82, 0x02, 0xc1, 0xbf, 0x14, 0xe8, 0x1c, 0x39, 0x97, 0x64, 0x1a,
+	0xcc, 0x43, 0x84, 0xa0, 0x11, 0x58, 0x3e, 0xd1, 0x95, 0xa1, 0x32, 0xea, 0x1a, 0x7c, 0x8d, 0xb6,
+	0xa0, 0xb5, 0x48, 0x48, 0x3c, 0x75, 0xf4, 0x3a, 0x47, 0xd3, 0x08, 0xed, 0x41, 0xdb, 0x4e, 0xa2,
+	0x0f, 0xcb, 0x88, 0xe8, 0xea, 0x50, 0x19, 0x6d, 0x1c, 0xdc, 0xdf, 0x97, 0x2e, 0x9a, 0x98, 0x33,
+	0xf6, 0xc9, 0xc8, 0xf6, 0xa0, 0x01, 0x74, 0xa2, 0xc5, 0x85, 0xe7, 0xda, 0xd3, 0x99, 0xde, 0xe0,
+	0x07, 0xe5, 0x31, 0x7a, 0x02, 0x20, 0xd6, 0xb3, 0x30, 0xa6, 0x7a, 0x73, 0xa8, 0x8c, 0x9a, 0x86,
+	0x84, 0xb0, 0xb2, 0x6c, 0xd7, 0x89, 0xf5, 0x96, 0x28, 0x8b, 0xad, 0x91, 0x0e, 0x6d, 0x3b, 0xf4,
+	0x7d, 0x12, 0x50, 0xbd, 0xcd, 0xe1, 0x2c, 0x64, 0x37, 0x59, 0x36, 0x75, 0xaf, 0xc8, 0x98, 0xea,
+	0x9d, 0xa1, 0x32, 0x52, 0x8d, 0x3c, 0xc6, 0x5f, 0xa0, 0x3d, 0x31, 0x67, 0xbc, 0x57, 0xa9, 0x7e,
+	0xe5, 0x2f, 0xea, 0xdf, 0x86, 0xae, 0x65, 0xdb, 0x24, 0x49, 0xde, 0x93, 0x65, 0xca, 0x44, 0x01,
+	0x20, 0x0c, 0x7d, 0x11, 0x98, 0xc4, 0x8e, 0x09, 0xe5, 0x8c, 0x74, 0x8d, 0x12, 0x86, 0xbf, 0x2b,
+	0xd0, 0x30, 0xa9, 0x45, 0x25, 0x46, 0x95, 0x12, 0xa3, 0x03, 0xe8, 0x10, 0xe7, 0x92, 0x9c, 0xb2,
+	0x09, 0x88, 0x1b, 0xf2, 0x18, 0x69, 0xa0, 0xda, 0xd1, 0x82, 0x9f, 0xab, 0x1a, 0x6c, 0xc9, 0x10,
+	0x9f, 0xf8, 0x9c, 0x4b, 0xd5, 0x60, 0x4b, 0x56, 0x22, 0x8d, 0xad, 0xf9, 0xdc, 0xb5, 0xa7, 0x01,
+	0x67, 0x51, 0x35, 0x0a, 0x80, 0x91, 0x9c, 0x06, 0x67, 0x0b, 0xca, 0xa9, 0x54, 0x0d, 0x09, 0xe1,
+	0xd9, 0xae, 0x4f, 0x12, 0x6a, 0xf9, 0x11, 0xa7, 0x94, 0x65, 0x67, 0x00, 0x1e, 0xc1, 0xc6, 0x31,
+	0xa1, 0x4c, 0x28, 0x27, 0x6e, 0x42, 0x0d, 0xf2, 0x79, 0x5d, 0x17, 0xd8, 0x03, 0xad, 0xb4, 0x33,
+	0xf2, 0x96, 0x7c, 0x80, 0xa1, 0x23, 0x88, 0x6e, 0x1a, 0x7c, 0xcd, 0x06, 0xe8, 0x93, 0x24, 0xb1,
+	0x2e, 0xb3, 0x66, 0xb3, 0x10, 0xed, 0x42, 0x93, 0xf5, 0x9d, 0xe8, 0xea, 0x50, 0x1d, 0xf5, 0x0e,
+	0x36, 0xe5, 0xb9, 0x64, 0x52, 0x35, 0xc4, 0x16, 0xfc, 0x43, 0x01, 0x18, 0x3b, 0x0e, 0x83, 0x59,
+	0x51, 0xff, 0x83, 0x80, 0xf1, 0x1c, 0xfa, 0x79, 0x4b, 0xd5, 0xd9, 0x1b, 0x41, 0xc3, 0xb1, 0xa8,
+	0xc5, 0x7b, 0x5a, 0x47, 0x1e, 0xdf, 0x81, 0xdf, 0x00, 0x1c, 0x12, 0x2f, 0xa3, 0xee, 0x16, 0xaa,
+	0xc4, 0xaf, 0xa0, 0x9f, 0x9f, 0x50, 0xb9, 0x52, 0xbc, 0x03, 0x77, 0x8e, 0x09, 0x9d, 0x98, 0xb3,
+	0x9b, 0x24, 0x15, 0xc0, 0x5d, 0x79, 0x63, 0x75, 0x4e, 0xc4, 0xa8, 0x59, 0xeb, 0xa9, 0xa6, 0xae,
+	0x8f, 0x9a, 0xb3, 0x92, 0xed, 0xc1, 0xdf, 0x14, 0xe8, 0x8e, 0x1d, 0x67, 0x62, 0xce, 0xfe, 0x44,
+	0x8c, 0xa4, 0x9f, 0x7a, 0x55, 0x03, 0x51, 0x6f, 0x32, 0x90, 0xc6, 0x0a, 0x03, 0x71, 0xa0, 0x97,
+	0x55, 0x55, 0x9d, 0x82, 0x9d, 0x92, 0x2c, 0x56, 0xf6, 0x2f, 0x54, 0x61, 0x40, 0xf7, 0x90, 0x78,
+	0xff, 0xb4, 0x77, 0xfc, 0x12, 0x7a, 0xd9, 0x99, 0xd5, 0x65, 0xf2, 0x55, 0x01, 0x38, 0x26, 0x94,
+	0x59, 0xe7, 0x2d, 0x75, 0xca, 0x2e, 0x9c, 0xc7, 0xa1, 0x9f, 0xda, 0x27, 0x5f, 0xa3, 0x4d, 0x68,
+	0xda, 0xe1, 0x22, 0x10, 0x54, 0x37, 0x0d, 0x11, 0xb0, 0x29, 0x39, 0x6e, 0x4c, 0x6c, 0xea, 0x86,
+	0x41, 0xfa, 0x90, 0x0b, 0x00, 0x3b, 0xd0, 0xcf, 0x2b, 0xa9, 0x3e, 0x82, 0xa7, 0xd0, 0x4c, 0xa8,
+	0x45, 0x33, 0x5f, 0xd3, 0x64, 0xca, 0xf8, 0x99, 0xe2, 0xf3, 0xee, 0x1e, 0xff, 0x27, 0xc5, 0x45,
+	0xd3, 0x81, 0xc6, 0xe9, 0xd9, 0xe9, 0x91, 0x56, 0x43, 0x6d, 0x50, 0xc7, 0x27, 0x53, 0x4d, 0x41,
+	0x2d, 0xa8, 0x9f, 0x9f, 0x6b, 0x75, 0x0e, 0x7c, 0x34, 0x35, 0xf5, 0xe0, 0xa7, 0x0a, 0xf7, 0x26,
+	0xf9, 0x49, 0x26, 0x89, 0xaf, 0x5c, 0x9b, 0xa0, 0x29, 0xf4, 0x24, 0x1b, 0x46, 0x03, 0xf9, 0xb2,
+	0xb2, 0x93, 0x0f, 0xb6, 0xd7, 0x7e, 0x8b, 0xbc, 0x25, 0xae, 0xa1, 0xd7, 0xd0, 0x4e, 0xfd, 0x08,
+	0x6d, 0xc9, 0x5b, 0x0b, 0xdf, 0x1d, 0xe8, 0x2b, 0xf1, 0x3c, 0x3d, 0x35, 0x89, 0x72, 0x7a, 0xe1,
+	0x3d, 0xe5, 0x74, 0xd9, 0x51, 0x70, 0x0d, 0xbd, 0xe3, 0xd3, 0x4f, 0x1f, 0x3f, 0x7a, 0x74, 0xad,
+	0xd6, 0xc2, 0x3d, 0x06, 0x8f, 0xd7, 0x7d, 0x12, 0xe7, 0xbc, 0x80, 0x96, 0x78, 0x3d, 0xe8, 0xc1,
+	0xb5, 0x62, 0x85, 0xd6, 0x07, 0x0f, 0x57, 0xc1, 0x79, 0xae, 0xd0, 0x6f, 0x39, 0x37, 0x7f, 0x27,
+	0xe5, 0x5c, 0x49, 0xea, 0xa2, 0xfd, 0x54, 0x33, 0xe5, 0xf6, 0x0b, 0x49, 0x97, 0xdb, 0x97, 0x05,
+	0x86, 0x6b, 0x6f, 0x3b, 0x9f, 0x5a, 0xcf, 0xf8, 0xaf, 0xb6, 0x8b, 0x16, 0xff, 0xf3, 0xfc, 0x77,
+	0x00, 0x00, 0x00, 0xff, 0xff, 0x34, 0xe7, 0xca, 0x25, 0xd0, 0x09, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -923,6 +1148,7 @@ type ControllerServiceClient interface {
 	GetCSPList(ctx context.Context, in *GetCSPListReq, opts ...grpc.CallOption) (*GetCSPListReply, error)
 	AddCSP(ctx context.Context, in *AddCSPReq, opts ...grpc.CallOption) (*AddCSPReply, error)
 	DelCSP(ctx context.Context, in *DelCSPReq, opts ...grpc.CallOption) (*DelCSPReply, error)
+	GetStat(ctx context.Context, in *GetStatReq, opts ...grpc.CallOption) (*GetStatReply, error)
 }
 
 type controllerServiceClient struct {
@@ -987,6 +1213,15 @@ func (c *controllerServiceClient) DelCSP(ctx context.Context, in *DelCSPReq, opt
 	return out, nil
 }
 
+func (c *controllerServiceClient) GetStat(ctx context.Context, in *GetStatReq, opts ...grpc.CallOption) (*GetStatReply, error) {
+	out := new(GetStatReply)
+	err := c.cc.Invoke(ctx, "/controller.ControllerService/GetStat", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ControllerServiceServer is the server API for ControllerService service.
 type ControllerServiceServer interface {
 	GetEdgeList(context.Context, *GetEdgeListReq) (*GetEdgeListReply, error)
@@ -995,6 +1230,7 @@ type ControllerServiceServer interface {
 	GetCSPList(context.Context, *GetCSPListReq) (*GetCSPListReply, error)
 	AddCSP(context.Context, *AddCSPReq) (*AddCSPReply, error)
 	DelCSP(context.Context, *DelCSPReq) (*DelCSPReply, error)
+	GetStat(context.Context, *GetStatReq) (*GetStatReply, error)
 }
 
 // UnimplementedControllerServiceServer can be embedded to have forward compatible implementations.
@@ -1018,6 +1254,9 @@ func (*UnimplementedControllerServiceServer) AddCSP(ctx context.Context, req *Ad
 }
 func (*UnimplementedControllerServiceServer) DelCSP(ctx context.Context, req *DelCSPReq) (*DelCSPReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DelCSP not implemented")
+}
+func (*UnimplementedControllerServiceServer) GetStat(ctx context.Context, req *GetStatReq) (*GetStatReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetStat not implemented")
 }
 
 func RegisterControllerServiceServer(s *grpc.Server, srv ControllerServiceServer) {
@@ -1132,6 +1371,24 @@ func _ControllerService_DelCSP_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ControllerService_GetStat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetStatReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ControllerServiceServer).GetStat(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/controller.ControllerService/GetStat",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ControllerServiceServer).GetStat(ctx, req.(*GetStatReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _ControllerService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "controller.ControllerService",
 	HandlerType: (*ControllerServiceServer)(nil),
@@ -1159,6 +1416,10 @@ var _ControllerService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DelCSP",
 			Handler:    _ControllerService_DelCSP_Handler,
+		},
+		{
+			MethodName: "GetStat",
+			Handler:    _ControllerService_GetStat_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"sync"
 	"time"
 
 	"github.com/ICKelin/cframe/codec"
@@ -23,29 +22,21 @@ type Registry struct {
 
 	// report channel
 	reportchan chan struct{}
-
-	// report channel store msg
-	// to be reported.
-	// will drop the overflow reported msg
-	mu          sync.Mutex
-	reportQueue []string
-	reporting   map[string]struct{}
 }
 
 func NewRegistry(srv, secret string, s *Server) *Registry {
 	return &Registry{
-		srv:         srv,
-		secret:      secret,
-		server:      s,
-		hbchan:      make(chan struct{}),
-		reportchan:  make(chan struct{}),
-		reportQueue: make([]string, 0),
-		reporting:   make(map[string]struct{}),
+		srv:        srv,
+		secret:     secret,
+		server:     s,
+		hbchan:     make(chan struct{}),
+		reportchan: make(chan struct{}),
 	}
 }
 
 func (r *Registry) Run() error {
 	go r.heartbeat()
+	go r.report()
 	for {
 		r.run()
 		time.Sleep(time.Second * 3)
@@ -89,6 +80,17 @@ func (r *Registry) run() error {
 	go r.read(conn)
 	r.write(conn)
 	return nil
+}
+
+func (r *Registry) report() {
+	tick := time.NewTicker(time.Second * 30)
+	defer tick.Stop()
+	for range tick.C {
+		select {
+		case r.reportchan <- struct{}{}:
+		default:
+		}
+	}
 }
 
 func (r *Registry) heartbeat() {
