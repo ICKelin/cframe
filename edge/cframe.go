@@ -105,7 +105,7 @@ func (s *Server) readRemote(lconn *net.UDPConn) {
 		nr, _, err := lconn.ReadFromUDP(buf)
 		if err != nil {
 			log.Error("read full fail: %v", err)
-			return
+			continue
 		}
 
 		if nr < klen {

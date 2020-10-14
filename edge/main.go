@@ -44,6 +44,15 @@ func main() {
 	if len(ctrl) > 0 {
 		ctrlAddr = ctrl
 	}
+
+	// it is our secret
+	// read from env firstly
+	// if empty, use configuration
+	secret := os.Getenv("secret")
+	if len(secret) <= 0 {
+		secret = cfg.SecretKey
+	}
+
 	reg := NewRegistry(ctrlAddr, cfg.SecretKey, s)
 	go func() {
 		err := reg.Run()
