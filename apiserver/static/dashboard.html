@@ -92,7 +92,7 @@
                                                     <div class="card-body text-center">
                                                         <h5 class="text-muted">告警</h5>
                                                         <div class="metric-value d-inline-block">
-                                                            <h1 class="mb-1  text-danger"><span v-text="edgeMeta.warnning"></span></h1>
+                                                            <h1 class="mb-1  text-danger"><span v-text="edgeMeta.warnning">0</span></h1>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -706,6 +706,10 @@
                 },
             }
         })
+
+        if (Cookies.get("accessToken") == undefined) {
+            window.location.href="/public"
+        }
 
         app.userMeta.accessToken =  Cookies.get("accessToken")
         app.userMeta.userId = Cookies.get("userId")

@@ -5,7 +5,7 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>cframe后台管理系统登录</title>
+    <title>cframe注册</title>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="assets/vendor/bootstrap/css/bootstrap.min.css">
     <link href="assets/vendor/fonts/circular-std/style.css" rel="stylesheet">
@@ -30,30 +30,32 @@
 
 <body>
     <div class="splash-container" id="app">
-        <div class="card ">
-            <div class="card-header text-center"><span class="splash-description">cframe后台管理登录</span></div>
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-1">cframe注册</h3>
+            </div>
             <div class="card-body">
                 <div class="form-group">
-                    <input class="form-control form-control-lg" v-model="loginForm.username"type="text" placeholder="用户名" autocomplete="off">
+                    <input class="form-control form-control-lg" v-model="signupForm.username" type="text" name="nick" required="" placeholder="用户名" autocomplete="off">
                 </div>
                 <div class="form-group">
-                    <input class="form-control form-control-lg" v-model="loginForm.password" type="password" placeholder="密码">
+                    <input class="form-control form-control-lg" v-model="signupForm.email" type="email" name="email" required="" placeholder="email" autocomplete="off">
                 </div>
-                <button  class="btn btn-primary btn-lg btn-block" v-on:click="login()">登录</button>
+                <div class="form-group">
+                    <input class="form-control form-control-lg" v-model="signupForm.password" type="password" required="" placeholder="密码">
+                </div>
+                <div class="form-group">
+                    <input class="form-control form-control-lg" v-model="signupForm.comment" type="text" required="" placeholder="个人简介">
+                </div>
+                <div class="form-group pt-2">
+                    <button class="btn btn-block btn-primary" v-on:click="signup()">提交</button>
+                </div>
             </div>
-            <div class="card-footer bg-white p-0  ">
-                <div class="card-footer-item card-footer-item-bordered">
-                    <a href="signup.html" class="footer-link">注册</a></div>
-                <div class="card-footer-item card-footer-item-bordered">
-                    <a href="#" class="footer-link">忘记密码</a>
-                </div>
+            <div class="card-footer bg-white">
+                <p>已经注册? <a href="index.html" class="text-secondary">登录.</a></p>
             </div>
         </div>
     </div>
-  
-    <script src="assets/vendor/jquery/jquery-3.3.1.min.js"></script>
-    <script src="assets/vendor/bootstrap/js/bootstrap.bundle.js"></script>
-
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue"></script>
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
@@ -61,41 +63,42 @@
          var app = new Vue({
             el: '#app',
             data: {
-                loginForm: {
+                signupForm: {
                     username: "",
-                    password: ""
+                    password: "",
+                    email: "",
+                    comment: ""
                 },
                 apiMeta: {
                     baseUrl: "http://demo.notr.tech/api-service/v1"
                 },
             },
             methods: {
-                login: function() {
-                    console.log(this.loginForm)
+                signup: function() {
                     var baseUrl = this.apiMeta.baseUrl
                     var p = this
                     axios({
                         method: "post",
-                        url: baseUrl+"/user/signin",
-                        data: p.loginForm
+                        url: baseUrl+"/user/signup",
+                        data: p.signupForm
                     })
                     .then(function(response) {
                         body = response.data
                         if (body.code != 20000) {
-                            alert("登录失败:" + body.message)
+                            alert("注册失败:" + body.message)
                             return
                         }
 
-
-                        Cookies.set("accessToken", body.data.token);
-                        Cookies.set("userId", body.data.userId)
-                        window.location.href="dashboard.html"
+                        alert("注册成功")
+                        window.location.href="/public"
                     })
                 }
             }
         })
 
     </script>
+
 </body>
+
  
 </html>
