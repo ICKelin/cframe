@@ -22,6 +22,7 @@ require (
 	github.com/pelletier/go-toml v1.8.0
 	github.com/satori/go.uuid v1.2.0
 	github.com/schollz/progressbar v1.0.0 // indirect
+	github.com/shirou/gopsutil v2.20.9+incompatible
 	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726
 	github.com/songgao/water v0.0.0-20200317203138-2b4b6d7c09d8
 	github.com/tdewolff/minify v2.3.6+incompatible // indirect
