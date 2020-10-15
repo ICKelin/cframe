@@ -6,7 +6,8 @@ cframe是一款云网融合的网络软件，最终目的是
 1. 用于连接公有云和公有云，实现多云互联
 2. 连接公有云与数据中心，实现公有云与idc互联。
 
-在线demo: [cframe后台管理系统](http://demo.notr.tech/public)
+在线demo: [cframe后台管理](http://demo.notr.tech/public)
+![dashboard](doc/images/dashboard1.jpg)
 
 ### 整体架构
 ![](doc/images/layer.jpg)

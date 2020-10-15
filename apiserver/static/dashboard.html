@@ -40,7 +40,7 @@
                     <div class="collapse navbar-collapse" id="navbarNav">
                         <ul class="navbar-nav flex-column">
                             <li class="nav-item ">
-                                <a class="nav-link active" href="#" onclick="moveTo('overview')">监控告警</a>
+                                <a class="nav-link active" href="#" onclick="moveTo('overview')">系统状态</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="#"  onclick="moveTo('cloud_connect')">云虚拟网关管理</a>
@@ -164,7 +164,7 @@
                                                                     <th scope="row">1</th>
                                                                     <td v-text="cspDetail[csp.cspType]"></td>
                                                                     <td v-text="csp.accessKey"></td>
-                                                                    <td v-text="csp.accessSecret"></td>
+                                                                    <td v-text="">****************</td>
                                                                 </tr>
                                                             
                                                             </tbody>
@@ -286,15 +286,14 @@
                                         </div>
                                     </div>
                                     <div class="form-group row">
-                                        <div class="col-sm-6 col-md-4 offset-2">
+                                        <div class="col-sm-6 col-md-1 offset-2">
+                                            <label class="custom-control custom-radio custom-control-inline">
+                                                <input type="radio" checked="" value="0" v-model="edgeMeta.addEdgeForm.csptype"  class="custom-control-input"><span class="custom-control-label">自建idc</span>
+                                            </label>
+                                        </div>
+                                        <div class="col-sm-6 col-md-4">
                                             <label class="custom-control custom-radio custom-control-inline">
                                                 <input type="radio" checked="" value="1" v-model="edgeMeta.addEdgeForm.csptype"  class="custom-control-input"><span class="custom-control-label">阿里云</span>
-                                            </label>
-                                            <label class="custom-control custom-radio custom-control-inline">
-                                                <input type="radio" value="2" v-model="edgeMeta.addEdgeForm.csptype" class="custom-control-input"><span class="custom-control-label">腾讯云</span>
-                                            </label>
-                                            <label class="custom-control custom-radio custom-control-inline">
-                                                <input type="radio" value="3" v-model="edgeMeta.addEdgeForm.csptype" class="custom-control-input"><span class="custom-control-label">亚马逊云(AWS)</span>
                                             </label>
                                         </div>
                                     </div>
@@ -330,7 +329,7 @@
                                                 <th scope="col">#</th>
                                                 <th scope="col">云厂商</th>
                                                 <th scope="col">access key</th>
-                                                <th scope="col">secret key</th>
+                                                <th scope="col">access secret</th>
                                             </tr>
                                         </thead>
                                         <tbody id="csp-body">
@@ -338,7 +337,7 @@
                                                 <th scope="row">1</th>
                                                 <td v-text="cspDetail[csp.cspType]"></td>
                                                 <td v-text="csp.accessKey"></td>
-                                                <td v-text="csp.accessSecret"></td>
+                                                <td v-text="">*************************</td>
                                                 <td><button class="btn btn-space btn-secondary" v-on:click="delCSP(csp.cspType)">移除</button></td>
                                             </tr>
                                         </tbody>
@@ -367,16 +366,7 @@
                                     <div class="form-group row">
                                         <div class="col-sm-6 col-md-4 offset-2">
                                             <label class="custom-control custom-radio custom-control-inline">
-                                                <input type="radio" checked="" value="0" v-model="cspMeta.addCSPForm.csptype"  class="custom-control-input"><span class="custom-control-label">IDC</span>
-                                            </label>
-                                            <label class="custom-control custom-radio custom-control-inline">
                                                 <input type="radio" checked="" value="1" v-model="cspMeta.addCSPForm.csptype"  class="custom-control-input"><span class="custom-control-label">阿里云</span>
-                                            </label>
-                                            <label class="custom-control custom-radio custom-control-inline">
-                                                <input type="radio" value="2" v-model="cspMeta.addCSPForm.csptype" class="custom-control-input"><span class="custom-control-label">腾讯云</span>
-                                            </label>
-                                            <label class="custom-control custom-radio custom-control-inline">
-                                                <input type="radio" value="3" v-model="cspMeta.addCSPForm.csptype" class="custom-control-input"><span class="custom-control-label">亚马逊云(AWS)</span>
                                             </label>
                                         </div>
                                     </div>
@@ -478,7 +468,7 @@
                     baseUrl: "http://demo.notr.tech/api-service/v1"
                 },
                 cspDetail: {
-                    0: "未知",
+                    0: "自建idc",
                     1: "阿里云",
                     2: "腾讯云",
                     3: "亚马逊(AWS)"
