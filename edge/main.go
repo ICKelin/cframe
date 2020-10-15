@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 
@@ -9,15 +8,7 @@ import (
 )
 
 func main() {
-	confpath := flag.String("c", "", "config file")
-	flag.Parse()
-
-	cfg, err := ParseConfig(*confpath)
-	if err != nil {
-		fmt.Printf("parse config fali: %v\n", err)
-		return
-	}
-	log.Init(cfg.Log.Path, cfg.Log.Level, cfg.Log.Days)
+	log.Init("log/edge.log", "debug", 3)
 
 	iface, err := NewInterface()
 	if err != nil {
@@ -35,7 +26,6 @@ func main() {
 	if len(lis) > 0 {
 		lisAddr = lis
 	}
-	s := NewServer(lisAddr, cfg.SecretKey, iface, nil)
 
 	// create registry to get connect to controller
 	// just hard code controller address once without env var
@@ -50,10 +40,13 @@ func main() {
 	// if empty, use configuration
 	secret := os.Getenv("secret")
 	if len(secret) <= 0 {
-		secret = cfg.SecretKey
+		log.Error("invalid secret")
+		return
 	}
 
-	reg := NewRegistry(ctrlAddr, cfg.SecretKey, s)
+	s := NewServer(lisAddr, secret, iface, nil)
+
+	reg := NewRegistry(ctrlAddr, secret, s)
 	go func() {
 		err := reg.Run()
 		if err != nil {
