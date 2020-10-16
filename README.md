@@ -1,8 +1,9 @@
 [![Build Status](https://travis-ci.org/ICKelin/cframe.svg?branch=master)](https://travis-ci.org/ICKelin/cframe) ![goreport](https://goreportcard.com/badge/github.com/ICKelin/cframe)
 
-# cframe是什么，解决什么问题
-cframe是一款基于公网传输的网络连接技术，通过cframe可以实现企业数据中心与VPC，VPC与VPC之间互联互通
-![cframe](doc/images/cframe1.1.0.jpg)
+# cframe是什么
+cframe是一款基于公网传输的网络连接技术，通过cframe可以实现VPC与VPC之间,企业数据中心与VPC之间的互联互通， 纯软件实现，不依赖硬件设备，每个VPC只需要一台linux服务器即可。
+
+![cframe](doc/images/vpcpeer.jpg)
 
 # 功能
 - 公有云多个VPC网络互联互通
