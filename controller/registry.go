@@ -41,6 +41,9 @@ type RegistryServer struct {
 	// stat manager
 	statManager *models.StatManager
 
+	// alarm manager
+	alarmManager *models.AlarmManager
+
 	// user manager rpc client
 	userCli proto.UserServiceClient
 }
@@ -52,12 +55,13 @@ type Session struct {
 
 func NewRegistryServer(addr string, cli proto.UserServiceClient) *RegistryServer {
 	return &RegistryServer{
-		addr:        addr,
-		sess:        make(map[string]*Session),
-		edgeManager: models.GetEdgeManager(),
-		cspManager:  models.GetCSPManager(),
-		statManager: models.GetStatManager(),
-		userCli:     cli,
+		addr:         addr,
+		sess:         make(map[string]*Session),
+		edgeManager:  models.GetEdgeManager(),
+		cspManager:   models.GetCSPManager(),
+		statManager:  models.GetStatManager(),
+		alarmManager: models.GetAlarmManager(),
+		userCli:      cli,
 	}
 }
 
@@ -215,7 +219,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 			s.edgeManager.UpdateActive(userObjectId, curEdge.Name, time.Now())
 
 		case codec.CmdReport:
-			log.Info("receive report from edge: %s %s", curEdge.Comment, string(body))
+			log.Info("receive report from edge: %s %s", curEdge.Name, string(body))
 			stat := codec.ReportMsg{}
 			json.Unmarshal(body, &stat)
 
@@ -226,6 +230,9 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 				TrafficOut: stat.TrafficOut,
 				Timestamp:  stat.Timestamp,
 			})
+
+		case codec.CmdAlarm:
+			log.Info("receive alarm from edge: %s %s", curEdge.Name, string(body))
 
 		default:
 			log.Warn("unsupported cmd %d", header.Cmd())
