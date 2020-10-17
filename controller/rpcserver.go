@@ -45,6 +45,7 @@ func (s *RPCServer) ListenAndServe() error {
 
 func (s *RPCServer) GetEdgeList(ctx context.Context,
 	req *proto.GetEdgeListReq) (*proto.GetEdgeListReply, error) {
+	log.Debug("get edge list with req: %v", req)
 	badReq := &proto.GetEdgeListReply{Code: 40000, Message: "Bad Param"}
 	if !bson.IsObjectIdHex(req.UserId) {
 		return badReq, nil
@@ -53,6 +54,7 @@ func (s *RPCServer) GetEdgeList(ctx context.Context,
 	userId := bson.ObjectIdHex(req.UserId)
 	edges, err := s.edgeManager.GetEdgeList(userId)
 	if err != nil {
+		log.Error("get edge list fail: %v")
 		return &proto.GetEdgeListReply{Code: 50000, Message: err.Error()}, nil
 	}
 

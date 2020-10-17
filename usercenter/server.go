@@ -47,6 +47,7 @@ func (s *Server) GetUserBySecret(ctx context.Context,
 		return &proto.GetUserBySecretReply{Code: 50000, Message: err.Error()}, nil
 	}
 
+	log.Debug("getuser by secret req: %v", req)
 	return &proto.GetUserBySecretReply{
 		UserInfo: &proto.UserInfo{
 			UserId:     user.Id.Hex(),
@@ -65,6 +66,8 @@ func (s *Server) AddUser(ctx context.Context,
 		len(req.Email) <= 0 {
 		return badReq, nil
 	}
+
+	log.Debug("add user req: %v", req)
 
 	// verify user
 	exist, _ := s.userManager.GetUserByName(req.UserName)
@@ -102,6 +105,8 @@ func (s *Server) AddUser(ctx context.Context,
 
 func (s *Server) GetUserInfo(ctx context.Context,
 	req *proto.GetUserInfoReq) (*proto.GetUserInfoReply, error) {
+	log.Debug("get user req: %v", req)
+
 	user, err := s.userManager.VerifyUser(req.UserName, req.Password)
 	if err != nil {
 		return &proto.GetUserInfoReply{Code: 50000, Message: err.Error()}, nil
@@ -119,6 +124,7 @@ func (s *Server) GetUserInfo(ctx context.Context,
 
 func (s *Server) Authorize(ctx context.Context,
 	req *proto.AuthorizeReq) (*proto.AuthorizeReply, error) {
+	log.Debug("auth req: %v", req)
 	userInfo, err := s.userManager.VerifyUser(req.Username, req.Password)
 	if err != nil {
 		// TODO: verify by email
@@ -146,6 +152,8 @@ func (s *Server) Authorize(ctx context.Context,
 
 func (s *Server) GetUserByToken(ctx context.Context,
 	req *proto.GetUserByTokenReq) (*proto.GetUserByTokenReply, error) {
+
+	log.Debug("get user by token req: %v", req)
 	authInfo, err := s.authManager.GetAuthByToken(req.Token)
 	if err != nil {
 		log.Error("get user by token fail: %v", err)

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+ 
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="assets/vendor/bootstrap/css/bootstrap.min.css">
+    <link href="assets/vendor/fonts/circular-std/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/libs/css/style.css">
+    <link rel="stylesheet" href="assets/vendor/fonts/fontawesome/css/fontawesome-all.css">
+    <link rel="stylesheet" href="assets/vendor/charts/chartist-bundle/chartist.css">
+    <link rel="stylesheet" href="assets/vendor/charts/morris-bundle/morris.css">
+    <link rel="stylesheet" href="assets/vendor/fonts/material-design-iconic-font/css/materialdesignicons.min.css">
+    <link rel="stylesheet" href="assets/vendor/charts/c3charts/c3.css">
+    <link rel="stylesheet" href="assets/vendor/fonts/flag-icon-css/flag-icon.min.css">
+    <link rel="stylesheet" href="assets/vendor/bootstrap-select/css/bootstrap-select.css">
+    <link rel="stylesheet" href="https://unpkg.com/browse/vis-network@8.4.0/dist/dist/vis-network.min.css">
+    <title>节点拓扑</title>
+    <style type="text/css">
+        body {
+            background-color: white;
+        }
+        #topology {
+            width: 100%;
+            height: 500px;
+            margin: 100px;
+            border: 1px solid lightgray;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="topology"></div>
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script>
+        var container = document.getElementById('topology');
+        var data = {}
+        var options = {
+            "title": "节点网络拓扑"
+        };
+        var network = new vis.Network(container, data, options);
+
+        loadtopology = function() {
+            axios({
+                method: "get",
+                url: "http://demo.notr.tech/api-service/v1/edge/list",
+                headers: {
+                    "Access-Token": Cookies.get("accessToken"),
+                }
+            })
+            .then(function(response) {
+                var body = response.data
+                gnodes = []
+                gedges = []
+                console.log(body)
+                var now = Date.parse(new Date())/1000
+                for ( it = 0; it < body.data.length; it++) {
+                    color = "#1fa439"
+                    edge = body.data[it]
+                    diff = now - edge.activeAt
+                    if (diff < 30) {
+                    } else if (diff < 60) {
+                        color = "#f1ad05"
+                    } else {
+                        color = "red"
+                    }
+
+                    gnodes.push({
+                        id: it,
+                        label: edge.name,
+                        color: color
+                    })
+                }
+
+                for (i = 0; i < gnodes.length; i++) {
+                    for (j = i+1; j < gnodes.length; j++) {
+                        gedges.push({
+                            from: i,
+                            to: j,
+                        })
+                    }
+                }
+                network.setData({nodes: gnodes, edges: gedges})
+            })
+        }
+
+        loadtopology()
+    </script>
+
+    <script>
+       
+    </script>
+</body>
+ 
+</html>

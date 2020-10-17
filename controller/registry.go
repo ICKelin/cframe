@@ -263,7 +263,9 @@ func (s *RegistryServer) online(peer net.Conn, edge *edgemanager.Edge) {
 		Cidr:       edge.Cidr,
 	}
 
+	peer.SetWriteDeadline(time.Now().Add(time.Second * 10))
 	err := codec.WriteJSON(peer, codec.CmdAdd, obj)
+	peer.SetWriteDeadline(time.Time{})
 	if err != nil {
 		log.Error("write json fail: %v", err)
 	}
@@ -291,7 +293,9 @@ func (s *RegistryServer) offline(peer net.Conn, edge *edgemanager.Edge) {
 		Cidr:       edge.Cidr,
 	}
 
+	peer.SetWriteDeadline(time.Now().Add(time.Second * 10))
 	err := codec.WriteJSON(peer, codec.CmdDel, obj)
+	peer.SetWriteDeadline(time.Time{})
 	if err != nil {
 		log.Error("write json fail: %v", err)
 	}

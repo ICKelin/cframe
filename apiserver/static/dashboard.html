@@ -16,6 +16,9 @@
     <link rel="stylesheet" href="assets/vendor/charts/c3charts/c3.css">
     <link rel="stylesheet" href="assets/vendor/fonts/flag-icon-css/flag-icon.min.css">
     <link rel="stylesheet" href="assets/vendor/bootstrap-select/css/bootstrap-select.css">
+    <link rel="stylesheet" href="https://unpkg.com/browse/vis-network@8.4.0/dist/dist/vis-network.min.css">
+    
+
     <title>cframe后台管理系统</title>
 </head>
 
@@ -108,11 +111,10 @@
                                                 </div>
                                             </div>                                            
                                         </div>
-
                                         <div class="row">
                                             <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
                                                 <div class="card">
-                                                    <h5 class="card-header">云虚拟网关</h5>
+                                                    <h5 class="card-header">云虚拟网关 <a href="topology.html" target="blank" class="badge-success badge">查看节点拓扑</a></h5>
                                                     <div class="card-body">
                                                         <table class="table table-striped">
                                                             <thead>
@@ -414,8 +416,7 @@
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
     <script src="https//cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js@3.0/dist/svg.min.js"></script>
-
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
     <script>
         current ="overview"
         function moveTo(target) {
@@ -424,6 +425,51 @@
             }
             document.getElementById(target).style.display="block"
             current = target
+        }
+        window.onload = function() {
+            var container = document.getElementById('topology');
+            var data = {}
+            var options = {};
+
+            // initialize your network!
+            var network = new vis.Network(container, data, options);
+
+            loadtopology = function() {
+                axios({
+                    method: "get",
+                    url: "http://demo.notr.tech/api-service/v1/edge/list",
+                    headers: {
+                        "Access-Token": Cookies.get("accessToken"),
+                    }
+                })
+                .then(function(response) {
+                    var body = response.data
+                    gnodes = []
+                    gedges = []
+                    console.log(body)
+                    var now = Date.parse(new Date())/1000
+                    for ( it = 0; it < body.data.length; it++) {
+                        edge = body.data[it]
+                        gnodes.push({
+                            id: it,
+                            label: edge.name
+                        })
+                    }
+
+                    for (i = 0; i < gnodes.length; i++) {
+                        for (j = i+1; j < gnodes.length; j++) {
+                            gedges.push({
+                                from: i,
+                                to: j,
+                            })
+                        }
+                    }
+console.log(gnodes,gedges)
+                    network.setData({nodes: gnodes, edges: gedges})
+                })
+            }
+            setInterval("loadtopology()", 1000*10)
+            loadtopology()
         }
      
     </script>
@@ -496,8 +542,11 @@
                         p.edgeMeta.warnning = 0
                         p.edgeMeta.stop = 0
 
+                        gnodes = []
+                        gedges = []
+
                         var now = Date.parse(new Date())/1000
-                        for (it in p.edgeMeta.edgelist) {
+                        for ( it = 0; it < p.edgeMeta.edgelist.length; it++) {
                             edge = p.edgeMeta.edgelist[it]
                             diff = now - edge.activeAt
                             if (diff < 30) {
@@ -507,6 +556,7 @@
                             } else {
                                 p.edgeMeta.stop+=1
                             }
+                            
                         }
                     })
                 },
@@ -532,11 +582,6 @@
                     console.log(this.edgeMeta.addEdgeForm)
                     var accessToken = this.userMeta.accessToken
                     var baseUrl = this.apiMeta.baseUrl
-                    
-                    if (this.edgeMeta.addEdgeForm.csptype == 0) {
-                        alert("非法云服务厂商")
-                        return
-                    }
                     
                     this.edgeMeta.addEdgeForm.csptype = parseInt(this.edgeMeta.addEdgeForm.csptype)
                     this.edgeMeta.addEdgeForm.publicPort = parseInt(this.edgeMeta.addEdgeForm.publicPort)
@@ -598,11 +643,6 @@
                 addCSP: function() {
                    var accessToken = this.userMeta.accessToken
                     var baseUrl = this.apiMeta.baseUrl
-                    
-                    if (this.cspMeta.addCSPForm.csptype == 0) {
-                        alert("非法云服务厂商")
-                        return
-                    }
                     
                     this.cspMeta.addCSPForm.csptype = parseInt(this.cspMeta.addCSPForm.csptype)
                     var p = this
@@ -700,7 +740,6 @@
         if (Cookies.get("accessToken") == undefined) {
             window.location.href="/public"
         }
-
         app.userMeta.accessToken =  Cookies.get("accessToken")
         app.userMeta.userId = Cookies.get("userId")
         app.getEdgelist()
@@ -722,13 +761,8 @@
             var s = date.getSeconds();
             return D+h+m+s;
         }
-
+    
     </script>
 </body>
-
-<script>
-
-
-</script>
  
 </html>
