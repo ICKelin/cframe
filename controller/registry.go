@@ -149,7 +149,9 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	csp, err := s.cspManager.GetCSP(userObjectId, curEdge.CSPType)
 	if err != nil {
 		log.Error("get csp fail: %v", err)
-		return
+		// as build in csp
+		csp = &models.CSP{}
+		// return
 	}
 
 	log.Debug("csp info: %v", csp)

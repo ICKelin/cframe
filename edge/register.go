@@ -72,9 +72,10 @@ func (r *Registry) run() error {
 	instance, err := vpc.GetVPCInstance(reply.CSPInfo.CspType, reply.CSPInfo.AccessKey, reply.CSPInfo.AccessSecret)
 	if err != nil {
 		log.Error("unsupported vpc %v", reply.CSPInfo.CspType)
-		return err
+		// return err
+	} else {
+		r.server.SetVPCInstance(instance)
 	}
-	r.server.SetVPCInstance(instance)
 	r.server.AddPeers(reply.EdgeList)
 
 	go r.read(conn)
