@@ -255,7 +255,7 @@
                                 </div>
                             </div>
                             <div class="card" v-show="edgeMeta.showAddForm">
-                                <h5 class="card-header">新增edge节点</h5>
+                                <h5 class="card-header">新增云虚拟网关</h5>
                                 <div class="card-body">
                                     <div class="form-group row">
                                         <label class="col-3 col-lg-2 col-form-label text-right">名称</label>
@@ -293,9 +293,14 @@
                                                 <input type="radio" checked="" value="0" v-model="edgeMeta.addEdgeForm.csptype"  class="custom-control-input"><span class="custom-control-label">自建idc</span>
                                             </label>
                                         </div>
-                                        <div class="col-sm-6 col-md-4">
+                                        <div class="col-sm-6 col-md-1">
                                             <label class="custom-control custom-radio custom-control-inline">
                                                 <input type="radio" checked="" value="1" v-model="edgeMeta.addEdgeForm.csptype"  class="custom-control-input"><span class="custom-control-label">阿里云</span>
+                                            </label>
+                                        </div>
+                                        <div class="col-sm-6 col-md-4">
+                                            <label class="custom-control custom-radio custom-control-inline">
+                                                <input type="radio" checked="" value="3" v-model="edgeMeta.addEdgeForm.csptype"  class="custom-control-input"><span class="custom-control-label">亚马逊(AWS)</span>
                                             </label>
                                         </div>
                                     </div>
@@ -366,9 +371,14 @@
                                         </div>
                                     </div>
                                     <div class="form-group row">
-                                        <div class="col-sm-6 col-md-4 offset-2">
+                                        <div class="col-sm-6 col-md-2 offset-2">
                                             <label class="custom-control custom-radio custom-control-inline">
                                                 <input type="radio" checked="" value="1" v-model="cspMeta.addCSPForm.csptype"  class="custom-control-input"><span class="custom-control-label">阿里云</span>
+                                            </label>
+                                        </div>
+                                        <div class="col-sm-6 col-md-2">
+                                            <label class="custom-control custom-radio custom-control-inline">
+                                                <input type="radio" checked="" value="3" v-model="cspMeta.addCSPForm.csptype"  class="custom-control-input"><span class="custom-control-label">亚马逊(AWS)</span>
                                             </label>
                                         </div>
                                     </div>

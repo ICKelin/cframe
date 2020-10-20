@@ -8,6 +8,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.1.1 // indirect
 	github.com/GoAdminGroup/go-admin v1.2.16 // indirect
 	github.com/GoAdminGroup/themes v0.0.39 // indirect
+	github.com/aws/aws-sdk-go v1.32.1
 	github.com/coredns/coredns v1.7.0
 	github.com/coreos/etcd v3.3.22+incompatible
 	github.com/coreos/go-semver v0.3.0 // indirect

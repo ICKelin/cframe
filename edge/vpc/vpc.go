@@ -18,6 +18,8 @@ func GetVPCInstance(typ proto.CSPType, key, secret string) (IVPC, error) {
 	switch typ {
 	case proto.CSPType_ALI:
 		return NewAliVPC(key, secret), nil
+	case proto.CSPType_AWS:
+		return NewAWSVPC(key, secret), nil
 	default:
 		return nil, fmt.Errorf("unsupported vpc type %s", typ)
 	}
