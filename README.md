@@ -1,218 +1,32 @@
 [![Build Status](https://travis-ci.org/ICKelin/cframe.svg?branch=master)](https://travis-ci.org/ICKelin/cframe) ![goreport](https://goreportcard.com/badge/github.com/ICKelin/cframe)
 
-# cframe
-cframe是一款云网融合的网络软件，最终目的是
+# cframe是什么
+cframe是一款基于公网传输的网络软件，通过cframe可以实现VPC与VPC之间,企业数据中心与VPC之间的互联互通，纯软件实现，不依赖硬件设备，每个VPC只需要一台linux服务器即可。
 
-1. 用于连接公有云和公有云，实现多云互联
-2. 连接公有云与数据中心，实现公有云与idc互联。
+![cframe](doc/images/vpcpeer.jpg)
 
-### 整体架构
-![](doc/images/layer.jpg)
+## 应用场景1: 阿里云不同可用区VPC互通
 
-项目整体而言分为三层。
+用户公有云使用阿里云，针对大陆用户使用了深圳地区的阿里云，为了应对海外市场，决定开通在香港开通阿里云服务海外用户，但是部分数据（比如中台配置，用户信息等）需要在深圳阿里云同步过去。
+由于部分内部服务不便暴露在公网。希望深圳阿里云能够通过内网地址访问香港阿里云，香港阿里云也能够通过内网地址访问深圳阿里云，因此需要将香港阿里云和深圳阿里云的网络进行打通。
 
-最上面一层为应用层，面向用户，为用户提供整个系统管理接口，最后将用户配置存储与etcd当中，供下层使用
+![ali-ali](doc/images/ali-ali.jpg)
 
-中间为控制器，用于读取存储在etcd当中的用户配置信息，并与下层建立tcp长连接以及路由的添加/删除操作，从而实现edge节点的动态添加与删除。
+## 应用场景2: 阿里云和aws网络打通
+AWS一直是云服务厂商的巨头，很多新的产品和解决方案都是由AWS率先提供，现用户需要在海外新增一个香港AWS的VPC，以使用AWS的最新产品，但是部分数据还是需要访问香港阿里与和大陆阿里云，因此需要将三者网络进行打通。
 
-最下面一层为边缘节点，也就是真正部署在用户云服务器vpc当中的应用程序，边缘节点会根据配置**自动添加vpc路由**，无需运维与网络工程师干预，因此需要云服务器管理人员开通子账号以及开通部分权限。这个在后续会有说明。
+![ali-aws](doc/images/ali-aws.jpg)
 
-**vpc互联**
-![](doc/images/cframe1.1.0.jpg)
+## 应用场景3: 阿里云，aws，腾讯云网络两两互通
+阿里云虽然是国内领先的云服务厂商，但是谁也不敢保证哪天出事两或者价格方面做了调整，或者说公司为了缩减预算切换到其他云服务厂商，所以有时也需要考虑使用腾讯云等作为备份，
+在必要的时候切换到腾讯云上，因此需要在场景1和场景2的基础之上新加入腾讯云，因此需要解决阿里云，腾讯云，aws这三者网络的互联互通。
 
-### 在线测试
-当前已解决阿里云vpc互联，只需要几个步骤即可完成操作。
+![ali-aws-tc](doc/images/ali-aws-tc.jpg)
 
-#### 开通阿里云子账户，并赋予相关权限。
+## 应用场景4: 数据中心与公有云互通
 
-**创建子账户**
+用户使用自己的数据中心，但是希望使用公有云的部分软件(比如负载均衡)，那么需要公有云能够访问数据中心，数据中心能够访问公有云，单纯使用公网ip通信可能会产生安全问题，因此需要在数据中心与公有云之间构建私有隧道，两者通过私有地址进行访问。
 
-进入阿里云控制台RAM访问控制模块，用户，创建用户，登录名称和显示名称均填写cframe，并勾选编程访问。
-![](doc/images/ram.jpg)
+![dci](doc/images/dci.jpg)
 
-创建子账号完成之后，需要将accessKey和secretKey保存，后续需要将其配置到edge节点的配置文件当中。
-
-**添加权限策略**
-
-在ram访问控制当中，选择权限策略管理，创建权限策略，勾选脚本配置，将以下相关权限粘贴进文本编辑器当中。
-```
-{
-    "Version": "1",
-    "Statement": [
-        {
-            "Action": [
-                "ecs:DescribeRegions",
-                "ecs:DescribeInstances",
-                "vpc:DescribeVpcs",
-                "DescribeVRouters",
-                "vpc:DescribeRouteTables",
-                "vpc:DeleteRouteEntry",
-                "vpc:CreateRouteEntry"
-            ],
-            "Resource": "*",
-            "Effect": "Allow"
-        }
-    ]
-}
-```
-
-**添加授权**
-
-选择授权，新增授权，用cframe进行模糊搜索
-![](doc/images/authorize.jpg)
-
-通过上述配置，完成cframe子账号的创建并授予相关权限，后续无需管理员再进行任何vpc路由相关的操作。
-
-### 使用cfctl添加vpc实例（名称，公网地址:端口，cidr）
-cfctl是cframe系统的管理工具，用于操作用户和边缘节点两大模块。
-
-```
-➜ ./cfctl 
-NAME:
-   cfctrl - cfctrl is cframe api server cli.
-
-USAGE:
-   cfctl [global options] command [command options] [arguments...]
-
-COMMANDS:
-   login    login to cframe, access token will store in token.conf
-   edge     edge control(add,del,list,topology)
-   help, h  Shows a list of commands or help for one command
-
-GLOBAL OPTIONS:
-   --help, -h  show help (default: false)
-```
-
-登录cframe，获取到token，cfctl会将token信息保存在token.conf文件当中，在线测试当中，会共用一个用户。
-
-```
-➜ ./cfctl login
-login reply:  {"code":20000,"message":"success","data":{"Token":"CrYyW9SITg+HcEIiIrsjvQ==","Username":"cframe"}}
-save loginReply to token.conf
-```
-
-获取当前vpc节点状态
-```
-➜ ./cfctl edge topology|jq      
-{
-  "code": 20000,
-  "message": "success",
-  "data": {
-    "edge_node": [
-      {
-        "name": "hk-1",
-        "comment": "",
-        "cidr": "172.31.0.0/16",
-        "host_addr": "47.242.14.118:58423",
-        "status": 0,
-        "type": ""
-      },
-      {
-        "name": "sz-1",
-        "comment": "",
-        "cidr": "172.18.0.0/16",
-        "host_addr": "47.115.82.187:58423",
-        "status": 0,
-        "type": "ali-vpc"
-      }
-    ],
-    "edge_host": []
-  }
-}
-```
-
-新增广州1区vpc
-
-```
-➜  ./cfctl edge add --name "gz-1" --hostaddr "47.242.14.188:58423" --cidr "172.20.0.0/16"|jq
-{
-  "code": 20000,
-  "message": "success",
-  "data": null
-}
-➜
-```
-
-获取最新新的节点信息，可以发现广州1区的vpc已加入到测试当中
-
-```
-➜  cfctl git:(develop) ✗ ./cfctl edge topology|jq                                                                 
-{
-  "code": 20000,
-  "message": "success",
-  "data": {
-    "edge_node": [
-      {
-        "name": "gz-1",
-        "comment": "",
-        "cidr": "172.20.0.0/16",
-        "host_addr": "47.242.14.188:58423",
-        "status": 0,
-        "type": ""
-      },
-      {
-        "name": "hk-1",
-        "comment": "",
-        "cidr": "172.31.0.0/16",
-        "host_addr": "47.242.14.118:58423",
-        "status": 0,
-        "type": ""
-      },
-      {
-        "name": "sz-1",
-        "comment": "",
-        "cidr": "172.18.0.0/16",
-        "host_addr": "47.115.82.187:58423",
-        "status": 0,
-        "type": "ali-vpc"
-      }
-    ],
-    "edge_host": []
-  }
-}
-```
-
-由于当前是demo状态，在添加之前建议将其他edge信息删除，以免造成不必要的影响，同时也建议在自己测试完成之后将自己的vpc信息删除，以免影响他人测试。但是系统内置的hk-1vpc不建议删除，该vpc用于验证vpc加入是否成功。
-
-#### 在各个vpc当中部署edge节点
-添加完vpc之后，需要在新的vpc当中部署edge程序，config.toml配置如下;
-
-```
-controller="demo.notr.tech:58422"
-listen_addr=":58423"
-name = "gz-1"
-type = "ali-vpc"
-cframe_secret="y0WBOnDTTZCrj4bo2vau5Q=="
-
-[alivpc]
-access_key=$ACCESS_KEY
-access_secret=$SECRET_KEY
-
-[log]
-level="debug"
-days=3
-path="log/edge.log"
-```
-
-此处cframe key为demo的key，需要将$ACCESS_KEY和SECRET_KEY替换为在第一步当中创建的阿里云子账户的accessKey和secretKey。
-
-配置修改完成后，启动edge程序
-```
-mkdir log
-nohup ./edge -c config.toml &
-```
-
-完成上述步骤之后，就可以进行网络连通性测试了，**系统会保留一个hk-1的edge节点供测试使用，建议不要将该edge删除,**`ping 172.31.185.159` 可进行测试。
-
-**注意:**
-
-    需要打开安全组当中公网udp端口58423的访问权限，该端口用于edge之间的通信。
-
-### 最后
-我认为这是个很有意思，也很有意义的工程，奈何本人个人精力有限，希望能有更多的人参与进来，无论你是:
-
-- 网络工程师
-- 系统运维
-- 后端开发人员
-- 前端开发人员
-- 甚至是销售人员
+如果您有以上四个应用场景，可以尝试使用cframe进行解决，在使用过程当中有任何问题可以随时提交issue。

@@ -8,10 +8,13 @@ import (
 )
 
 type Config struct {
-	ApiAddr    string   `toml:"api_addr"`
-	ListenAddr string   `toml:"listen_addr"`
-	Etcd       []string `toml:"etcd"`
-	Log        Log      `toml:"log"`
+	ListenAddr     string   `toml:"listen_addr"`
+	Etcd           []string `toml:"etcd"`
+	MongoUrl       string   `toml:"mongourl"`
+	DBName         string   `toml:"dbname"`
+	UserCenterAddr string   `toml:"usercenter_addr"`
+	RpcAddr        string   `toml:"rpc_addr"`
+	Log            Log      `toml:"log"`
 }
 
 type Log struct {

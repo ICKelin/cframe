@@ -1,0 +1,778 @@
+<!doctype html>
+<html lang="en">
+ 
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="assets/vendor/bootstrap/css/bootstrap.min.css">
+    <link href="assets/vendor/fonts/circular-std/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/libs/css/style.css">
+    <link rel="stylesheet" href="assets/vendor/fonts/fontawesome/css/fontawesome-all.css">
+    <link rel="stylesheet" href="assets/vendor/charts/chartist-bundle/chartist.css">
+    <link rel="stylesheet" href="assets/vendor/charts/morris-bundle/morris.css">
+    <link rel="stylesheet" href="assets/vendor/fonts/material-design-iconic-font/css/materialdesignicons.min.css">
+    <link rel="stylesheet" href="assets/vendor/charts/c3charts/c3.css">
+    <link rel="stylesheet" href="assets/vendor/fonts/flag-icon-css/flag-icon.min.css">
+    <link rel="stylesheet" href="assets/vendor/bootstrap-select/css/bootstrap-select.css">
+    <link rel="stylesheet" href="https://unpkg.com/browse/vis-network@8.4.0/dist/dist/vis-network.min.css">
+    
+
+    <title>cframe后台管理系统</title>
+</head>
+
+<body>
+    <div class="dashboard-main-wrapper" id="app">
+        <div class="dashboard-header">
+            <nav class="navbar navbar-expand-lg bg-white fixed-top">
+                <a class="navbar-brand" href="index.html">cframe后台管理系统</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </nav>
+        </div>
+
+        <div class="nav-left-sidebar sidebar-dark">
+            <div class="menu-list">
+                <nav class="navbar navbar-expand-lg navbar-light">
+                    <a class="d-xl-none d-lg-none" href="#">Dashboard</a>
+                    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav flex-column">
+                            <li class="nav-item ">
+                                <a class="nav-link active" href="#" onclick="moveTo('overview')">系统状态</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#"  onclick="moveTo('cloud_connect')">云虚拟网关管理</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#"  onclick="moveTo('csp')">云服务授权管理</a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+        </div>
+
+        <!-- 概览 -->
+        <div class="dashboard-wrapper" id="overview">
+            <div class="dashboard-ecommerce">
+                <div class="container-fluid dashboard-content ">
+                    <div class="row">
+                        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12 mb-5">
+                            <div class="pills-regular">
+                                <ul class="nav nav-pills mb-1" id="pills-tab" role="tablist">
+                                    <li class="nav-item">
+                                        <a class="nav-link active" id="stat-tab" data-toggle="pill" href="#stat-stat" role="tab" aria-controls="home" aria-selected="true">运行状态</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="edge-tab" data-toggle="pill" href="#stat-edge" role="tab" aria-controls="profile" aria-selected="false">虚拟网关监控</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" id="alarm-tab" data-toggle="pill" href="#stat-alarm" role="tab" aria-controls="contact" aria-selected="false">告警管理</a>
+                                    </li>
+                                </ul>
+                                <div class="tab-content" id="pills-tabContent">
+                                    <div class="tab-pane fade show active" id="stat-stat" role="tabpanel" aria-labelledby="stat-tab">
+                                        <div class="row">
+                                            <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 col-12">
+                                                <div class="card border-3 border-top border-top-primary">
+                                                    <div class="card-body text-center">
+                                                        <h5 class="text-muted">运行中/已停止</h5>
+                                                        <div class="metric-value d-inline-block">
+                                                            <h1 class="mb-1">
+                                                                <span v-text="edgeMeta.healthy"></span>/<span class="text-danger" v-text="edgeMeta.stop"></span>
+                                                            </h1>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 col-12">
+                                                <div class="card border-3 border-top border-top-primary  border-secondary">
+                                                    <div class="card-body text-center">
+                                                        <h5 class="text-muted">告警</h5>
+                                                        <div class="metric-value d-inline-block">
+                                                            <h1 class="mb-1  text-danger"><span v-text="edgeMeta.warnning">0</span></h1>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 col-12">
+                                                <div class="card border-3 border-top border-top-primary">
+                                                    <div class="card-body text-center">
+                                                        <h5 class="text-muted">累计流量</h5>
+                                                        <div class="metric-value d-inline-block">
+                                                            <h1 class="mb-1">0</h1>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>                                            
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                                                <div class="card">
+                                                    <h5 class="card-header">云虚拟网关 <a href="topology.html" target="blank" class="badge-success badge">查看节点拓扑</a></h5>
+                                                    <div class="card-body">
+                                                        <table class="table table-striped">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th scope="col">#</th>
+                                                                    <th scope="col">云厂商</th>
+                                                                    <th scope="col">名称</th>
+                                                                    <th scope="col">公网ip</th>
+                                                                    <th scope="col">vpc ip地址块</th>
+                                                                    <th scope="col">描述</th>
+                                                                    <th scope="col">上次心跳时间</th>
+                                                                    <th scope="col">健康状态</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <tr v-for="edge in edgeMeta.edgelist">
+                                                                    <th scope="row">1</th>
+                                                                    <td v-text="cspDetail[edge.cspType]"></td>
+                                                                    <td v-text="edge.name"></td>
+                                                                    <td v-text="edge.publicIP"></td>
+                                                                    <td v-text="edge.cidr"></td>
+                                                                    <td v-text="edge.comment"></td>
+                                                                    <td v-if="edge.activeAt == 0">-</td>
+                                                                    <td v-else v-text="Date.parse(new Date())/1000 - edge.activeAt + '秒前'"></td>
+
+                                                                    <td v-if="Date.parse(new Date())/1000 - edge.activeAt < 30"><span class="badge badge-success">健康</span></td>
+                                                                    <td v-else-if="Date.parse(new Date())/1000 - edge.activeAt < 60"><span class="badge badge-warning">告警</span></td>
+                                                                    <td v-else><span class="badge badge-danger">已停止</span></td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+
+                                                <div class="card">
+                                                    <h5 class="card-header">云服务授权列表</h5>
+                                                    <div class="card-body">
+                                                        <table class="table table-striped">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th scope="col">#</th>
+                                                                    <th scope="col">云厂商</th>
+                                                                    <th scope="col">access key</th>
+                                                                    <th scope="col">secret key</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <tr v-for="csp in cspMeta.csplist">
+                                                                    <th scope="row">1</th>
+                                                                    <td v-text="cspDetail[csp.cspType]"></td>
+                                                                    <td v-text="csp.accessKey"></td>
+                                                                    <td v-text="">****************</td>
+                                                                </tr>
+                                                            
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <div class="tab-pane fade" id="stat-edge" role="tabpanel" aria-labelledby="edge-tab">
+                                        <div class="row">
+                                            <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                                                <h4>选择云虚拟网关</h4>
+                                                <select class="selectpicker" v-model="edgeSelected" v-on:change="getEdgeStat()">
+                                                    <option v-for="edge in edgeMeta.edgelist">
+                                                        {{ edge.name }}
+                                                    </option>
+                                                </select>    
+                                            </div>
+                                        </div>
+                                        <div class="row" >
+                                            <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                                                <h5 class="text-center">网络流量 <a href="#" v-on:click="getEdgeStat()">刷新</a></h5> 
+                                                <canvas id="traffic-charts" height="50"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane fade" id="stat-alarm" role="tabpanel" aria-labelledby="alarm-tab">
+                                        TODO:
+                                    </div>
+                                    <div class="tab-pane fade" id="stat-topology" role="tabpanel" aria-labelledby=topology-tab">
+                                       TODO:
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            
+        </div>
+
+        <!-- 多云互联配置 -->
+        <div class="dashboard-wrapper" id="cloud_connect" style="display:none">
+            <div class="dashboard-ecommerce">
+                <div class="container-fluid dashboard-content ">
+                    <div class="row">
+                        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                            <div class="card">
+                                <h5 class="card-header">虚拟网关列表</h5>
+                                <div class="card-body">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">#</th>
+                                                <th scope="col">云厂商</th>
+                                                <th scope="col">名称</th>
+                                                <th scope="col">公网ip</th>
+                                                <th scope="col">对外端口</th>
+                                                <th scope="col">VPC地址段</th>
+                                                <th scope="col">描述</th>
+                                                <th scope="col">操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="edge in edgeMeta.edgelist">
+                                                <th scope="row">1</th>
+                                                <td v-text="cspDetail[edge.cspType]"></td>
+                                                <td v-text="edge.name"></td>
+                                                <td v-text="edge.publicIP"></td>
+                                                <td v-text="edge.publicPort"></td>
+                                                <td v-text="edge.cidr"></td>
+                                                <td v-text="edge.comment"></td>
+                                                <td>
+                                                    <button class="btn btn-space btn-secondary" v-on:click=delEdge(edge.name)>停用</button>
+                                                    <!-- <a href="" class="btn btn-space btn-primary">监控</a> -->
+                                                </td>                                            
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="col col-sm-10 col-lg-9 offset-sm-1 offset-lg-0">
+                                    <button class="btn btn-space btn-primary" v-on:click="edgeMeta.showAddForm=true">新增</button>
+                                </div>
+                            </div>
+                            <div class="card" v-show="edgeMeta.showAddForm">
+                                <h5 class="card-header">新增云虚拟网关</h5>
+                                <div class="card-body">
+                                    <div class="form-group row">
+                                        <label class="col-3 col-lg-2 col-form-label text-right">名称</label>
+                                        <div class="col-9 col-lg-10">
+                                            <input required="" v-model="edgeMeta.addEdgeForm.name"placeholder="名称" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label  class="col-3 col-lg-2 col-form-label text-right">公网ip</label>
+                                        <div class="col-9 col-lg-10">
+                                            <input required="" v-model="edgeMeta.addEdgeForm.hostaddr" placeholder="公网ip" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-3 col-lg-2 col-form-label text-right">对外端口</label>
+                                        <div class="col-9 col-lg-10">
+                                            <input required="" v-model="edgeMeta.addEdgeForm.publicPort" placeholder="对外提供端口" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-3 col-lg-2 col-form-label text-right">VPC地址段</label>
+                                        <div class="col-9 col-lg-10">
+                                            <input required="" v-model="edgeMeta.addEdgeForm.cidr" data-parsley-type="url" placeholder="vpc地址段" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-3 col-lg-2 col-form-label text-right">描述</label>
+                                        <div class="col-9 col-lg-10">
+                                            <input required="" v-model="edgeMeta.addEdgeForm.comment" data-parsley-type="url" placeholder="描述" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-sm-6 col-md-1 offset-2">
+                                            <label class="custom-control custom-radio custom-control-inline">
+                                                <input type="radio" checked="" value="0" v-model="edgeMeta.addEdgeForm.csptype"  class="custom-control-input"><span class="custom-control-label">自建idc</span>
+                                            </label>
+                                        </div>
+                                        <div class="col-sm-6 col-md-1">
+                                            <label class="custom-control custom-radio custom-control-inline">
+                                                <input type="radio" checked="" value="1" v-model="edgeMeta.addEdgeForm.csptype"  class="custom-control-input"><span class="custom-control-label">阿里云</span>
+                                            </label>
+                                        </div>
+                                        <div class="col-sm-6 col-md-4">
+                                            <label class="custom-control custom-radio custom-control-inline">
+                                                <input type="radio" checked="" value="3" v-model="edgeMeta.addEdgeForm.csptype"  class="custom-control-input"><span class="custom-control-label">亚马逊(AWS)</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="row pt-2 pt-sm-5 mt-1">
+                                        <div class="col-sm-6 pl-0">
+                                            <p class="text-right">
+                                                <button class="btn btn-space btn-primary" v-on:click="addEdge">确认</button>
+                                                <button class="btn btn-space btn-secondary" v-on:click="edgeMeta.showAddForm=false">取消</button>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+           
+        </div>
+
+        <!-- 云服务厂商管理 -->
+        <div class="dashboard-wrapper" id="csp" style="display: none;">
+            <div class="dashboard-ecommerce">
+                <div class="container-fluid dashboard-content ">
+                    <div class="row">
+                        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                            <div class="card">
+                                <h5 class="card-header">云服务授权列表</h5>
+                                <div class="card-body">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">#</th>
+                                                <th scope="col">云厂商</th>
+                                                <th scope="col">access key</th>
+                                                <th scope="col">access secret</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="csp-body">
+                                            <tr v-for="csp in cspMeta.csplist">
+                                                <th scope="row">1</th>
+                                                <td v-text="cspDetail[csp.cspType]"></td>
+                                                <td v-text="csp.accessKey"></td>
+                                                <td v-text="">*************************</td>
+                                                <td><button class="btn btn-space btn-secondary" v-on:click="delCSP(csp.cspType)">移除</button></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="col col-sm-10 col-lg-9 offset-sm-1 offset-lg-0">
+                                    <button class="btn btn-space btn-primary" v-on:click="cspMeta.showAddForm=true">新增</button>
+                                </div>
+                            </div>
+
+                            <div class="card" v-show="cspMeta.showAddForm">
+                                <h5 class="card-header">新增云服务授权</h5>
+                                <div class="card-body">
+                                    <div class="form-group row">
+                                        <label  class="col-3 col-lg-2 col-form-label text-right">access key</label>
+                                        <div class="col-9 col-lg-10">
+                                            <input required="" v-model="cspMeta.addCSPForm.accessKey" placeholder="access key" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-3 col-lg-2 col-form-label text-right">secret key</label>
+                                        <div class="col-9 col-lg-10">
+                                            <input required="" type="password" v-model="cspMeta.addCSPForm.accessSecret" placeholder="secret key" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-sm-6 col-md-2 offset-2">
+                                            <label class="custom-control custom-radio custom-control-inline">
+                                                <input type="radio" checked="" value="1" v-model="cspMeta.addCSPForm.csptype"  class="custom-control-input"><span class="custom-control-label">阿里云</span>
+                                            </label>
+                                        </div>
+                                        <div class="col-sm-6 col-md-2">
+                                            <label class="custom-control custom-radio custom-control-inline">
+                                                <input type="radio" checked="" value="3" v-model="cspMeta.addCSPForm.csptype"  class="custom-control-input"><span class="custom-control-label">亚马逊(AWS)</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="row pt-2 pt-sm-5 mt-1">
+                                        <div class="col-sm-6 pl-0">
+                                            <p class="text-right">
+                                                <button class="btn btn-space btn-primary" v-on:click="addCSP">确认</button>
+                                                <button class="btn btn-space btn-secondary" v-on:click="cspMeta.showAddForm=false">取消</button>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+           
+        </div>
+    </div>
+    <!-- ============================================================== -->
+    <!-- end main wrapper  -->
+    <!-- ============================================================== -->
+    <!-- Optional JavaScript -->
+    <!-- jquery 3.3.1 -->
+    <script src="assets/vendor/jquery/jquery-3.3.1.min.js"></script>
+    <!-- bootstap bundle js -->
+    <script src="assets/vendor/bootstrap/js/bootstrap.bundle.js"></script>
+    <!-- slimscroll js -->
+    <script src="assets/vendor/slimscroll/jquery.slimscroll.js"></script>
+    <!-- main js -->
+    <script src="assets/libs/js/main-js.js"></script>
+    <!-- sparkline js -->
+    <script src="assets/vendor/charts/sparkline/jquery.sparkline.js"></script>
+    <!-- morris js -->
+    <script src="assets/vendor/charts/morris-bundle/raphael.min.js"></script>
+    <script src="assets/vendor/charts/morris-bundle/morris.js"></script>
+    <!-- chart c3 js -->
+    <script src="assets/libs/js/dashboard-ecommerce.js"></script>
+    <script src="assets/vendor/bootstrap-select/js/bootstrap-select.js"></script>
+
+
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+    <script src="https//cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <script>
+        current ="overview"
+        function moveTo(target) {
+            if (current != "") {
+                document.getElementById(current).style.display="none"
+            }
+            document.getElementById(target).style.display="block"
+            current = target
+        }
+        window.onload = function() {
+            var container = document.getElementById('topology');
+            var data = {}
+            var options = {};
+
+            // initialize your network!
+            var network = new vis.Network(container, data, options);
+
+            loadtopology = function() {
+                axios({
+                    method: "get",
+                    url: "http://demo.notr.tech/api-service/v1/edge/list",
+                    headers: {
+                        "Access-Token": Cookies.get("accessToken"),
+                    }
+                })
+                .then(function(response) {
+                    var body = response.data
+                    gnodes = []
+                    gedges = []
+                    console.log(body)
+                    var now = Date.parse(new Date())/1000
+                    for ( it = 0; it < body.data.length; it++) {
+                        edge = body.data[it]
+                        gnodes.push({
+                            id: it,
+                            label: edge.name
+                        })
+                    }
+
+                    for (i = 0; i < gnodes.length; i++) {
+                        for (j = i+1; j < gnodes.length; j++) {
+                            gedges.push({
+                                from: i,
+                                to: j,
+                            })
+                        }
+                    }
+console.log(gnodes,gedges)
+                    network.setData({nodes: gnodes, edges: gedges})
+                })
+            }
+            setInterval("loadtopology()", 1000*10)
+            loadtopology()
+        }
+     
+    </script>
+
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: {
+                edgeMeta: {
+                    size: 0,
+                    showAddForm: false,
+                    edgelist: [],
+                    addEdgeForm:{
+                        "csptype": 0,
+                        "name": "",
+                        "hostaddr":"",
+                        "publicPort": "",
+                        "cidr": "",
+                        "comment": "",
+                        "activeAy": 0
+                    },
+                    healthy: 0,
+                    warnning: 0,
+                    stop: 0,
+                },
+                chartjs: {},
+                cspMeta: {
+                    size: 0,
+                    showAddForm: false,
+                    csplist: [],
+                    addCSPForm: {
+                        "csptype": 0,
+                        "accessKey": "",
+                        "accessSecret": ""
+                    }
+                },
+                userMeta: {
+                    userid: "",
+                    accessToken: ""
+                },
+                apiMeta: {
+                    baseUrl: "http://demo.notr.tech/api-service/v1"
+                },
+                cspDetail: {
+                    0: "自建idc",
+                    1: "阿里云",
+                    2: "腾讯云",
+                    3: "亚马逊(AWS)"
+                },
+                edgeSelected: ""
+            },
+            methods: {
+                getEdgelist: function() {
+                    var accessToken = this.userMeta.accessToken
+                    var baseUrl = this.apiMeta.baseUrl
+                    var p = this
+                    axios({
+                        method: "get",
+                        url: baseUrl+"/edge/list",
+                        headers: {
+                            "Access-Token": accessToken,
+                        }
+                    })
+                    .then(function(response) {
+                        var body = response.data
+                        p.edgeMeta.size = body.data.length
+                        p.edgeMeta.edgelist = body.data
+
+                        p.edgeMeta.healthy = 0
+                        p.edgeMeta.warnning = 0
+                        p.edgeMeta.stop = 0
+
+                        gnodes = []
+                        gedges = []
+
+                        var now = Date.parse(new Date())/1000
+                        for ( it = 0; it < p.edgeMeta.edgelist.length; it++) {
+                            edge = p.edgeMeta.edgelist[it]
+                            diff = now - edge.activeAt
+                            if (diff < 30) {
+                                p.edgeMeta.healthy+=1
+                            } else if (diff < 60) {
+                                p.edgeMeta.warnning+=1
+                            } else {
+                                p.edgeMeta.stop+=1
+                            }
+                            
+                        }
+                    })
+                },
+                delEdge: function(name) {
+                    var accessToken = this.userMeta.accessToken
+                    var baseUrl = this.apiMeta.baseUrl
+                    var p = this
+                    axios({
+                        method: "post",
+                        url: baseUrl+"/edge/del",
+                        headers: {
+                            "Access-Token": accessToken,
+                        },
+                        data: {
+                            "name": name,
+                        }
+                    })
+                    .then(function(response) {
+                        p.getEdgelist()  
+                    })
+                },
+                addEdge: function() {
+                    console.log(this.edgeMeta.addEdgeForm)
+                    var accessToken = this.userMeta.accessToken
+                    var baseUrl = this.apiMeta.baseUrl
+                    
+                    this.edgeMeta.addEdgeForm.csptype = parseInt(this.edgeMeta.addEdgeForm.csptype)
+                    this.edgeMeta.addEdgeForm.publicPort = parseInt(this.edgeMeta.addEdgeForm.publicPort)
+
+                    var p = this
+                    axios({
+                        method: "post",
+                        url: baseUrl+"/edge/add",
+                        headers: {
+                            "Access-Token": accessToken,
+                        },
+                        data: p.edgeMeta.addEdgeForm
+                    })
+                    .then(function(response) {
+                        var body = response.data
+                        if (body.code != 20000) {
+                            alert("新增edge节点错误: ", body.message)
+                            return
+                        }
+                        p.edgeMeta.showAddForm = false
+                        p.getEdgelist()
+                    })
+                },
+                getCSPlist: function() {
+                    var accessToken = this.userMeta.accessToken
+                    var baseUrl = this.apiMeta.baseUrl
+                    var p = this
+                    axios({
+                        method: "get",
+                        url: baseUrl+"/csp/list",
+                        headers: {
+                            "Access-Token": accessToken,
+                        }
+                    })
+                    .then(function(response) {
+                        var body = response.data
+                        p.cspMeta.size = body.data.length
+                        p.cspMeta.csplist = body.data
+                    })
+                },
+                delCSP: function(csptype) {
+                    var accessToken = this.userMeta.accessToken
+                    var baseUrl = this.apiMeta.baseUrl
+                    var p = this
+                    axios({
+                        method: "post",
+                        url: baseUrl+"/csp/del",
+                        headers: {
+                            "Access-Token": accessToken,
+                        },
+                        data: {
+                            "csptype": csptype,
+                        }
+                    })
+                    .then(function(response) {
+                        p.getCSPlist()
+                    })
+                },
+                addCSP: function() {
+                   var accessToken = this.userMeta.accessToken
+                    var baseUrl = this.apiMeta.baseUrl
+                    
+                    this.cspMeta.addCSPForm.csptype = parseInt(this.cspMeta.addCSPForm.csptype)
+                    var p = this
+                    axios({
+                        method: "post",
+                        url: baseUrl+"/csp/add",
+                        headers: {
+                            "Access-Token": accessToken,
+                        },
+                        data: p.cspMeta.addCSPForm
+                    })
+                    .then(function(response) {
+                        var body = response.data
+                        console.log(body)
+                        if (body.code != 20000) {
+                            alert("新增云服务授权信息失败: " + body.message)
+                            return
+                        }
+                        p.cspMeta.showAddForm = false
+                        p.getCSPlist()
+                    })
+                },
+
+                getEdgeStat: function(edgeName) {
+                    console.log(this.edgeSelected)
+
+                    getStatForm = {
+                        name: this.edgeSelected,
+                        from: 0,
+                        count: 0,
+                        direction: 0
+                    }
+
+                    var accessToken = this.userMeta.accessToken
+                    var baseUrl = this.apiMeta.baseUrl
+                    
+                    var p = this
+                    axios({
+                        method: "post",
+                        url: baseUrl+"/edge/stat",
+                        headers: {
+                            "Access-Token": accessToken,
+                        },
+                        data: getStatForm
+                    })
+                    .then(function(response) {
+                        var body = response.data
+                        data = {
+                            labels: [],
+                            datasets: [],
+                        }
+						trafficIn = {
+                                label: "流入流量(Bytes)",
+                                fillColor: "rgba(220,220,220,0.2)",
+								data:[]
+						}
+                        trafficOut = {
+                            label: "流出流量(Bytes)",
+                            fillColor: "rgba(151,187,205,0.2)",
+                            data:[]
+                        }
+
+                        if (body.data == null) {
+                            return
+                        }
+
+                        body.data.reverse()
+                        for (i in body.data) {
+                            s = body.data[i]
+                            data.labels.push(timestampToTime(s.timestamp*1000))
+							trafficIn.data.push(s.trafficIn)
+                            trafficOut.data.push(s.trafficOut)
+                        }
+						data.datasets.push(trafficIn)
+						data.datasets.push(trafficOut)
+                        if(p.chartjs.chart == undefined) {
+                            // 绘制折线图
+                            var ctx = document.getElementById("traffic-charts").getContext("2d");
+                            var lineChart = new Chart(ctx, {
+                                type: "line",
+                                data: data,
+                            });
+                            p.chartjs.chart = lineChart
+                        } else {
+                            p.chartjs.chart.data.labels = data.labels
+                            p.chartjs.chart.data.datasets[0].data = trafficIn.data
+                            p.chartjs.chart.data.datasets[1].data = trafficOut.data
+                            p.chartjs.chart.update()
+                        }
+                    })
+                },
+            }
+        })
+
+        if (Cookies.get("accessToken") == undefined) {
+            window.location.href="/public"
+        }
+        app.userMeta.accessToken =  Cookies.get("accessToken")
+        app.userMeta.userId = Cookies.get("userId")
+        app.getEdgelist()
+        app.getCSPlist()
+
+        setInterval("load()", 1000*10)
+        load = function() {
+            app.getEdgelist()
+            app.getCSPlist()
+        }
+
+        function timestampToTime(timestamp) {
+            var date = new Date(timestamp);//时间戳为10位需*1000，时间戳为13位的话不需乘1000 var date = new Date(timestamp*1000);
+            var Y = date.getFullYear() + '-';
+            var M = (date.getMonth()+1 < 10 ? '0'+(date.getMonth()+1) : date.getMonth()+1) + '-';
+            var D = date.getDate() + ' ';
+            var h = date.getHours() + ':';
+            var m = date.getMinutes() + ':';
+            var s = date.getSeconds();
+            return D+h+m+s;
+        }
+    
+    </script>
+</body>
+ 
+</html>

@@ -4,12 +4,12 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/ICKelin/cframe/pkg/access"
-	"github.com/ICKelin/cframe/pkg/auth"
-
+	"github.com/ICKelin/cframe/codec/proto"
+	"github.com/ICKelin/cframe/pkg/database"
 	"github.com/ICKelin/cframe/pkg/edgemanager"
 	"github.com/ICKelin/cframe/pkg/etcdstorage"
 	log "github.com/ICKelin/cframe/pkg/logs"
+	"google.golang.org/grpc"
 )
 
 func main() {
@@ -25,22 +25,25 @@ func main() {
 	log.Init(conf.Log.Path, conf.Log.Level, conf.Log.Days)
 	log.Info("%v", conf)
 
+	cli, err := createUserServiceCli(conf.UserCenterAddr)
+	if err != nil {
+		log.Error("create user service fail: %v", err)
+		return
+	}
+
 	// create etcd storage
 	store := etcdstorage.NewEtcd(conf.Etcd)
 
 	// create edge manager
 	edgeManager := edgemanager.New(store)
 
-	// create edge host manager
-	edgemanager.NewEdgeHostManager(store)
+	// initial mongodb url
+	database.NewModelManager(conf.MongoUrl, conf.DBName)
 
-	// create access manager
-	access.NewAccessManager(store)
+	rpcsrv := NewRPCServer(conf.RpcAddr)
+	go rpcsrv.ListenAndServe()
 
-	// create auth manager
-	auth.NewAuthManager(store)
-
-	r := NewRegistryServer(conf.ListenAddr)
+	r := NewRegistryServer(conf.ListenAddr, cli)
 
 	// watch for edge delete/put
 	// tell registry edge change
@@ -53,4 +56,13 @@ func main() {
 		})
 
 	r.ListenAndServe()
+}
+
+func createUserServiceCli(remote string) (proto.UserServiceClient, error) {
+	conn, err := grpc.Dial(remote, grpc.WithInsecure())
+	if err != nil {
+		return nil, err
+	}
+	cli := proto.NewUserServiceClient(conn)
+	return cli, nil
 }

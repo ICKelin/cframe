@@ -1,27 +1,28 @@
 package handler
 
 import (
-	"encoding/base64"
+	"context"
+	"fmt"
 
-	"github.com/ICKelin/cframe/pkg/auth"
+	"github.com/ICKelin/cframe/codec/proto"
 	log "github.com/ICKelin/cframe/pkg/logs"
 	"github.com/gin-gonic/gin"
-	uuid "github.com/satori/go.uuid"
 )
 
 type UserHandler struct {
 	BaseHandler
 }
 
+func NewUserHandler(userCli proto.UserServiceClient) *UserHandler {
+	return &UserHandler{
+		BaseHandler: BaseHandler{userCli: userCli},
+	}
+}
+
 func (h *UserHandler) Run(eng *gin.Engine) {
 	group := eng.Group("/api-service/v1/user")
 	group.POST("/signup", h.signup)
 	group.POST("/signin", h.signin)
-
-	group.Use(h.MidAuth)
-	{
-		group.GET("/profile", h.getUserInfo)
-	}
 }
 
 func (h *UserHandler) signup(ctx *gin.Context) {
@@ -30,29 +31,25 @@ func (h *UserHandler) signup(ctx *gin.Context) {
 		return
 	}
 
-	// TODO: verify user exist
-
-	// create user info
-	user, err := auth.CreateUser(f.Username, f.Password)
+	req := &proto.AddUserReq{
+		UserName: f.Username,
+		Password: f.Password,
+		Email:    f.Email,
+		About:    f.About,
+	}
+	reply, err := h.userCli.AddUser(context.Background(), req)
 	if err != nil {
-		log.Error("%v", err)
+		log.Error("add user rpc fail: %v", err)
 		h.Response(ctx, nil, err)
 		return
 	}
 
-	// create secret key
-	err = auth.CreateSecret(user.SecretKey, user)
-	if err != nil {
-		log.Error("%v", err)
-		h.Response(ctx, nil, err)
+	if reply.Code != 0 {
+		log.Error("add user fail: %d %s", reply.Code, reply.Message)
+		h.Response(ctx, nil, fmt.Errorf("<%d>%s", reply.Code, reply.Message))
 		return
 	}
-	h.Response(ctx, user, err)
-}
-
-type SignInResponse struct {
-	Token    string
-	Username string
+	h.Response(ctx, reply.UserInfo, nil)
 }
 
 func (h *UserHandler) signin(ctx *gin.Context) {
@@ -61,30 +58,21 @@ func (h *UserHandler) signin(ctx *gin.Context) {
 		return
 	}
 
-	userInfo, err := auth.GetUser(f.Username, f.Password)
-	if err != nil {
-		log.Error("%v", err)
-		h.Response(ctx, nil, err)
-		return
-	}
-
-	uniq := uuid.NewV4()
-	token := base64.StdEncoding.EncodeToString(uniq.Bytes())
-	err = auth.SetUserToken(token, userInfo)
-	if err != nil {
-		log.Error("%v", err)
-		h.Response(ctx, nil, err)
-		return
-	}
-
-	signinResp := &SignInResponse{
-		Token:    token,
+	req := &proto.AuthorizeReq{
 		Username: f.Username,
+		Password: f.Password,
 	}
-	h.Response(ctx, signinResp, nil)
-}
+	reply, err := h.userCli.Authorize(context.Background(), req)
+	if err != nil {
+		log.Error("auth rpc fail: %v", err)
+		h.Response(ctx, nil, err)
+		return
+	}
 
-func (h *UserHandler) getUserInfo(ctx *gin.Context) {
-	userInfo := h.GetUserInfo(ctx)
-	h.Response(ctx, userInfo, nil)
+	if reply.Code != 0 {
+		log.Error("auth fail: %d %s", reply.Code, reply.Message)
+		h.Response(ctx, nil, fmt.Errorf("<%d>%s", reply.Code, reply.Message))
+		return
+	}
+	h.Response(ctx, reply.Data, nil)
 }

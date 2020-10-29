@@ -31,6 +31,9 @@ const (
 
 	// edge report subhost of it to controller
 	CmdReport
+
+	// alarm report
+	CmdAlarm
 )
 
 // version: 1byte

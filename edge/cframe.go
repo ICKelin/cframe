@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"time"
 
 	"github.com/ICKelin/cframe/codec"
 	"github.com/ICKelin/cframe/edge/vpc"
@@ -13,7 +14,10 @@ import (
 type Server struct {
 	registry *Registry
 
-	// server监听udp地址
+	// secret
+	key string
+
+	// server listen udp address
 	laddr string
 
 	// peers connection
@@ -26,15 +30,17 @@ type Server struct {
 }
 
 type peerConn struct {
-	conn *net.UDPConn
+	addr string
+	// conn *net.UDPConn
 	// conn *kcp.UDPSession
 	// conn net.Conn
 	cidr string
 }
 
-func NewServer(laddr string, iface *Interface, vpcInstance vpc.IVPC) *Server {
+func NewServer(laddr, key string, iface *Interface, vpcInstance vpc.IVPC) *Server {
 	return &Server{
 		laddr:       laddr,
+		key:         key,
 		peerConns:   make(map[string]*peerConn),
 		iface:       iface,
 		vpcInstance: vpcInstance,
@@ -43,6 +49,12 @@ func NewServer(laddr string, iface *Interface, vpcInstance vpc.IVPC) *Server {
 
 func (s *Server) SetRegistry(r *Registry) {
 	s.registry = r
+}
+
+func (s *Server) SetVPCInstance(vpcInstance vpc.IVPC) {
+	if s.vpcInstance == nil {
+		s.vpcInstance = vpcInstance
+	}
 }
 
 func (s *Server) ListenAndServe() error {
@@ -56,21 +68,66 @@ func (s *Server) ListenAndServe() error {
 	}
 	defer lconn.Close()
 
-	go s.readLocal()
+	go s.readLocal(lconn)
+	go s.ping(lconn)
 	s.readRemote(lconn)
 	return nil
 }
 
+func (s *Server) ping(sock *net.UDPConn) {
+	tc := time.NewTicker(time.Second * 5)
+	defer tc.Stop()
+	ping := "ping"
+	buf := make([]byte, 0, len(s.key)+len(ping))
+	buf = append(buf, []byte(s.key)...)
+	buf = append(buf, []byte(ping)...)
+	for range tc.C {
+		for _, p := range s.peerConns {
+			log.Debug("ping %s", p.addr)
+			raddr, err := net.ResolveUDPAddr("udp", p.addr)
+			if err != nil {
+				log.Error("resolve %s fail: %v", err)
+				continue
+			}
+
+			sock.WriteToUDP(buf, raddr)
+		}
+	}
+}
+
 func (s *Server) readRemote(lconn *net.UDPConn) {
 	buf := make([]byte, 1024*64)
+	key := s.key
+	klen := len(key)
+	ping := "ping"
+	plen := len(ping)
 	for {
 		nr, _, err := lconn.ReadFromUDP(buf)
 		if err != nil {
 			log.Error("read full fail: %v", err)
-			return
+			continue
 		}
 
-		p := Packet(buf[:nr])
+		if nr < klen {
+			log.Error("pkt to small")
+			continue
+		}
+
+		// decode key
+		rkey := buf[:klen]
+		if string(rkey) != key {
+			log.Error("access forbidden!!")
+			continue
+		}
+
+		pkt := buf[klen:nr]
+
+		if len(pkt) >= plen && string(pkt[:plen]) == ping {
+			log.Debug("recv ping from remote")
+			continue
+		}
+
+		p := Packet(pkt)
 		if p.Invalid() {
 			log.Error("invalid ipv4 packet")
 			continue
@@ -80,11 +137,12 @@ func (s *Server) readRemote(lconn *net.UDPConn) {
 		dst := p.Dst()
 		log.Debug("tuple %s => %s", src, dst)
 
-		s.iface.Write(buf[:nr])
+		AddTrafficIn(int64(nr))
+		s.iface.Write(pkt)
 	}
 }
 
-func (s *Server) readLocal() {
+func (s *Server) readLocal(sock *net.UDPConn) {
 	for {
 		pkt, err := s.iface.Read()
 		if err != nil {
@@ -98,12 +156,10 @@ func (s *Server) readLocal() {
 			continue
 		}
 
+		AddTrafficOut(int64(len(pkt)))
 		src := p.Src()
 		dst := p.Dst()
-		log.Debug("local tuple %s => %s\n", src, dst)
-
-		// report src ip as edge host ip
-		s.registry.Report(src)
+		log.Debug("tuple %s => %s", src, dst)
 
 		peer, err := s.route(dst)
 		if err != nil {
@@ -111,14 +167,24 @@ func (s *Server) readLocal() {
 			continue
 		}
 
-		_, err = peer.Write(pkt)
+		raddr, err := net.ResolveUDPAddr("udp", peer)
 		if err != nil {
-			log.Error("[E] write to peer: ", err)
+			log.Error("parse %s fail: %v", peer, err)
+			continue
+		}
+
+		// encode key
+		buf := make([]byte, 0, len(pkt)+len(s.key))
+		buf = append(buf, []byte(s.key)...)
+		buf = append(buf, pkt...)
+		_, e := sock.WriteToUDP(buf, raddr)
+		if e != nil {
+			log.Error("%v", e)
 		}
 	}
 }
 
-func (s *Server) route(dst string) (net.Conn, error) {
+func (s *Server) route(dst string) (string, error) {
 	for _, p := range s.peerConns {
 		_, ipnet, err := net.ParseCIDR(p.cidr)
 		if err != nil {
@@ -140,14 +206,14 @@ func (s *Server) route(dst string) (net.Conn, error) {
 		}
 
 		if ipnet.String() == dstNet.String() {
-			return p.conn, nil
+			return p.addr, nil
 		}
 	}
 
-	return nil, fmt.Errorf("no route")
+	return "", fmt.Errorf("no route")
 }
 
-func (s *Server) AddPeer(peer *codec.Host) {
+func (s *Server) AddPeer(peer *codec.Edge) error {
 	s.DelPeer(peer)
 	log.Info("add peer: ", peer)
 
@@ -157,16 +223,16 @@ func (s *Server) AddPeer(peer *codec.Host) {
 		// route to current instance
 		err := s.vpcInstance.CreateRoute(peer.Cidr)
 		if err != nil {
-			log.Error("create vpc route entry fail: %v", err)
-			return
+			log.Error("create vpc route fail: %v", err)
 		}
 	}
 
-	// connect to peer
-	err := s.connectPeer(peer)
-	if err != nil {
-		log.Error("add peer %v fail: %v", peer, err)
+	conn := &peerConn{
+		addr: peer.ListenAddr,
+		cidr: peer.Cidr,
 	}
+
+	s.peerConns[peer.Cidr] = conn
 
 	// add local route
 	// route to tun device
@@ -175,22 +241,23 @@ func (s *Server) AddPeer(peer *codec.Host) {
 	if err != nil {
 		log.Error("route add -net %s dev %s, %s %v\n",
 			peer.Cidr, s.iface.tun.Name(), out, err)
-		// 移除peer
+		// remove peer
 		s.disconnPeer(peer.Cidr)
-		return
+		return err
 	}
 	log.Info("route add -net %s dev %s, %s %v\n",
 		peer.Cidr, s.iface.tun.Name(), out, err)
 
+	return nil
 }
 
-func (s *Server) AddPeers(peers []*codec.Host) {
+func (s *Server) AddPeers(peers []*codec.Edge) {
 	for _, p := range peers {
 		s.AddPeer(p)
 	}
 }
 
-func (s *Server) DelPeer(peer *codec.Host) {
+func (s *Server) DelPeer(peer *codec.Edge) {
 	log.Info("del peer: ", peer)
 	s.disconnPeer(peer.Cidr)
 
@@ -200,33 +267,7 @@ func (s *Server) DelPeer(peer *codec.Host) {
 		peer.Cidr, s.iface.tun.Name(), out, err)
 }
 
-func (s *Server) connectPeer(node *codec.Host) error {
-	raddr, err := net.ResolveUDPAddr("udp", node.HostAddr)
-	if err != nil {
-		return err
-	}
-
-	conn, err := net.DialUDP("udp", nil, raddr)
-	if err != nil {
-		log.Error("%v", err)
-		return err
-	}
-
-	peer := &peerConn{
-		conn: conn,
-		cidr: node.Cidr,
-	}
-
-	s.peerConns[peer.cidr] = peer
-	return nil
-}
-
 func (s *Server) disconnPeer(key string) {
-	p := s.peerConns[key]
-	if p != nil {
-		p.conn.Close()
-	}
-
 	delete(s.peerConns, key)
 	log.Info("delete peer %s", key)
 }

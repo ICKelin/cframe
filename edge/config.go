@@ -1,29 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 
 	"github.com/pelletier/go-toml"
 )
 
 type Config struct {
-	Name         string       `toml:"name"`
-	Controller   string       `toml:"controller"`
-	ListenAddr   string       `toml:"listen_addr"`
-	Type         string       `toml:"type"`
-	SecretKey    string       `toml:"cframe_secret"`
-	AliVPCConfig AliVPCConfig `toml:"alivpc"`
-	Log          Log          `toml:"log"`
-}
-
-type AuthConfig struct {
 	SecretKey string `toml:"cframe_secret"`
-}
-
-type AliVPCConfig struct {
-	AccessKey    string `toml:"access_key"`
-	AccessSecret string `toml:"access_secret"`
+	Log       Log    `toml:"log"`
 }
 
 type Log struct {
@@ -44,9 +29,9 @@ func ParseConfig(path string) (*Config, error) {
 		return nil, err
 	}
 
-	if len(cfg.Type) == 0 {
-		return nil, fmt.Errorf("type MUST configured")
-	}
+	// if len(cfg.Type) == 0 {
+	// 	return nil, fmt.Errorf("type MUST configured")
+	// }
 
 	// if len(cfg.AccessKey) == 0 {
 	// 	cfg.AccessKey = os.Getenv("access_key")

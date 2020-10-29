@@ -1,0 +1,133 @@
+syntax = "proto3";
+
+package controller;
+
+option go_package = "/proto";
+
+message EdgeInfo {
+    string name    = 1;       
+	string userId  = 2;       
+	CSPType cspType    = 3;    
+	string publicIP = 4;      
+	int32 publicPort    = 5;
+	string cidr          = 6; 
+    string comment       = 7; 
+    int64 activeAt = 8;
+}
+
+message CSPInfo {
+    CSPType cspType = 1;
+    string accessKey = 2;
+    string accessSecret = 3;
+}
+
+message Stat {
+    string userId = 1;
+    string edgeName = 2;
+    int64 cpu = 3;
+    int64 mem = 4;
+    int64 trafficIn = 5;
+    int64 trafficOut = 6;
+    int64 timestamp = 7;
+}
+
+enum CSPType {
+    NONE = 0;
+    ALI = 1;
+    QQ = 2;
+    AWS = 3;
+}
+
+message GetEdgeListReq {
+    string userId = 1;
+}
+
+message GetEdgeListReply {
+    int32 code = 1;
+    string message = 2;
+    repeated EdgeInfo edges = 3;
+}
+
+message AddEdgeReq {
+    string name    = 1;       
+	string userId  = 2;       
+	CSPType cspType    = 3;    
+	string publicIP = 4;      
+	int32 publicPort    = 5;
+	string cidr          = 6; 
+	string comment       = 7; 
+}
+
+message AddEdgeReply {
+    int32 code = 1;
+    string message = 2;
+    EdgeInfo data = 3;
+}
+
+message DelEdgeReq {
+    string userId = 1;
+    string edgeName = 2 ;
+}
+
+message DelEdgeReply {
+    int32 code = 1;
+    string message = 2;
+}
+
+message GetCSPListReq{
+    string userId = 1;
+}
+
+message GetCSPListReply{
+    int32 code = 1;
+    string message = 2;
+    repeated CSPInfo cspInfo = 3;
+}
+
+message AddCSPReq{
+    string userId = 1;
+    CSPType cspType = 2;
+    string accessKey = 3;
+    string accessSecret = 4;
+}
+
+message AddCSPReply{
+    int32 code = 1;
+    string message = 2;
+    CSPInfo data = 3;
+}
+
+message DelCSPReq{
+    string userId = 1;
+    CSPType cspType = 2 ;
+}
+
+message DelCSPReply{
+    int32 code = 1;
+    string message = 2;
+}
+
+message GetStatReq {
+    string userId = 1;
+    string edgeName = 2;
+    int64 from = 3;
+    int32 count = 4;
+    int32 direction = 5;
+}
+
+message GetStatReply {
+    int32 code = 1;
+    string message = 2;
+    repeated Stat stats = 3;
+}
+
+
+service ControllerService {
+    rpc GetEdgeList(GetEdgeListReq) returns (GetEdgeListReply){}
+    rpc AddEdge(AddEdgeReq) returns (AddEdgeReply){}
+    rpc DelEdge(DelEdgeReq) returns (DelEdgeReply){}
+    rpc GetCSPList(GetCSPListReq) returns (GetCSPListReply){}
+    rpc AddCSP(AddCSPReq) returns (AddCSPReply){}
+    rpc DelCSP(DelCSPReq) returns (DelCSPReply){}
+    rpc GetStat(GetStatReq) returns (GetStatReply) {}
+}

@@ -8,9 +8,11 @@ import (
 )
 
 type Config struct {
-	ApiAddr string   `toml:"api_addr"`
-	Etcd    []string `toml:"etcd"`
-	Log     Log      `toml:"log"`
+	ApiAddr        string   `toml:"api_addr"`
+	UserCenterAddr string   `toml:"usercenter_addr"`
+	CtrlAddr       string   `toml:"ctrl_addr"`
+	Etcd           []string `toml:"etcd"`
+	Log            Log      `toml:"log"`
 }
 
 type Log struct {

@@ -4,3 +4,4 @@ log
 *.log
 dist
 webui
+tool

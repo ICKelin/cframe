@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 
-	"github.com/ICKelin/cframe/pkg/auth"
+	"github.com/ICKelin/cframe/codec/proto"
+	log "github.com/ICKelin/cframe/pkg/logs"
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,7 +20,9 @@ type ResponseBody struct {
 	Data    interface{} `json:"data"`
 }
 
-type BaseHandler struct{}
+type BaseHandler struct {
+	userCli proto.UserServiceClient
+}
 
 func (h *BaseHandler) BindAndValidate(ctx *gin.Context, obj interface{}) bool {
 	err := ctx.BindJSON(obj)
@@ -52,14 +56,22 @@ func (h *BaseHandler) MidAuth(ctx *gin.Context) {
 		return
 	}
 
-	userInfo, err := auth.GetUserByToken(token)
-	if err != nil || len(userInfo.Username) <= 0 {
+	reply, err := h.userCli.GetUserByToken(context.Background(), &proto.GetUserByTokenReq{
+		Token: token,
+	})
+	if err != nil {
+		log.Error("get user by token %s fail %s", token, err)
 		ctx.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
+	if reply.Code != 0 {
+		log.Error("get user by token %s fail: %d %s", token, reply.Code, reply.Message)
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, reply.Message)
+		return
+	}
 
-	ctx.Set("username", userInfo.Username)
-	ctx.Set("userInfo", userInfo)
+	ctx.Set("username", reply.Data.UserName)
+	ctx.Set("userId", reply.Data.UserId)
 }
 
 func (h *BaseHandler) GetUsername(ctx *gin.Context) string {
@@ -68,8 +80,8 @@ func (h *BaseHandler) GetUsername(ctx *gin.Context) string {
 	return username
 }
 
-func (h *BaseHandler) GetUserInfo(ctx *gin.Context) *auth.UserInfo {
-	obj, _ := ctx.Get("userInfo")
-	userInfo, _ := obj.(*auth.UserInfo)
-	return userInfo
+func (h *BaseHandler) GetUserId(ctx *gin.Context) string {
+	obj, _ := ctx.Get("userId")
+	userId, _ := obj.(string)
+	return userId
 }

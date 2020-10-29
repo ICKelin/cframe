@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+ 
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>cframe注册</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="assets/vendor/bootstrap/css/bootstrap.min.css">
+    <link href="assets/vendor/fonts/circular-std/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/libs/css/style.css">
+    <link rel="stylesheet" href="assets/vendor/fonts/fontawesome/css/fontawesome-all.css">
+    <style>
+    html,
+    body {
+        height: 100%;
+    }
+
+    body {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-align: center;
+        align-items: center;
+        padding-top: 40px;
+        padding-bottom: 40px;
+    }
+    </style>
+</head>
+
+<body>
+    <div class="splash-container" id="app">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-1">cframe注册</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <input class="form-control form-control-lg" v-model="signupForm.username" type="text" name="nick" required="" placeholder="用户名" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <input class="form-control form-control-lg" v-model="signupForm.email" type="email" name="email" required="" placeholder="email" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <input class="form-control form-control-lg" v-model="signupForm.password" type="password" required="" placeholder="密码">
+                </div>
+                <div class="form-group">
+                    <input class="form-control form-control-lg" v-model="signupForm.comment" type="text" required="" placeholder="个人简介">
+                </div>
+                <div class="form-group pt-2">
+                    <button class="btn btn-block btn-primary" v-on:click="signup()">提交</button>
+                </div>
+            </div>
+            <div class="card-footer bg-white">
+                <p>已经注册? <a href="index.html" class="text-secondary">登录.</a></p>
+            </div>
+        </div>
+    </div>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+    <script>
+         var app = new Vue({
+            el: '#app',
+            data: {
+                signupForm: {
+                    username: "",
+                    password: "",
+                    email: "",
+                    comment: ""
+                },
+                apiMeta: {
+                    baseUrl: "http://demo.notr.tech/api-service/v1"
+                },
+            },
+            methods: {
+                signup: function() {
+                    var baseUrl = this.apiMeta.baseUrl
+                    var p = this
+                    axios({
+                        method: "post",
+                        url: baseUrl+"/user/signup",
+                        data: p.signupForm
+                    })
+                    .then(function(response) {
+                        body = response.data
+                        if (body.code != 20000) {
+                            alert("注册失败:" + body.message)
+                            return
+                        }
+
+                        alert("注册成功")
+                        window.location.href="/public"
+                    })
+                }
+            }
+        })
+
+    </script>
+
+</body>
+
+ 
+</html>

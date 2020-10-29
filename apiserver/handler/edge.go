@@ -1,15 +1,24 @@
 package handler
 
 import (
+	"context"
 	"fmt"
 
-	"github.com/ICKelin/cframe/pkg/edgemanager"
+	"github.com/ICKelin/cframe/codec/proto"
 	log "github.com/ICKelin/cframe/pkg/logs"
 	"github.com/gin-gonic/gin"
 )
 
 type EdgeHandler struct {
 	BaseHandler
+	ctrlCli proto.ControllerServiceClient
+}
+
+func NewEdgeHandler(userCli proto.UserServiceClient, ctrl proto.ControllerServiceClient) *EdgeHandler {
+	return &EdgeHandler{
+		BaseHandler: BaseHandler{userCli: userCli},
+		ctrlCli:     ctrl,
+	}
 }
 
 func (h *EdgeHandler) Run(eng *gin.Engine) {
@@ -17,71 +26,117 @@ func (h *EdgeHandler) Run(eng *gin.Engine) {
 	group.Use(h.MidAuth)
 	{
 		group.POST("/add", h.addEdge)
-		group.POST("/del", h.delEdge)
 		group.GET("/list", h.getEdgeList)
-		group.GET("/topology", h.getTopology)
+		group.POST("/del", h.delEdge)
+		group.POST("/stat", h.getEdgeStat)
 	}
-
 }
 
 func (h *EdgeHandler) addEdge(ctx *gin.Context) {
-	username := ctx.GetString("username")
+	userId := h.GetUserId(ctx)
+	log.Debug("add edge list for user %s", userId)
+
 	addForm := AddEdgeForm{}
 	if ok := h.BindAndValidate(ctx, &addForm); !ok {
 		return
 	}
 
-	// verify cidr format and conflict
-	ok := edgemanager.VerifyCidr(addForm.Cidr)
-	if !ok {
-		log.Error("verify cidr fail")
-		h.Response(ctx, nil, fmt.Errorf("cidr conflict"))
+	reply, err := h.ctrlCli.AddEdge(context.Background(), &proto.AddEdgeReq{
+		UserId:     userId,
+		Name:       addForm.Name,
+		PublicIP:   addForm.PublicIP,
+		Cidr:       addForm.Cidr,
+		PublicPort: addForm.PublicPort,
+		CspType:    proto.CSPType(addForm.CSPType),
+		Comment:    addForm.Comment,
+	})
+	if err != nil {
+		log.Error("add edge rpc fail: %v", err)
+		h.Response(ctx, nil, err)
 		return
 	}
 
-	edg := &edgemanager.Edge{
-		Type:     addForm.Type,
-		Name:     addForm.Name,
-		HostAddr: addForm.HostAddr,
-		Cidr:     addForm.Cidr,
-	}
-	edgemanager.AddEdge(username, edg.Name, edg)
-	h.Response(ctx, nil, nil)
-}
-
-func (h *EdgeHandler) delEdge(ctx *gin.Context) {
-	username := ctx.GetString("username")
-
-	delForm := DeleteEdgeForm{}
-	if ok := h.BindAndValidate(ctx, &delForm); !ok {
+	if reply.Code != 0 {
+		log.Error("add edge fail: %d %s", reply.Code, reply.Message)
+		h.Response(ctx, nil, fmt.Errorf("<%d>%s", reply.Code, reply.Message))
 		return
 	}
-
-	edgemanager.DelEdge(username, delForm.Name)
-	h.Response(ctx, nil, nil)
+	h.Response(ctx, reply.Data, nil)
 }
 
 func (h *EdgeHandler) getEdgeList(ctx *gin.Context) {
-	username := ctx.GetString("username")
+	userId := h.GetUserId(ctx)
+	log.Debug("get edge list for user %s", userId)
 
-	edges := edgemanager.GetEdges(username)
-	h.Response(ctx, edges, nil)
-}
-
-type topology struct {
-	EdgeNode []*edgemanager.Edge     `json:"edge_node"`
-	EdgeHost []*edgemanager.EdgeHost `json:"edge_host"`
-}
-
-func (h *EdgeHandler) getTopology(ctx *gin.Context) {
-	username := h.GetUsername(ctx)
-	log.Debug("get topology for user %s", username)
-
-	edges := edgemanager.GetEdges(username)
-	hosts := edgemanager.GetEdgeHosts()
-	t := &topology{
-		EdgeNode: edges,
-		EdgeHost: hosts,
+	reply, err := h.ctrlCli.GetEdgeList(context.Background(), &proto.GetEdgeListReq{
+		UserId: userId,
+	})
+	if err != nil {
+		log.Error("add edge rpc fail: %v", err)
+		h.Response(ctx, nil, err)
+		return
 	}
-	h.Response(ctx, t, nil)
+
+	if reply.Code != 0 {
+		log.Error("add edge fail: %d %s", reply.Code, reply.Message)
+		h.Response(ctx, nil, fmt.Errorf("<%d>%s", reply.Code, reply.Message))
+		return
+	}
+	h.Response(ctx, reply.Edges, nil)
+}
+
+func (h *EdgeHandler) delEdge(ctx *gin.Context) {
+	userId := h.GetUserId(ctx)
+	log.Debug("del edge list for user %s", userId)
+	f := DelEdgeForm{}
+	if ok := h.BindAndValidate(ctx, &f); !ok {
+		return
+	}
+
+	reply, err := h.ctrlCli.DelEdge(context.Background(), &proto.DelEdgeReq{
+		UserId:   userId,
+		EdgeName: f.Name,
+	})
+	if err != nil {
+		log.Error("add edge rpc fail: %v", err)
+		h.Response(ctx, nil, err)
+		return
+	}
+
+	if reply.Code != 0 {
+		log.Error("add edge fail: %d %s", reply.Code, reply.Message)
+		h.Response(ctx, nil, fmt.Errorf("<%d>%s", reply.Code, reply.Message))
+		return
+	}
+	h.Response(ctx, nil, nil)
+}
+
+func (h *EdgeHandler) getEdgeStat(ctx *gin.Context) {
+	userId := h.GetUserId(ctx)
+	log.Debug("get edge stat for user %s", userId)
+	f := GetStatForm{}
+	if ok := h.BindAndValidate(ctx, &f); !ok {
+		return
+	}
+
+	reply, err := h.ctrlCli.GetStat(context.Background(), &proto.GetStatReq{
+		UserId:    userId,
+		EdgeName:  f.Name,
+		From:      f.From,
+		Count:     f.Count,
+		Direction: f.Direction,
+	})
+
+	if err != nil {
+		log.Error("get edge stat rpc fail: %v", err)
+		h.Response(ctx, nil, err)
+		return
+	}
+
+	if reply.Code != 0 {
+		log.Error("get edge stat fail: %d %s", reply.Code, reply.Message)
+		h.Response(ctx, nil, fmt.Errorf("<%d>%s", reply.Code, reply.Message))
+		return
+	}
+	h.Response(ctx, reply.Stats, nil)
 }

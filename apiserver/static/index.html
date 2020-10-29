@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+ 
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>cframe后台管理系统登录</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="assets/vendor/bootstrap/css/bootstrap.min.css">
+    <link href="assets/vendor/fonts/circular-std/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/libs/css/style.css">
+    <link rel="stylesheet" href="assets/vendor/fonts/fontawesome/css/fontawesome-all.css">
+    <style>
+    html,
+    body {
+        height: 100%;
+    }
+
+    body {
+        display: -ms-flexbox;
+        display: flex;
+        -ms-flex-align: center;
+        align-items: center;
+        padding-top: 40px;
+        padding-bottom: 40px;
+    }
+    </style>
+</head>
+
+<body>
+    <div class="splash-container" id="app">
+        <div class="card ">
+            <div class="card-header text-center"><span class="splash-description">cframe后台管理登录</span></div>
+            <div class="card-body">
+                <div class="form-group">
+                    <input class="form-control form-control-lg" v-model="loginForm.username"type="text" placeholder="用户名" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <input class="form-control form-control-lg" v-model="loginForm.password" type="password" placeholder="密码">
+                </div>
+                <button  class="btn btn-primary btn-lg btn-block" v-on:click="login()">登录</button>
+            </div>
+            <div class="card-footer bg-white p-0  ">
+                <div class="card-footer-item card-footer-item-bordered">
+                    <a href="signup.html" class="footer-link">注册</a></div>
+                <div class="card-footer-item card-footer-item-bordered">
+                    <a href="#" class="footer-link">忘记密码</a>
+                </div>
+            </div>
+        </div>
+    </div>
+  
+    <script src="assets/vendor/jquery/jquery-3.3.1.min.js"></script>
+    <script src="assets/vendor/bootstrap/js/bootstrap.bundle.js"></script>
+
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+    <script>
+         var app = new Vue({
+            el: '#app',
+            data: {
+                loginForm: {
+                    username: "",
+                    password: ""
+                },
+                apiMeta: {
+                    baseUrl: "http://demo.notr.tech/api-service/v1"
+                },
+            },
+            methods: {
+                login: function() {
+                    console.log(this.loginForm)
+                    var baseUrl = this.apiMeta.baseUrl
+                    var p = this
+                    axios({
+                        method: "post",
+                        url: baseUrl+"/user/signin",
+                        data: p.loginForm
+                    })
+                    .then(function(response) {
+                        body = response.data
+                        if (body.code != 20000) {
+                            alert("登录失败:" + body.message)
+                            return
+                        }
+
+
+                        Cookies.set("accessToken", body.data.token);
+                        Cookies.set("userId", body.data.userId)
+                        window.location.href="dashboard.html"
+                    })
+                }
+            }
+        })
+
+    </script>
+</body>
+ 
+</html>
