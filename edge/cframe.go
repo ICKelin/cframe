@@ -275,22 +275,10 @@ func (s *Server) DelPeer(peer *codec.Edge) {
 }
 
 func (s *Server) AddRoute(msg *codec.AddRouteMsg) {
-	// add local route item
-	out, err := execCmd("route", []string{"add", "-net",
-		msg.Cidr, "dev", s.iface.tun.Name()})
-	if err != nil {
-		log.Error("route add -net %s dev %s, %s %v\n",
-			msg.Cidr, s.iface.tun.Name(), out, err)
-		return
-	}
-	log.Info("route add -net %s dev %s, %s %v\n",
-		msg.Cidr, s.iface.tun.Name(), out, err)
-
-	conn := &peerConn{
-		addr: msg.Nexthop,
-		cidr: msg.Cidr,
-	}
-	s.peerConns[msg.Cidr] = conn
+	s.AddPeer(&codec.Edge{
+		Cidr:       msg.Cidr,
+		ListenAddr: msg.Nexthop,
+	})
 }
 
 func (s *Server) DelRoute(msg *codec.DelRouteMsg) {
