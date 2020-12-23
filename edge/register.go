@@ -168,6 +168,27 @@ func (r *Registry) read(conn net.Conn) {
 				ListenAddr: offline.ListenAddr,
 				Cidr:       offline.Cidr,
 			})
+
+		case codec.CmdAddRoute:
+			log.Debug("add route cmd: %s", string(body))
+			addRoute := codec.AddRouteMsg{}
+			err := json.Unmarshal(body, &addRoute)
+			if err != nil {
+				log.Error("invalid add route msg: %v", err)
+				continue
+			}
+			r.server.AddRoute(&addRoute)
+
+		case codec.CmdDelRoute:
+			log.Debug("del route cmd: %s", string(body))
+			delRoute := codec.DelRouteMsg{}
+			err := json.Unmarshal(body, &delRoute)
+			if err != nil {
+				log.Error("invalid add route msg: %v", err)
+				continue
+			}
+			r.server.DelRoute(&delRoute)
+
 		}
 	}
 }

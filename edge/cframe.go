@@ -214,39 +214,45 @@ func (s *Server) route(dst string) (string, error) {
 }
 
 func (s *Server) AddPeer(peer *codec.Edge) error {
-	s.DelPeer(peer)
 	log.Info("add peer: ", peer)
 
-	// not idc gateway
-	if s.vpcInstance != nil {
-		// add vpc route entry
-		// route to current instance
-		err := s.vpcInstance.CreateRoute(peer.Cidr)
-		if err != nil {
-			log.Error("create vpc route fail: %v", err)
-		}
+	// remove old item
+	log.Info("removing old local route item")
+	out, err := execCmd("route", []string{"del", "-net",
+		peer.Cidr, "dev", s.iface.tun.Name()})
+	if err != nil {
+		log.Info("route del -net %s dev %s, %s %v",
+			peer.Cidr, s.iface.tun.Name(), out, err)
 	}
 
-	conn := &peerConn{
-		addr: peer.ListenAddr,
-		cidr: peer.Cidr,
-	}
-
-	s.peerConns[peer.Cidr] = conn
-
-	// add local route
-	// route to tun device
-	out, err := execCmd("route", []string{"add", "-net",
+	// add local route item
+	log.Info("adding new local route item")
+	out, err = execCmd("route", []string{"add", "-net",
 		peer.Cidr, "dev", s.iface.tun.Name()})
 	if err != nil {
 		log.Error("route add -net %s dev %s, %s %v\n",
 			peer.Cidr, s.iface.tun.Name(), out, err)
-		// remove peer
-		s.disconnPeer(peer.Cidr)
 		return err
 	}
 	log.Info("route add -net %s dev %s, %s %v\n",
 		peer.Cidr, s.iface.tun.Name(), out, err)
+
+	if s.vpcInstance != nil {
+		// add vpc route entry
+		// route to current instance
+		log.Info("adding new vpc route item")
+		err := s.vpcInstance.CreateRoute(peer.Cidr)
+		if err != nil {
+			log.Error("create vpc route fail: %v", err)
+			// Do not return
+		}
+	}
+
+	// finaly, add memory route
+	s.peerConns[peer.Cidr] = &peerConn{
+		addr: peer.ListenAddr,
+		cidr: peer.Cidr,
+	}
 
 	return nil
 }
@@ -259,15 +265,37 @@ func (s *Server) AddPeers(peers []*codec.Edge) {
 
 func (s *Server) DelPeer(peer *codec.Edge) {
 	log.Info("del peer: ", peer)
-	s.disconnPeer(peer.Cidr)
+	delete(s.peerConns, peer.Cidr)
 
 	out, err := execCmd("route", []string{"del", "-net",
 		peer.Cidr, "dev", s.iface.tun.Name()})
 	log.Info("route del -net %s dev %s, %s %v",
 		peer.Cidr, s.iface.tun.Name(), out, err)
+	// TODO: remove vpc route item
 }
 
-func (s *Server) disconnPeer(key string) {
-	delete(s.peerConns, key)
-	log.Info("delete peer %s", key)
+func (s *Server) AddRoute(msg *codec.AddRouteMsg) {
+	// add local route item
+	out, err := execCmd("route", []string{"add", "-net",
+		msg.Cidr, "dev", s.iface.tun.Name()})
+	if err != nil {
+		log.Error("route add -net %s dev %s, %s %v\n",
+			msg.Cidr, s.iface.tun.Name(), out, err)
+		return
+	}
+	log.Info("route add -net %s dev %s, %s %v\n",
+		msg.Cidr, s.iface.tun.Name(), out, err)
+
+	conn := &peerConn{
+		addr: msg.Nexthop,
+		cidr: msg.Cidr,
+	}
+	s.peerConns[msg.Cidr] = conn
+}
+
+func (s *Server) DelRoute(msg *codec.DelRouteMsg) {
+	s.DelPeer(&codec.Edge{
+		Cidr:       msg.Cidr,
+		ListenAddr: msg.Nexthop,
+	})
 }

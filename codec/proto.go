@@ -87,3 +87,15 @@ type ReportMsg struct {
 }
 
 type Heartbeat struct{}
+
+// controller deploy route added to edges
+type AddRouteMsg struct {
+	// dst cidr
+	Cidr string
+	// next hop edge listen address
+	// ip:port
+	Nexthop string
+}
+
+// controller deploy route deleted to edges
+type DelRouteMsg AddRouteMsg
