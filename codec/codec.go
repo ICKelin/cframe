@@ -34,6 +34,12 @@ const (
 
 	// alarm report
 	CmdAlarm
+
+	// add route
+	CmdAddRoute
+
+	// del route
+	CmdDelRoute
 )
 
 // version: 1byte

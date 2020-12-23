@@ -30,6 +30,7 @@ require (
 	github.com/tdewolff/parse v2.3.4+incompatible // indirect
 	github.com/templexxx/cpufeat v0.0.0-20180724012125-cef66df7f161 // indirect
 	github.com/templexxx/xor v0.0.0-20191217153810-f85b25db303b // indirect
+	github.com/tencentcloud/tencentcloud-sdk-go v3.0.233+incompatible // indirect
 	github.com/tjfoc/gmsm v1.3.2 // indirect
 	github.com/urfave/cli v1.22.4
 	github.com/urfave/cli/v2 v2.2.0
