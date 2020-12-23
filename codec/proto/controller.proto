@@ -31,6 +31,11 @@ message Stat {
     int64 timestamp = 7;
 }
 
+message Route {
+    string cidr = 1;
+    string nexthop = 2;
+}
+
 enum CSPType {
     NONE = 0;
     ALI = 1;
@@ -121,6 +126,36 @@ message GetStatReply {
     repeated Stat stats = 3;
 }
 
+message AddRouteReq {
+    string edgeId = 1;
+    string cidr = 2;
+    string nexthop = 3;
+}
+
+message AddRouteReply {
+    int32 code = 1;
+    string message = 2;
+}
+
+message DelRouteReq {
+    string id = 1;
+}
+
+message DelRouteReply {
+    int32 code = 1;
+    string message = 2;
+}
+
+message GetEdgeRoutesReq {
+    string edgeId = 1;
+}
+
+message GetEdgeRoutesReply {
+    int32 code = 1;
+    string message = 2;
+    repeated Route routes = 3;
+}
+
 
 service ControllerService {
     rpc GetEdgeList(GetEdgeListReq) returns (GetEdgeListReply){}
@@ -130,4 +165,7 @@ service ControllerService {
     rpc AddCSP(AddCSPReq) returns (AddCSPReply){}
     rpc DelCSP(DelCSPReq) returns (DelCSPReply){}
     rpc GetStat(GetStatReq) returns (GetStatReply) {}
+    rpc AddRoute(AddRouteReq) returns (AddRouteReply) {}
+    rpc DelRoute(DelRouteReq) returns (DelRouteReply) {}
+    rpc GetEdgeRoutes(GetEdgeRoutesReq) returns (GetEdgeRoutesReply) {}
 }

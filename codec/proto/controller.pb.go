@@ -56,14 +56,14 @@ func (CSPType) EnumDescriptor() ([]byte, []int) {
 }
 
 type EdgeInfo struct {
-	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name"`
-	UserId               string   `protobuf:"bytes,2,opt,name=userId,proto3" json:"userId"`
-	CspType              CSPType  `protobuf:"varint,3,opt,name=cspType,proto3,enum=controller.CSPType" json:"cspType"`
-	PublicIP             string   `protobuf:"bytes,4,opt,name=publicIP,proto3" json:"publicIP"`
-	PublicPort           int32    `protobuf:"varint,5,opt,name=publicPort,proto3" json:"publicPort"`
-	Cidr                 string   `protobuf:"bytes,6,opt,name=cidr,proto3" json:"cidr"`
-	Comment              string   `protobuf:"bytes,7,opt,name=comment,proto3" json:"comment"`
-	ActiveAt             int64    `protobuf:"varint,8,opt,name=activeAt,proto3" json:"activeAt"`
+	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	UserId               string   `protobuf:"bytes,2,opt,name=userId,proto3" json:"userId,omitempty"`
+	CspType              CSPType  `protobuf:"varint,3,opt,name=cspType,proto3,enum=controller.CSPType" json:"cspType,omitempty"`
+	PublicIP             string   `protobuf:"bytes,4,opt,name=publicIP,proto3" json:"publicIP,omitempty"`
+	PublicPort           int32    `protobuf:"varint,5,opt,name=publicPort,proto3" json:"publicPort,omitempty"`
+	Cidr                 string   `protobuf:"bytes,6,opt,name=cidr,proto3" json:"cidr,omitempty"`
+	Comment              string   `protobuf:"bytes,7,opt,name=comment,proto3" json:"comment,omitempty"`
+	ActiveAt             int64    `protobuf:"varint,8,opt,name=activeAt,proto3" json:"activeAt,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -151,9 +151,9 @@ func (m *EdgeInfo) GetActiveAt() int64 {
 }
 
 type CSPInfo struct {
-	CspType              CSPType  `protobuf:"varint,1,opt,name=cspType,proto3,enum=controller.CSPType" json:"cspType"`
-	AccessKey            string   `protobuf:"bytes,2,opt,name=accessKey,proto3" json:"accessKey"`
-	AccessSecret         string   `protobuf:"bytes,3,opt,name=accessSecret,proto3" json:"accessSecret"`
+	CspType              CSPType  `protobuf:"varint,1,opt,name=cspType,proto3,enum=controller.CSPType" json:"cspType,omitempty"`
+	AccessKey            string   `protobuf:"bytes,2,opt,name=accessKey,proto3" json:"accessKey,omitempty"`
+	AccessSecret         string   `protobuf:"bytes,3,opt,name=accessSecret,proto3" json:"accessSecret,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -206,13 +206,13 @@ func (m *CSPInfo) GetAccessSecret() string {
 }
 
 type Stat struct {
-	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId"`
-	EdgeName             string   `protobuf:"bytes,2,opt,name=edgeName,proto3" json:"edgeName"`
-	Cpu                  int64    `protobuf:"varint,3,opt,name=cpu,proto3" json:"cpu"`
-	Mem                  int64    `protobuf:"varint,4,opt,name=mem,proto3" json:"mem"`
-	TrafficIn            int64    `protobuf:"varint,5,opt,name=trafficIn,proto3" json:"trafficIn"`
-	TrafficOut           int64    `protobuf:"varint,6,opt,name=trafficOut,proto3" json:"trafficOut"`
-	Timestamp            int64    `protobuf:"varint,7,opt,name=timestamp,proto3" json:"timestamp"`
+	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId,omitempty"`
+	EdgeName             string   `protobuf:"bytes,2,opt,name=edgeName,proto3" json:"edgeName,omitempty"`
+	Cpu                  int64    `protobuf:"varint,3,opt,name=cpu,proto3" json:"cpu,omitempty"`
+	Mem                  int64    `protobuf:"varint,4,opt,name=mem,proto3" json:"mem,omitempty"`
+	TrafficIn            int64    `protobuf:"varint,5,opt,name=trafficIn,proto3" json:"trafficIn,omitempty"`
+	TrafficOut           int64    `protobuf:"varint,6,opt,name=trafficOut,proto3" json:"trafficOut,omitempty"`
+	Timestamp            int64    `protobuf:"varint,7,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -292,8 +292,55 @@ func (m *Stat) GetTimestamp() int64 {
 	return 0
 }
 
+type Route struct {
+	Cidr                 string   `protobuf:"bytes,1,opt,name=cidr,proto3" json:"cidr,omitempty"`
+	Nexthop              string   `protobuf:"bytes,2,opt,name=nexthop,proto3" json:"nexthop,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Route) Reset()         { *m = Route{} }
+func (m *Route) String() string { return proto.CompactTextString(m) }
+func (*Route) ProtoMessage()    {}
+func (*Route) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ed7f10298fa1d90f, []int{3}
+}
+
+func (m *Route) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Route.Unmarshal(m, b)
+}
+func (m *Route) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Route.Marshal(b, m, deterministic)
+}
+func (m *Route) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Route.Merge(m, src)
+}
+func (m *Route) XXX_Size() int {
+	return xxx_messageInfo_Route.Size(m)
+}
+func (m *Route) XXX_DiscardUnknown() {
+	xxx_messageInfo_Route.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Route proto.InternalMessageInfo
+
+func (m *Route) GetCidr() string {
+	if m != nil {
+		return m.Cidr
+	}
+	return ""
+}
+
+func (m *Route) GetNexthop() string {
+	if m != nil {
+		return m.Nexthop
+	}
+	return ""
+}
+
 type GetEdgeListReq struct {
-	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId"`
+	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -303,7 +350,7 @@ func (m *GetEdgeListReq) Reset()         { *m = GetEdgeListReq{} }
 func (m *GetEdgeListReq) String() string { return proto.CompactTextString(m) }
 func (*GetEdgeListReq) ProtoMessage()    {}
 func (*GetEdgeListReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed7f10298fa1d90f, []int{3}
+	return fileDescriptor_ed7f10298fa1d90f, []int{4}
 }
 
 func (m *GetEdgeListReq) XXX_Unmarshal(b []byte) error {
@@ -332,9 +379,9 @@ func (m *GetEdgeListReq) GetUserId() string {
 }
 
 type GetEdgeListReply struct {
-	Code                 int32       `protobuf:"varint,1,opt,name=code,proto3" json:"code"`
-	Message              string      `protobuf:"bytes,2,opt,name=message,proto3" json:"message"`
-	Edges                []*EdgeInfo `protobuf:"bytes,3,rep,name=edges,proto3" json:"edges"`
+	Code                 int32       `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
+	Message              string      `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	Edges                []*EdgeInfo `protobuf:"bytes,3,rep,name=edges,proto3" json:"edges,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
 	XXX_unrecognized     []byte      `json:"-"`
 	XXX_sizecache        int32       `json:"-"`
@@ -344,7 +391,7 @@ func (m *GetEdgeListReply) Reset()         { *m = GetEdgeListReply{} }
 func (m *GetEdgeListReply) String() string { return proto.CompactTextString(m) }
 func (*GetEdgeListReply) ProtoMessage()    {}
 func (*GetEdgeListReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed7f10298fa1d90f, []int{4}
+	return fileDescriptor_ed7f10298fa1d90f, []int{5}
 }
 
 func (m *GetEdgeListReply) XXX_Unmarshal(b []byte) error {
@@ -387,13 +434,13 @@ func (m *GetEdgeListReply) GetEdges() []*EdgeInfo {
 }
 
 type AddEdgeReq struct {
-	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name"`
-	UserId               string   `protobuf:"bytes,2,opt,name=userId,proto3" json:"userId"`
-	CspType              CSPType  `protobuf:"varint,3,opt,name=cspType,proto3,enum=controller.CSPType" json:"cspType"`
-	PublicIP             string   `protobuf:"bytes,4,opt,name=publicIP,proto3" json:"publicIP"`
-	PublicPort           int32    `protobuf:"varint,5,opt,name=publicPort,proto3" json:"publicPort"`
-	Cidr                 string   `protobuf:"bytes,6,opt,name=cidr,proto3" json:"cidr"`
-	Comment              string   `protobuf:"bytes,7,opt,name=comment,proto3" json:"comment"`
+	Name                 string   `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	UserId               string   `protobuf:"bytes,2,opt,name=userId,proto3" json:"userId,omitempty"`
+	CspType              CSPType  `protobuf:"varint,3,opt,name=cspType,proto3,enum=controller.CSPType" json:"cspType,omitempty"`
+	PublicIP             string   `protobuf:"bytes,4,opt,name=publicIP,proto3" json:"publicIP,omitempty"`
+	PublicPort           int32    `protobuf:"varint,5,opt,name=publicPort,proto3" json:"publicPort,omitempty"`
+	Cidr                 string   `protobuf:"bytes,6,opt,name=cidr,proto3" json:"cidr,omitempty"`
+	Comment              string   `protobuf:"bytes,7,opt,name=comment,proto3" json:"comment,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -403,7 +450,7 @@ func (m *AddEdgeReq) Reset()         { *m = AddEdgeReq{} }
 func (m *AddEdgeReq) String() string { return proto.CompactTextString(m) }
 func (*AddEdgeReq) ProtoMessage()    {}
 func (*AddEdgeReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed7f10298fa1d90f, []int{5}
+	return fileDescriptor_ed7f10298fa1d90f, []int{6}
 }
 
 func (m *AddEdgeReq) XXX_Unmarshal(b []byte) error {
@@ -474,9 +521,9 @@ func (m *AddEdgeReq) GetComment() string {
 }
 
 type AddEdgeReply struct {
-	Code                 int32     `protobuf:"varint,1,opt,name=code,proto3" json:"code"`
-	Message              string    `protobuf:"bytes,2,opt,name=message,proto3" json:"message"`
-	Data                 *EdgeInfo `protobuf:"bytes,3,opt,name=data,proto3" json:"data"`
+	Code                 int32     `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
+	Message              string    `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	Data                 *EdgeInfo `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
 	XXX_unrecognized     []byte    `json:"-"`
 	XXX_sizecache        int32     `json:"-"`
@@ -486,7 +533,7 @@ func (m *AddEdgeReply) Reset()         { *m = AddEdgeReply{} }
 func (m *AddEdgeReply) String() string { return proto.CompactTextString(m) }
 func (*AddEdgeReply) ProtoMessage()    {}
 func (*AddEdgeReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed7f10298fa1d90f, []int{6}
+	return fileDescriptor_ed7f10298fa1d90f, []int{7}
 }
 
 func (m *AddEdgeReply) XXX_Unmarshal(b []byte) error {
@@ -529,8 +576,8 @@ func (m *AddEdgeReply) GetData() *EdgeInfo {
 }
 
 type DelEdgeReq struct {
-	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId"`
-	EdgeName             string   `protobuf:"bytes,2,opt,name=edgeName,proto3" json:"edgeName"`
+	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId,omitempty"`
+	EdgeName             string   `protobuf:"bytes,2,opt,name=edgeName,proto3" json:"edgeName,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -540,7 +587,7 @@ func (m *DelEdgeReq) Reset()         { *m = DelEdgeReq{} }
 func (m *DelEdgeReq) String() string { return proto.CompactTextString(m) }
 func (*DelEdgeReq) ProtoMessage()    {}
 func (*DelEdgeReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed7f10298fa1d90f, []int{7}
+	return fileDescriptor_ed7f10298fa1d90f, []int{8}
 }
 
 func (m *DelEdgeReq) XXX_Unmarshal(b []byte) error {
@@ -576,8 +623,8 @@ func (m *DelEdgeReq) GetEdgeName() string {
 }
 
 type DelEdgeReply struct {
-	Code                 int32    `protobuf:"varint,1,opt,name=code,proto3" json:"code"`
-	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message"`
+	Code                 int32    `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
+	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -587,7 +634,7 @@ func (m *DelEdgeReply) Reset()         { *m = DelEdgeReply{} }
 func (m *DelEdgeReply) String() string { return proto.CompactTextString(m) }
 func (*DelEdgeReply) ProtoMessage()    {}
 func (*DelEdgeReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed7f10298fa1d90f, []int{8}
+	return fileDescriptor_ed7f10298fa1d90f, []int{9}
 }
 
 func (m *DelEdgeReply) XXX_Unmarshal(b []byte) error {
@@ -623,7 +670,7 @@ func (m *DelEdgeReply) GetMessage() string {
 }
 
 type GetCSPListReq struct {
-	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId"`
+	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -633,7 +680,7 @@ func (m *GetCSPListReq) Reset()         { *m = GetCSPListReq{} }
 func (m *GetCSPListReq) String() string { return proto.CompactTextString(m) }
 func (*GetCSPListReq) ProtoMessage()    {}
 func (*GetCSPListReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed7f10298fa1d90f, []int{9}
+	return fileDescriptor_ed7f10298fa1d90f, []int{10}
 }
 
 func (m *GetCSPListReq) XXX_Unmarshal(b []byte) error {
@@ -662,9 +709,9 @@ func (m *GetCSPListReq) GetUserId() string {
 }
 
 type GetCSPListReply struct {
-	Code                 int32      `protobuf:"varint,1,opt,name=code,proto3" json:"code"`
-	Message              string     `protobuf:"bytes,2,opt,name=message,proto3" json:"message"`
-	CspInfo              []*CSPInfo `protobuf:"bytes,3,rep,name=cspInfo,proto3" json:"cspInfo"`
+	Code                 int32      `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
+	Message              string     `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	CspInfo              []*CSPInfo `protobuf:"bytes,3,rep,name=cspInfo,proto3" json:"cspInfo,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
 	XXX_unrecognized     []byte     `json:"-"`
 	XXX_sizecache        int32      `json:"-"`
@@ -674,7 +721,7 @@ func (m *GetCSPListReply) Reset()         { *m = GetCSPListReply{} }
 func (m *GetCSPListReply) String() string { return proto.CompactTextString(m) }
 func (*GetCSPListReply) ProtoMessage()    {}
 func (*GetCSPListReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed7f10298fa1d90f, []int{10}
+	return fileDescriptor_ed7f10298fa1d90f, []int{11}
 }
 
 func (m *GetCSPListReply) XXX_Unmarshal(b []byte) error {
@@ -717,10 +764,10 @@ func (m *GetCSPListReply) GetCspInfo() []*CSPInfo {
 }
 
 type AddCSPReq struct {
-	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId"`
-	CspType              CSPType  `protobuf:"varint,2,opt,name=cspType,proto3,enum=controller.CSPType" json:"cspType"`
-	AccessKey            string   `protobuf:"bytes,3,opt,name=accessKey,proto3" json:"accessKey"`
-	AccessSecret         string   `protobuf:"bytes,4,opt,name=accessSecret,proto3" json:"accessSecret"`
+	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId,omitempty"`
+	CspType              CSPType  `protobuf:"varint,2,opt,name=cspType,proto3,enum=controller.CSPType" json:"cspType,omitempty"`
+	AccessKey            string   `protobuf:"bytes,3,opt,name=accessKey,proto3" json:"accessKey,omitempty"`
+	AccessSecret         string   `protobuf:"bytes,4,opt,name=accessSecret,proto3" json:"accessSecret,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -730,7 +777,7 @@ func (m *AddCSPReq) Reset()         { *m = AddCSPReq{} }
 func (m *AddCSPReq) String() string { return proto.CompactTextString(m) }
 func (*AddCSPReq) ProtoMessage()    {}
 func (*AddCSPReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed7f10298fa1d90f, []int{11}
+	return fileDescriptor_ed7f10298fa1d90f, []int{12}
 }
 
 func (m *AddCSPReq) XXX_Unmarshal(b []byte) error {
@@ -780,9 +827,9 @@ func (m *AddCSPReq) GetAccessSecret() string {
 }
 
 type AddCSPReply struct {
-	Code                 int32    `protobuf:"varint,1,opt,name=code,proto3" json:"code"`
-	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message"`
-	Data                 *CSPInfo `protobuf:"bytes,3,opt,name=data,proto3" json:"data"`
+	Code                 int32    `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
+	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	Data                 *CSPInfo `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -792,7 +839,7 @@ func (m *AddCSPReply) Reset()         { *m = AddCSPReply{} }
 func (m *AddCSPReply) String() string { return proto.CompactTextString(m) }
 func (*AddCSPReply) ProtoMessage()    {}
 func (*AddCSPReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed7f10298fa1d90f, []int{12}
+	return fileDescriptor_ed7f10298fa1d90f, []int{13}
 }
 
 func (m *AddCSPReply) XXX_Unmarshal(b []byte) error {
@@ -835,8 +882,8 @@ func (m *AddCSPReply) GetData() *CSPInfo {
 }
 
 type DelCSPReq struct {
-	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId"`
-	CspType              CSPType  `protobuf:"varint,2,opt,name=cspType,proto3,enum=controller.CSPType" json:"cspType"`
+	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId,omitempty"`
+	CspType              CSPType  `protobuf:"varint,2,opt,name=cspType,proto3,enum=controller.CSPType" json:"cspType,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -846,7 +893,7 @@ func (m *DelCSPReq) Reset()         { *m = DelCSPReq{} }
 func (m *DelCSPReq) String() string { return proto.CompactTextString(m) }
 func (*DelCSPReq) ProtoMessage()    {}
 func (*DelCSPReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed7f10298fa1d90f, []int{13}
+	return fileDescriptor_ed7f10298fa1d90f, []int{14}
 }
 
 func (m *DelCSPReq) XXX_Unmarshal(b []byte) error {
@@ -882,8 +929,8 @@ func (m *DelCSPReq) GetCspType() CSPType {
 }
 
 type DelCSPReply struct {
-	Code                 int32    `protobuf:"varint,1,opt,name=code,proto3" json:"code"`
-	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message"`
+	Code                 int32    `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
+	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -893,7 +940,7 @@ func (m *DelCSPReply) Reset()         { *m = DelCSPReply{} }
 func (m *DelCSPReply) String() string { return proto.CompactTextString(m) }
 func (*DelCSPReply) ProtoMessage()    {}
 func (*DelCSPReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed7f10298fa1d90f, []int{14}
+	return fileDescriptor_ed7f10298fa1d90f, []int{15}
 }
 
 func (m *DelCSPReply) XXX_Unmarshal(b []byte) error {
@@ -929,11 +976,11 @@ func (m *DelCSPReply) GetMessage() string {
 }
 
 type GetStatReq struct {
-	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId"`
-	EdgeName             string   `protobuf:"bytes,2,opt,name=edgeName,proto3" json:"edgeName"`
-	From                 int64    `protobuf:"varint,3,opt,name=from,proto3" json:"from"`
-	Count                int32    `protobuf:"varint,4,opt,name=count,proto3" json:"count"`
-	Direction            int32    `protobuf:"varint,5,opt,name=direction,proto3" json:"direction"`
+	UserId               string   `protobuf:"bytes,1,opt,name=userId,proto3" json:"userId,omitempty"`
+	EdgeName             string   `protobuf:"bytes,2,opt,name=edgeName,proto3" json:"edgeName,omitempty"`
+	From                 int64    `protobuf:"varint,3,opt,name=from,proto3" json:"from,omitempty"`
+	Count                int32    `protobuf:"varint,4,opt,name=count,proto3" json:"count,omitempty"`
+	Direction            int32    `protobuf:"varint,5,opt,name=direction,proto3" json:"direction,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -943,7 +990,7 @@ func (m *GetStatReq) Reset()         { *m = GetStatReq{} }
 func (m *GetStatReq) String() string { return proto.CompactTextString(m) }
 func (*GetStatReq) ProtoMessage()    {}
 func (*GetStatReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed7f10298fa1d90f, []int{15}
+	return fileDescriptor_ed7f10298fa1d90f, []int{16}
 }
 
 func (m *GetStatReq) XXX_Unmarshal(b []byte) error {
@@ -1000,9 +1047,9 @@ func (m *GetStatReq) GetDirection() int32 {
 }
 
 type GetStatReply struct {
-	Code                 int32    `protobuf:"varint,1,opt,name=code,proto3" json:"code"`
-	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message"`
-	Stats                []*Stat  `protobuf:"bytes,3,rep,name=stats,proto3" json:"stats"`
+	Code                 int32    `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
+	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	Stats                []*Stat  `protobuf:"bytes,3,rep,name=stats,proto3" json:"stats,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -1012,7 +1059,7 @@ func (m *GetStatReply) Reset()         { *m = GetStatReply{} }
 func (m *GetStatReply) String() string { return proto.CompactTextString(m) }
 func (*GetStatReply) ProtoMessage()    {}
 func (*GetStatReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ed7f10298fa1d90f, []int{16}
+	return fileDescriptor_ed7f10298fa1d90f, []int{17}
 }
 
 func (m *GetStatReply) XXX_Unmarshal(b []byte) error {
@@ -1054,11 +1101,294 @@ func (m *GetStatReply) GetStats() []*Stat {
 	return nil
 }
 
+type AddRouteReq struct {
+	EdgeId               string   `protobuf:"bytes,1,opt,name=edgeId,proto3" json:"edgeId,omitempty"`
+	Cidr                 string   `protobuf:"bytes,2,opt,name=cidr,proto3" json:"cidr,omitempty"`
+	Nexthop              string   `protobuf:"bytes,3,opt,name=nexthop,proto3" json:"nexthop,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *AddRouteReq) Reset()         { *m = AddRouteReq{} }
+func (m *AddRouteReq) String() string { return proto.CompactTextString(m) }
+func (*AddRouteReq) ProtoMessage()    {}
+func (*AddRouteReq) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ed7f10298fa1d90f, []int{18}
+}
+
+func (m *AddRouteReq) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AddRouteReq.Unmarshal(m, b)
+}
+func (m *AddRouteReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AddRouteReq.Marshal(b, m, deterministic)
+}
+func (m *AddRouteReq) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AddRouteReq.Merge(m, src)
+}
+func (m *AddRouteReq) XXX_Size() int {
+	return xxx_messageInfo_AddRouteReq.Size(m)
+}
+func (m *AddRouteReq) XXX_DiscardUnknown() {
+	xxx_messageInfo_AddRouteReq.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AddRouteReq proto.InternalMessageInfo
+
+func (m *AddRouteReq) GetEdgeId() string {
+	if m != nil {
+		return m.EdgeId
+	}
+	return ""
+}
+
+func (m *AddRouteReq) GetCidr() string {
+	if m != nil {
+		return m.Cidr
+	}
+	return ""
+}
+
+func (m *AddRouteReq) GetNexthop() string {
+	if m != nil {
+		return m.Nexthop
+	}
+	return ""
+}
+
+type AddRouteReply struct {
+	Code                 int32    `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
+	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *AddRouteReply) Reset()         { *m = AddRouteReply{} }
+func (m *AddRouteReply) String() string { return proto.CompactTextString(m) }
+func (*AddRouteReply) ProtoMessage()    {}
+func (*AddRouteReply) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ed7f10298fa1d90f, []int{19}
+}
+
+func (m *AddRouteReply) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_AddRouteReply.Unmarshal(m, b)
+}
+func (m *AddRouteReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_AddRouteReply.Marshal(b, m, deterministic)
+}
+func (m *AddRouteReply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AddRouteReply.Merge(m, src)
+}
+func (m *AddRouteReply) XXX_Size() int {
+	return xxx_messageInfo_AddRouteReply.Size(m)
+}
+func (m *AddRouteReply) XXX_DiscardUnknown() {
+	xxx_messageInfo_AddRouteReply.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_AddRouteReply proto.InternalMessageInfo
+
+func (m *AddRouteReply) GetCode() int32 {
+	if m != nil {
+		return m.Code
+	}
+	return 0
+}
+
+func (m *AddRouteReply) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+type DelRouteReq struct {
+	Id                   string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DelRouteReq) Reset()         { *m = DelRouteReq{} }
+func (m *DelRouteReq) String() string { return proto.CompactTextString(m) }
+func (*DelRouteReq) ProtoMessage()    {}
+func (*DelRouteReq) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ed7f10298fa1d90f, []int{20}
+}
+
+func (m *DelRouteReq) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DelRouteReq.Unmarshal(m, b)
+}
+func (m *DelRouteReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DelRouteReq.Marshal(b, m, deterministic)
+}
+func (m *DelRouteReq) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DelRouteReq.Merge(m, src)
+}
+func (m *DelRouteReq) XXX_Size() int {
+	return xxx_messageInfo_DelRouteReq.Size(m)
+}
+func (m *DelRouteReq) XXX_DiscardUnknown() {
+	xxx_messageInfo_DelRouteReq.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DelRouteReq proto.InternalMessageInfo
+
+func (m *DelRouteReq) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+type DelRouteReply struct {
+	Code                 int32    `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
+	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DelRouteReply) Reset()         { *m = DelRouteReply{} }
+func (m *DelRouteReply) String() string { return proto.CompactTextString(m) }
+func (*DelRouteReply) ProtoMessage()    {}
+func (*DelRouteReply) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ed7f10298fa1d90f, []int{21}
+}
+
+func (m *DelRouteReply) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DelRouteReply.Unmarshal(m, b)
+}
+func (m *DelRouteReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DelRouteReply.Marshal(b, m, deterministic)
+}
+func (m *DelRouteReply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DelRouteReply.Merge(m, src)
+}
+func (m *DelRouteReply) XXX_Size() int {
+	return xxx_messageInfo_DelRouteReply.Size(m)
+}
+func (m *DelRouteReply) XXX_DiscardUnknown() {
+	xxx_messageInfo_DelRouteReply.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DelRouteReply proto.InternalMessageInfo
+
+func (m *DelRouteReply) GetCode() int32 {
+	if m != nil {
+		return m.Code
+	}
+	return 0
+}
+
+func (m *DelRouteReply) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+type GetEdgeRoutesReq struct {
+	EdgeId               string   `protobuf:"bytes,1,opt,name=edgeId,proto3" json:"edgeId,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *GetEdgeRoutesReq) Reset()         { *m = GetEdgeRoutesReq{} }
+func (m *GetEdgeRoutesReq) String() string { return proto.CompactTextString(m) }
+func (*GetEdgeRoutesReq) ProtoMessage()    {}
+func (*GetEdgeRoutesReq) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ed7f10298fa1d90f, []int{22}
+}
+
+func (m *GetEdgeRoutesReq) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetEdgeRoutesReq.Unmarshal(m, b)
+}
+func (m *GetEdgeRoutesReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetEdgeRoutesReq.Marshal(b, m, deterministic)
+}
+func (m *GetEdgeRoutesReq) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetEdgeRoutesReq.Merge(m, src)
+}
+func (m *GetEdgeRoutesReq) XXX_Size() int {
+	return xxx_messageInfo_GetEdgeRoutesReq.Size(m)
+}
+func (m *GetEdgeRoutesReq) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetEdgeRoutesReq.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetEdgeRoutesReq proto.InternalMessageInfo
+
+func (m *GetEdgeRoutesReq) GetEdgeId() string {
+	if m != nil {
+		return m.EdgeId
+	}
+	return ""
+}
+
+type GetEdgeRoutesReply struct {
+	Code                 int32    `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
+	Message              string   `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	Routes               []*Route `protobuf:"bytes,3,rep,name=routes,proto3" json:"routes,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *GetEdgeRoutesReply) Reset()         { *m = GetEdgeRoutesReply{} }
+func (m *GetEdgeRoutesReply) String() string { return proto.CompactTextString(m) }
+func (*GetEdgeRoutesReply) ProtoMessage()    {}
+func (*GetEdgeRoutesReply) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ed7f10298fa1d90f, []int{23}
+}
+
+func (m *GetEdgeRoutesReply) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetEdgeRoutesReply.Unmarshal(m, b)
+}
+func (m *GetEdgeRoutesReply) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetEdgeRoutesReply.Marshal(b, m, deterministic)
+}
+func (m *GetEdgeRoutesReply) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetEdgeRoutesReply.Merge(m, src)
+}
+func (m *GetEdgeRoutesReply) XXX_Size() int {
+	return xxx_messageInfo_GetEdgeRoutesReply.Size(m)
+}
+func (m *GetEdgeRoutesReply) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetEdgeRoutesReply.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetEdgeRoutesReply proto.InternalMessageInfo
+
+func (m *GetEdgeRoutesReply) GetCode() int32 {
+	if m != nil {
+		return m.Code
+	}
+	return 0
+}
+
+func (m *GetEdgeRoutesReply) GetMessage() string {
+	if m != nil {
+		return m.Message
+	}
+	return ""
+}
+
+func (m *GetEdgeRoutesReply) GetRoutes() []*Route {
+	if m != nil {
+		return m.Routes
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterEnum("controller.CSPType", CSPType_name, CSPType_value)
 	proto.RegisterType((*EdgeInfo)(nil), "controller.EdgeInfo")
 	proto.RegisterType((*CSPInfo)(nil), "controller.CSPInfo")
 	proto.RegisterType((*Stat)(nil), "controller.Stat")
+	proto.RegisterType((*Route)(nil), "controller.Route")
 	proto.RegisterType((*GetEdgeListReq)(nil), "controller.GetEdgeListReq")
 	proto.RegisterType((*GetEdgeListReply)(nil), "controller.GetEdgeListReply")
 	proto.RegisterType((*AddEdgeReq)(nil), "controller.AddEdgeReq")
@@ -1073,61 +1403,77 @@ func init() {
 	proto.RegisterType((*DelCSPReply)(nil), "controller.DelCSPReply")
 	proto.RegisterType((*GetStatReq)(nil), "controller.GetStatReq")
 	proto.RegisterType((*GetStatReply)(nil), "controller.GetStatReply")
+	proto.RegisterType((*AddRouteReq)(nil), "controller.AddRouteReq")
+	proto.RegisterType((*AddRouteReply)(nil), "controller.AddRouteReply")
+	proto.RegisterType((*DelRouteReq)(nil), "controller.DelRouteReq")
+	proto.RegisterType((*DelRouteReply)(nil), "controller.DelRouteReply")
+	proto.RegisterType((*GetEdgeRoutesReq)(nil), "controller.GetEdgeRoutesReq")
+	proto.RegisterType((*GetEdgeRoutesReply)(nil), "controller.GetEdgeRoutesReply")
 }
 
 func init() { proto.RegisterFile("controller.proto", fileDescriptor_ed7f10298fa1d90f) }
 
 var fileDescriptor_ed7f10298fa1d90f = []byte{
-	// 781 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xdc, 0x56, 0x5b, 0x6e, 0xd3, 0x40,
-	0x14, 0x8d, 0xe3, 0x3c, 0x6f, 0x42, 0x31, 0x43, 0x29, 0x26, 0x54, 0x28, 0x9a, 0x0f, 0x1a, 0x55,
-	0x6a, 0x91, 0xca, 0x1f, 0x0f, 0x89, 0x90, 0x96, 0x2a, 0xa2, 0x6a, 0x53, 0x1b, 0x09, 0x89, 0x3f,
-	0xd7, 0x9e, 0x54, 0x96, 0xfc, 0xc2, 0x9e, 0x54, 0x0a, 0x2b, 0x60, 0x01, 0xac, 0x86, 0x5d, 0xf0,
-	0xcd, 0x12, 0xd8, 0x04, 0x9a, 0x19, 0x3f, 0xc6, 0x55, 0x42, 0x71, 0xc5, 0x17, 0x5f, 0x9d, 0x7b,
-	0x3c, 0x77, 0xe6, 0xde, 0x73, 0xcf, 0x9c, 0x06, 0x34, 0x3b, 0x0c, 0x68, 0x1c, 0x7a, 0x1e, 0x89,
-	0xf7, 0xa3, 0x38, 0xa4, 0x21, 0x82, 0x02, 0xc1, 0xbf, 0x14, 0xe8, 0x1c, 0x39, 0x97, 0x64, 0x1a,
-	0xcc, 0x43, 0x84, 0xa0, 0x11, 0x58, 0x3e, 0xd1, 0x95, 0xa1, 0x32, 0xea, 0x1a, 0x7c, 0x8d, 0xb6,
-	0xa0, 0xb5, 0x48, 0x48, 0x3c, 0x75, 0xf4, 0x3a, 0x47, 0xd3, 0x08, 0xed, 0x41, 0xdb, 0x4e, 0xa2,
-	0x0f, 0xcb, 0x88, 0xe8, 0xea, 0x50, 0x19, 0x6d, 0x1c, 0xdc, 0xdf, 0x97, 0x2e, 0x9a, 0x98, 0x33,
-	0xf6, 0xc9, 0xc8, 0xf6, 0xa0, 0x01, 0x74, 0xa2, 0xc5, 0x85, 0xe7, 0xda, 0xd3, 0x99, 0xde, 0xe0,
-	0x07, 0xe5, 0x31, 0x7a, 0x02, 0x20, 0xd6, 0xb3, 0x30, 0xa6, 0x7a, 0x73, 0xa8, 0x8c, 0x9a, 0x86,
-	0x84, 0xb0, 0xb2, 0x6c, 0xd7, 0x89, 0xf5, 0x96, 0x28, 0x8b, 0xad, 0x91, 0x0e, 0x6d, 0x3b, 0xf4,
-	0x7d, 0x12, 0x50, 0xbd, 0xcd, 0xe1, 0x2c, 0x64, 0x37, 0x59, 0x36, 0x75, 0xaf, 0xc8, 0x98, 0xea,
-	0x9d, 0xa1, 0x32, 0x52, 0x8d, 0x3c, 0xc6, 0x5f, 0xa0, 0x3d, 0x31, 0x67, 0xbc, 0x57, 0xa9, 0x7e,
-	0xe5, 0x2f, 0xea, 0xdf, 0x86, 0xae, 0x65, 0xdb, 0x24, 0x49, 0xde, 0x93, 0x65, 0xca, 0x44, 0x01,
-	0x20, 0x0c, 0x7d, 0x11, 0x98, 0xc4, 0x8e, 0x09, 0xe5, 0x8c, 0x74, 0x8d, 0x12, 0x86, 0xbf, 0x2b,
-	0xd0, 0x30, 0xa9, 0x45, 0x25, 0x46, 0x95, 0x12, 0xa3, 0x03, 0xe8, 0x10, 0xe7, 0x92, 0x9c, 0xb2,
-	0x09, 0x88, 0x1b, 0xf2, 0x18, 0x69, 0xa0, 0xda, 0xd1, 0x82, 0x9f, 0xab, 0x1a, 0x6c, 0xc9, 0x10,
-	0x9f, 0xf8, 0x9c, 0x4b, 0xd5, 0x60, 0x4b, 0x56, 0x22, 0x8d, 0xad, 0xf9, 0xdc, 0xb5, 0xa7, 0x01,
-	0x67, 0x51, 0x35, 0x0a, 0x80, 0x91, 0x9c, 0x06, 0x67, 0x0b, 0xca, 0xa9, 0x54, 0x0d, 0x09, 0xe1,
-	0xd9, 0xae, 0x4f, 0x12, 0x6a, 0xf9, 0x11, 0xa7, 0x94, 0x65, 0x67, 0x00, 0x1e, 0xc1, 0xc6, 0x31,
-	0xa1, 0x4c, 0x28, 0x27, 0x6e, 0x42, 0x0d, 0xf2, 0x79, 0x5d, 0x17, 0xd8, 0x03, 0xad, 0xb4, 0x33,
-	0xf2, 0x96, 0x7c, 0x80, 0xa1, 0x23, 0x88, 0x6e, 0x1a, 0x7c, 0xcd, 0x06, 0xe8, 0x93, 0x24, 0xb1,
-	0x2e, 0xb3, 0x66, 0xb3, 0x10, 0xed, 0x42, 0x93, 0xf5, 0x9d, 0xe8, 0xea, 0x50, 0x1d, 0xf5, 0x0e,
-	0x36, 0xe5, 0xb9, 0x64, 0x52, 0x35, 0xc4, 0x16, 0xfc, 0x43, 0x01, 0x18, 0x3b, 0x0e, 0x83, 0x59,
-	0x51, 0xff, 0x83, 0x80, 0xf1, 0x1c, 0xfa, 0x79, 0x4b, 0xd5, 0xd9, 0x1b, 0x41, 0xc3, 0xb1, 0xa8,
-	0xc5, 0x7b, 0x5a, 0x47, 0x1e, 0xdf, 0x81, 0xdf, 0x00, 0x1c, 0x12, 0x2f, 0xa3, 0xee, 0x16, 0xaa,
-	0xc4, 0xaf, 0xa0, 0x9f, 0x9f, 0x50, 0xb9, 0x52, 0xbc, 0x03, 0x77, 0x8e, 0x09, 0x9d, 0x98, 0xb3,
-	0x9b, 0x24, 0x15, 0xc0, 0x5d, 0x79, 0x63, 0x75, 0x4e, 0xc4, 0xa8, 0x59, 0xeb, 0xa9, 0xa6, 0xae,
-	0x8f, 0x9a, 0xb3, 0x92, 0xed, 0xc1, 0xdf, 0x14, 0xe8, 0x8e, 0x1d, 0x67, 0x62, 0xce, 0xfe, 0x44,
-	0x8c, 0xa4, 0x9f, 0x7a, 0x55, 0x03, 0x51, 0x6f, 0x32, 0x90, 0xc6, 0x0a, 0x03, 0x71, 0xa0, 0x97,
-	0x55, 0x55, 0x9d, 0x82, 0x9d, 0x92, 0x2c, 0x56, 0xf6, 0x2f, 0x54, 0x61, 0x40, 0xf7, 0x90, 0x78,
-	0xff, 0xb4, 0x77, 0xfc, 0x12, 0x7a, 0xd9, 0x99, 0xd5, 0x65, 0xf2, 0x55, 0x01, 0x38, 0x26, 0x94,
-	0x59, 0xe7, 0x2d, 0x75, 0xca, 0x2e, 0x9c, 0xc7, 0xa1, 0x9f, 0xda, 0x27, 0x5f, 0xa3, 0x4d, 0x68,
-	0xda, 0xe1, 0x22, 0x10, 0x54, 0x37, 0x0d, 0x11, 0xb0, 0x29, 0x39, 0x6e, 0x4c, 0x6c, 0xea, 0x86,
-	0x41, 0xfa, 0x90, 0x0b, 0x00, 0x3b, 0xd0, 0xcf, 0x2b, 0xa9, 0x3e, 0x82, 0xa7, 0xd0, 0x4c, 0xa8,
-	0x45, 0x33, 0x5f, 0xd3, 0x64, 0xca, 0xf8, 0x99, 0xe2, 0xf3, 0xee, 0x1e, 0xff, 0x27, 0xc5, 0x45,
-	0xd3, 0x81, 0xc6, 0xe9, 0xd9, 0xe9, 0x91, 0x56, 0x43, 0x6d, 0x50, 0xc7, 0x27, 0x53, 0x4d, 0x41,
-	0x2d, 0xa8, 0x9f, 0x9f, 0x6b, 0x75, 0x0e, 0x7c, 0x34, 0x35, 0xf5, 0xe0, 0xa7, 0x0a, 0xf7, 0x26,
-	0xf9, 0x49, 0x26, 0x89, 0xaf, 0x5c, 0x9b, 0xa0, 0x29, 0xf4, 0x24, 0x1b, 0x46, 0x03, 0xf9, 0xb2,
-	0xb2, 0x93, 0x0f, 0xb6, 0xd7, 0x7e, 0x8b, 0xbc, 0x25, 0xae, 0xa1, 0xd7, 0xd0, 0x4e, 0xfd, 0x08,
-	0x6d, 0xc9, 0x5b, 0x0b, 0xdf, 0x1d, 0xe8, 0x2b, 0xf1, 0x3c, 0x3d, 0x35, 0x89, 0x72, 0x7a, 0xe1,
-	0x3d, 0xe5, 0x74, 0xd9, 0x51, 0x70, 0x0d, 0xbd, 0xe3, 0xd3, 0x4f, 0x1f, 0x3f, 0x7a, 0x74, 0xad,
-	0xd6, 0xc2, 0x3d, 0x06, 0x8f, 0xd7, 0x7d, 0x12, 0xe7, 0xbc, 0x80, 0x96, 0x78, 0x3d, 0xe8, 0xc1,
-	0xb5, 0x62, 0x85, 0xd6, 0x07, 0x0f, 0x57, 0xc1, 0x79, 0xae, 0xd0, 0x6f, 0x39, 0x37, 0x7f, 0x27,
-	0xe5, 0x5c, 0x49, 0xea, 0xa2, 0xfd, 0x54, 0x33, 0xe5, 0xf6, 0x0b, 0x49, 0x97, 0xdb, 0x97, 0x05,
-	0x86, 0x6b, 0x6f, 0x3b, 0x9f, 0x5a, 0xcf, 0xf8, 0xaf, 0xb6, 0x8b, 0x16, 0xff, 0xf3, 0xfc, 0x77,
-	0x00, 0x00, 0x00, 0xff, 0xff, 0x34, 0xe7, 0xca, 0x25, 0xd0, 0x09, 0x00, 0x00,
+	// 935 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xdc, 0x57, 0xef, 0x8e, 0xdb, 0x44,
+	0x10, 0x8f, 0xe3, 0x38, 0x7f, 0xe6, 0xae, 0x47, 0xba, 0x94, 0xe2, 0x9a, 0x52, 0x45, 0xfb, 0x81,
+	0x86, 0x93, 0x5a, 0xa4, 0x43, 0x7c, 0x01, 0x2a, 0xf5, 0x48, 0xcb, 0x29, 0xa2, 0xba, 0x4b, 0x6d,
+	0x24, 0x24, 0xbe, 0xb9, 0xf6, 0xe6, 0xb0, 0x14, 0xff, 0xc1, 0xde, 0x54, 0x1c, 0x4f, 0xc0, 0x03,
+	0xf0, 0x20, 0x7c, 0xe6, 0x2d, 0x78, 0x0e, 0x5e, 0x02, 0xed, 0xac, 0x77, 0xbd, 0x8e, 0x72, 0x57,
+	0x7c, 0xe2, 0x13, 0x9f, 0xb2, 0x33, 0xbb, 0x33, 0x3b, 0xf3, 0x9b, 0x99, 0xdf, 0xc6, 0x30, 0x8d,
+	0xf2, 0x8c, 0x97, 0xf9, 0x66, 0xc3, 0xca, 0xa7, 0x45, 0x99, 0xf3, 0x9c, 0x40, 0xa3, 0xa1, 0x7f,
+	0x5b, 0x30, 0x7e, 0x19, 0x5f, 0xb2, 0x65, 0xb6, 0xce, 0x09, 0x81, 0x41, 0x16, 0xa6, 0xcc, 0xb5,
+	0x66, 0xd6, 0x7c, 0xe2, 0xe3, 0x9a, 0xdc, 0x87, 0xe1, 0xb6, 0x62, 0xe5, 0x32, 0x76, 0xfb, 0xa8,
+	0xad, 0x25, 0xf2, 0x04, 0x46, 0x51, 0x55, 0x7c, 0x7f, 0x55, 0x30, 0xd7, 0x9e, 0x59, 0xf3, 0xa3,
+	0x93, 0xf7, 0x9f, 0x1a, 0x17, 0x2d, 0x82, 0x95, 0xd8, 0xf2, 0xd5, 0x19, 0xe2, 0xc1, 0xb8, 0xd8,
+	0xbe, 0xd9, 0x24, 0xd1, 0x72, 0xe5, 0x0e, 0xd0, 0x91, 0x96, 0xc9, 0x23, 0x00, 0xb9, 0x5e, 0xe5,
+	0x25, 0x77, 0x9d, 0x99, 0x35, 0x77, 0x7c, 0x43, 0x23, 0xc2, 0x8a, 0x92, 0xb8, 0x74, 0x87, 0x32,
+	0x2c, 0xb1, 0x26, 0x2e, 0x8c, 0xa2, 0x3c, 0x4d, 0x59, 0xc6, 0xdd, 0x11, 0xaa, 0x95, 0x28, 0x6e,
+	0x0a, 0x23, 0x9e, 0xbc, 0x65, 0xa7, 0xdc, 0x1d, 0xcf, 0xac, 0xb9, 0xed, 0x6b, 0x99, 0xfe, 0x0a,
+	0xa3, 0x45, 0xb0, 0xc2, 0x5c, 0x8d, 0xf8, 0xad, 0x7f, 0x11, 0xff, 0x43, 0x98, 0x84, 0x51, 0xc4,
+	0xaa, 0xea, 0x3b, 0x76, 0x55, 0x23, 0xd1, 0x28, 0x08, 0x85, 0x43, 0x29, 0x04, 0x2c, 0x2a, 0x19,
+	0x47, 0x44, 0x26, 0x7e, 0x4b, 0x47, 0xff, 0xb4, 0x60, 0x10, 0xf0, 0x90, 0x1b, 0x88, 0x5a, 0x2d,
+	0x44, 0x3d, 0x18, 0xb3, 0xf8, 0x92, 0x9d, 0x8b, 0x0a, 0xc8, 0x1b, 0xb4, 0x4c, 0xa6, 0x60, 0x47,
+	0xc5, 0x16, 0xfd, 0xda, 0xbe, 0x58, 0x0a, 0x4d, 0xca, 0x52, 0xc4, 0xd2, 0xf6, 0xc5, 0x52, 0x84,
+	0xc8, 0xcb, 0x70, 0xbd, 0x4e, 0xa2, 0x65, 0x86, 0x28, 0xda, 0x7e, 0xa3, 0x10, 0x20, 0xd7, 0xc2,
+	0xc5, 0x96, 0x23, 0x94, 0xb6, 0x6f, 0x68, 0xd0, 0x3a, 0x49, 0x59, 0xc5, 0xc3, 0xb4, 0x40, 0x48,
+	0x85, 0xb5, 0x52, 0xd0, 0x2f, 0xc0, 0xf1, 0xf3, 0x2d, 0x67, 0xba, 0x16, 0x56, 0xbb, 0x16, 0x19,
+	0xfb, 0x85, 0xff, 0x94, 0x17, 0x75, 0xdc, 0x4a, 0xa4, 0x73, 0x38, 0x3a, 0x63, 0x5c, 0xf4, 0xd7,
+	0xab, 0xa4, 0xe2, 0x3e, 0xfb, 0xf9, 0xba, 0xe4, 0xe9, 0x06, 0xa6, 0xad, 0x93, 0xc5, 0xe6, 0x0a,
+	0xef, 0xca, 0x63, 0x59, 0x1f, 0xc7, 0xc7, 0xb5, 0xb8, 0x2b, 0x65, 0x55, 0x15, 0x5e, 0x2a, 0x8c,
+	0x94, 0x48, 0x8e, 0xc1, 0x11, 0x70, 0x55, 0xae, 0x3d, 0xb3, 0xe7, 0x07, 0x27, 0xf7, 0xcc, 0x72,
+	0xaa, 0x0e, 0xf7, 0xe5, 0x11, 0xfa, 0x97, 0x05, 0x70, 0x1a, 0xc7, 0x42, 0x2d, 0x82, 0xfa, 0x3f,
+	0xf4, 0x3d, 0x5d, 0xc3, 0xa1, 0x4e, 0xa9, 0x3b, 0x7a, 0x73, 0x18, 0xc4, 0x21, 0x0f, 0x31, 0xa7,
+	0xeb, 0xc0, 0xc3, 0x13, 0xf4, 0x39, 0xc0, 0x0b, 0xb6, 0x51, 0xd0, 0xdd, 0xa2, 0x99, 0xe9, 0xd7,
+	0x70, 0xa8, 0x3d, 0x74, 0x8e, 0x94, 0x3e, 0x86, 0x3b, 0x67, 0x8c, 0x2f, 0x82, 0xd5, 0xbb, 0x5a,
+	0x2a, 0x83, 0xf7, 0xcc, 0x83, 0xdd, 0x31, 0x91, 0xa5, 0x16, 0xa9, 0xd7, 0x3d, 0xb5, 0x5b, 0x6a,
+	0x44, 0x45, 0x9d, 0xa1, 0xbf, 0x5b, 0x30, 0x39, 0x8d, 0xe3, 0x45, 0xb0, 0xba, 0x09, 0x18, 0xa3,
+	0x7f, 0xfa, 0x5d, 0x79, 0xc7, 0x7e, 0x17, 0xef, 0x0c, 0xf6, 0xf0, 0x4e, 0x0c, 0x07, 0x2a, 0xaa,
+	0xee, 0x10, 0x3c, 0x6e, 0xb5, 0xc5, 0xde, 0xfc, 0x65, 0x57, 0xf8, 0x30, 0x79, 0xc1, 0x36, 0xff,
+	0x69, 0xee, 0xf4, 0x2b, 0x38, 0x50, 0x3e, 0xbb, 0xb7, 0xc9, 0x6f, 0x16, 0xc0, 0x19, 0xe3, 0x82,
+	0x71, 0x6f, 0xd9, 0xa7, 0xe2, 0xc2, 0x75, 0x99, 0xa7, 0x35, 0xeb, 0xe2, 0x9a, 0xdc, 0x03, 0x27,
+	0xca, 0xb7, 0x99, 0x84, 0xda, 0xf1, 0xa5, 0x20, 0xaa, 0x14, 0x27, 0x25, 0x8b, 0x78, 0x92, 0x67,
+	0xf5, 0x20, 0x37, 0x0a, 0x1a, 0xc3, 0xa1, 0x8e, 0xa4, 0x7b, 0x09, 0x3e, 0x01, 0xa7, 0xe2, 0x21,
+	0x57, 0xbc, 0x36, 0x35, 0x21, 0x43, 0x9f, 0x72, 0x9b, 0x06, 0x58, 0x67, 0x64, 0xe9, 0x3a, 0x61,
+	0x91, 0x48, 0x93, 0xb0, 0x94, 0x34, 0xa9, 0xf4, 0xf7, 0x13, 0xb8, 0xdd, 0x26, 0xf0, 0x67, 0x70,
+	0xa7, 0x71, 0xda, 0xbd, 0x08, 0x1f, 0x63, 0x05, 0x75, 0x4c, 0x47, 0xd0, 0x4f, 0x54, 0x3c, 0xfd,
+	0x24, 0x16, 0xde, 0x9b, 0xed, 0xee, 0xde, 0x8f, 0xf5, 0x9b, 0x81, 0x2e, 0xaa, 0x1b, 0xd2, 0xa6,
+	0x29, 0x90, 0x9d, 0xb3, 0xdd, 0x2b, 0xf1, 0x29, 0x0c, 0x4b, 0x34, 0xae, 0x4b, 0x71, 0xd7, 0x2c,
+	0x85, 0xcc, 0xa2, 0x3e, 0x70, 0xfc, 0x04, 0xff, 0x68, 0xe0, 0x04, 0x8f, 0x61, 0x70, 0x7e, 0x71,
+	0xfe, 0x72, 0xda, 0x23, 0x23, 0xb0, 0x4f, 0x5f, 0x2d, 0xa7, 0x16, 0x19, 0x42, 0xff, 0xf5, 0xeb,
+	0x69, 0x1f, 0x15, 0x3f, 0x04, 0x53, 0xfb, 0xe4, 0x0f, 0x07, 0xee, 0x2e, 0xb4, 0xaf, 0x80, 0x95,
+	0x6f, 0x93, 0x88, 0x91, 0x25, 0x1c, 0x18, 0x6f, 0x22, 0xf1, 0xcc, 0xeb, 0xda, 0xcf, 0xaa, 0xf7,
+	0xf0, 0xda, 0xbd, 0x62, 0x73, 0x45, 0x7b, 0xe4, 0x19, 0x8c, 0xea, 0xc7, 0x81, 0xdc, 0x37, 0x8f,
+	0x36, 0x8f, 0xa0, 0xe7, 0xee, 0xd5, 0x6b, 0xf3, 0x9a, 0xb1, 0xdb, 0xe6, 0xcd, 0x43, 0xd0, 0x36,
+	0x37, 0xe9, 0x9d, 0xf6, 0xc8, 0xb7, 0x38, 0x8a, 0x35, 0x13, 0x93, 0x07, 0x3b, 0xb1, 0x36, 0x54,
+	0xee, 0x7d, 0x74, 0xdd, 0x96, 0xf4, 0xf3, 0x25, 0x0c, 0x25, 0x95, 0x91, 0x0f, 0x76, 0x82, 0x95,
+	0xc4, 0xe3, 0x7d, 0xb8, 0x4f, 0xad, 0x6d, 0x25, 0x99, 0xb4, 0x6d, 0x35, 0x69, 0xb5, 0x6d, 0x0d,
+	0xde, 0x91, 0xe9, 0xd7, 0x03, 0xdc, 0x4e, 0xbf, 0xe1, 0x97, 0x76, 0xfa, 0xe6, 0xb4, 0xd3, 0x1e,
+	0x79, 0x0e, 0x63, 0x35, 0x44, 0x64, 0x37, 0x42, 0x35, 0x1b, 0xde, 0x83, 0xfd, 0x1b, 0xda, 0x83,
+	0x1a, 0x14, 0xb2, 0x1b, 0xe7, 0x7e, 0x0f, 0xad, 0xb9, 0xa2, 0x3d, 0x72, 0x81, 0xaf, 0x66, 0xd3,
+	0xff, 0x64, 0x5f, 0xc7, 0xe8, 0x31, 0xf2, 0x1e, 0xdd, 0xb0, 0x8b, 0x0e, 0xbf, 0x19, 0xff, 0x38,
+	0xfc, 0x0c, 0x3f, 0x27, 0xde, 0x0c, 0xf1, 0xe7, 0xf3, 0x7f, 0x02, 0x00, 0x00, 0xff, 0xff, 0x6a,
+	0x34, 0xe8, 0x6c, 0x69, 0x0c, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1149,6 +1495,9 @@ type ControllerServiceClient interface {
 	AddCSP(ctx context.Context, in *AddCSPReq, opts ...grpc.CallOption) (*AddCSPReply, error)
 	DelCSP(ctx context.Context, in *DelCSPReq, opts ...grpc.CallOption) (*DelCSPReply, error)
 	GetStat(ctx context.Context, in *GetStatReq, opts ...grpc.CallOption) (*GetStatReply, error)
+	AddRoute(ctx context.Context, in *AddRouteReq, opts ...grpc.CallOption) (*AddRouteReply, error)
+	DelRoute(ctx context.Context, in *DelRouteReq, opts ...grpc.CallOption) (*DelRouteReply, error)
+	GetEdgeRoutes(ctx context.Context, in *GetEdgeRoutesReq, opts ...grpc.CallOption) (*GetEdgeRoutesReply, error)
 }
 
 type controllerServiceClient struct {
@@ -1222,6 +1571,33 @@ func (c *controllerServiceClient) GetStat(ctx context.Context, in *GetStatReq, o
 	return out, nil
 }
 
+func (c *controllerServiceClient) AddRoute(ctx context.Context, in *AddRouteReq, opts ...grpc.CallOption) (*AddRouteReply, error) {
+	out := new(AddRouteReply)
+	err := c.cc.Invoke(ctx, "/controller.ControllerService/AddRoute", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *controllerServiceClient) DelRoute(ctx context.Context, in *DelRouteReq, opts ...grpc.CallOption) (*DelRouteReply, error) {
+	out := new(DelRouteReply)
+	err := c.cc.Invoke(ctx, "/controller.ControllerService/DelRoute", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *controllerServiceClient) GetEdgeRoutes(ctx context.Context, in *GetEdgeRoutesReq, opts ...grpc.CallOption) (*GetEdgeRoutesReply, error) {
+	out := new(GetEdgeRoutesReply)
+	err := c.cc.Invoke(ctx, "/controller.ControllerService/GetEdgeRoutes", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ControllerServiceServer is the server API for ControllerService service.
 type ControllerServiceServer interface {
 	GetEdgeList(context.Context, *GetEdgeListReq) (*GetEdgeListReply, error)
@@ -1231,6 +1607,9 @@ type ControllerServiceServer interface {
 	AddCSP(context.Context, *AddCSPReq) (*AddCSPReply, error)
 	DelCSP(context.Context, *DelCSPReq) (*DelCSPReply, error)
 	GetStat(context.Context, *GetStatReq) (*GetStatReply, error)
+	AddRoute(context.Context, *AddRouteReq) (*AddRouteReply, error)
+	DelRoute(context.Context, *DelRouteReq) (*DelRouteReply, error)
+	GetEdgeRoutes(context.Context, *GetEdgeRoutesReq) (*GetEdgeRoutesReply, error)
 }
 
 // UnimplementedControllerServiceServer can be embedded to have forward compatible implementations.
@@ -1257,6 +1636,15 @@ func (*UnimplementedControllerServiceServer) DelCSP(ctx context.Context, req *De
 }
 func (*UnimplementedControllerServiceServer) GetStat(ctx context.Context, req *GetStatReq) (*GetStatReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetStat not implemented")
+}
+func (*UnimplementedControllerServiceServer) AddRoute(ctx context.Context, req *AddRouteReq) (*AddRouteReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddRoute not implemented")
+}
+func (*UnimplementedControllerServiceServer) DelRoute(ctx context.Context, req *DelRouteReq) (*DelRouteReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DelRoute not implemented")
+}
+func (*UnimplementedControllerServiceServer) GetEdgeRoutes(ctx context.Context, req *GetEdgeRoutesReq) (*GetEdgeRoutesReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetEdgeRoutes not implemented")
 }
 
 func RegisterControllerServiceServer(s *grpc.Server, srv ControllerServiceServer) {
@@ -1389,6 +1777,60 @@ func _ControllerService_GetStat_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ControllerService_AddRoute_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddRouteReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ControllerServiceServer).AddRoute(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/controller.ControllerService/AddRoute",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ControllerServiceServer).AddRoute(ctx, req.(*AddRouteReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ControllerService_DelRoute_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DelRouteReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ControllerServiceServer).DelRoute(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/controller.ControllerService/DelRoute",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ControllerServiceServer).DelRoute(ctx, req.(*DelRouteReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ControllerService_GetEdgeRoutes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetEdgeRoutesReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ControllerServiceServer).GetEdgeRoutes(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/controller.ControllerService/GetEdgeRoutes",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ControllerServiceServer).GetEdgeRoutes(ctx, req.(*GetEdgeRoutesReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _ControllerService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "controller.ControllerService",
 	HandlerType: (*ControllerServiceServer)(nil),
@@ -1420,6 +1862,18 @@ var _ControllerService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetStat",
 			Handler:    _ControllerService_GetStat_Handler,
+		},
+		{
+			MethodName: "AddRoute",
+			Handler:    _ControllerService_AddRoute_Handler,
+		},
+		{
+			MethodName: "DelRoute",
+			Handler:    _ControllerService_DelRoute_Handler,
+		},
+		{
+			MethodName: "GetEdgeRoutes",
+			Handler:    _ControllerService_GetEdgeRoutes_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

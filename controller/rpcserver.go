@@ -16,18 +16,20 @@ import (
 )
 
 type RPCServer struct {
-	addr        string
-	edgeManager *models.EdgeManager
-	cspManager  *models.CSPManager
-	statManager *models.StatManager
+	addr         string
+	edgeManager  *models.EdgeManager
+	cspManager   *models.CSPManager
+	statManager  *models.StatManager
+	routeManager *models.RouteManager
 }
 
 func NewRPCServer(addr string) *RPCServer {
 	return &RPCServer{
-		addr:        addr,
-		edgeManager: models.GetEdgeManager(),
-		cspManager:  models.GetCSPManager(),
-		statManager: models.GetStatManager(),
+		addr:         addr,
+		edgeManager:  models.GetEdgeManager(),
+		cspManager:   models.GetCSPManager(),
+		statManager:  models.GetStatManager(),
+		routeManager: models.GetRouteManager(),
 	}
 }
 
@@ -263,4 +265,67 @@ func (s *RPCServer) GetStat(ctx context.Context,
 		})
 	}
 	return &proto.GetStatReply{Stats: stats}, nil
+}
+
+func (s *RPCServer) AddRoute(ctx context.Context,
+	req *proto.AddRouteReq) (*proto.AddRouteReply, error) {
+	badReq := &proto.AddRouteReply{Code: 40000, Message: "Bad Param"}
+	if !bson.IsObjectIdHex(req.EdgeId) {
+		log.Error("invalid edgeid: ", req.EdgeId)
+		return badReq, nil
+	}
+
+	_, err := s.routeManager.AddRoute(bson.ObjectIdHex(req.EdgeId), req.Cidr, req.Nexthop)
+	if err != nil {
+		log.Error("add route fail: %v", err)
+		return &proto.AddRouteReply{Code: 50000, Message: err.Error()}, nil
+	}
+
+	// TODO: write to etcd
+
+	return &proto.AddRouteReply{}, nil
+}
+
+func (s *RPCServer) DelRoute(ctx context.Context,
+	req *proto.DelRouteReq) (*proto.DelRouteReply, error) {
+	badReq := &proto.DelRouteReply{Code: 40000, Message: "Bad Param"}
+	if !bson.IsObjectIdHex(req.Id) {
+		log.Error("invalid id: ", req.Id)
+		return badReq, nil
+	}
+
+	err := s.routeManager.DelRoute(bson.ObjectIdHex(req.Id))
+	if err != nil {
+		log.Error("del route %s fail: %v", req.Id, err)
+		return &proto.DelRouteReply{Code: 50000, Message: err.Error()}, nil
+	}
+
+	// TODO: write to etcd
+
+	return &proto.DelRouteReply{}, nil
+}
+
+func (s *RPCServer) GetEdgeRoutes(ctx context.Context,
+	req *proto.GetEdgeRoutesReq) (*proto.GetEdgeRoutesReply, error) {
+	badReq := &proto.GetEdgeRoutesReply{Code: 40000, Message: "Bad Param"}
+	if !bson.IsObjectIdHex(req.EdgeId) {
+		log.Error("invalid id: ", req.EdgeId)
+		return badReq, nil
+	}
+
+	routes, err := s.routeManager.GetEdgeRoutes(bson.ObjectIdHex(req.EdgeId))
+	if err != nil {
+		log.Error("get edge %s route %s fail: %v", req.EdgeId, err)
+		return &proto.GetEdgeRoutesReply{Code: 50000, Message: err.Error()}, nil
+	}
+
+	outroutes := make([]*proto.Route, 0, len(routes))
+	for _, r := range routes {
+		outroutes = append(outroutes, &proto.Route{
+			Cidr:    r.Cidr,
+			Nexthop: r.Nexthop,
+		})
+	}
+
+	return &proto.GetEdgeRoutesReply{Routes: outroutes}, nil
 }
