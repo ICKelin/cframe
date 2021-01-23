@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"os"
 	"time"
 
 	"github.com/ICKelin/cframe/codec"
@@ -54,6 +55,7 @@ func (r *Registry) run() error {
 
 	reg := codec.RegisterReq{
 		SecretKey: r.secret,
+		PublicIP:  os.Getenv("PUBLIC_IP"),
 	}
 	err = codec.WriteJSON(conn, codec.CmdRegister, &reg)
 	if err != nil {

@@ -206,6 +206,12 @@ func (s *Server) route(dst string) (string, error) {
 		}
 
 		if ipnet.String() == dstNet.String() {
+			// ignore peer ip address
+			ip, _, _ := net.SplitHostPort(p.addr)
+			if ip == dst {
+				continue
+			}
+
 			return p.addr, nil
 		}
 	}
