@@ -18,6 +18,7 @@ func NewInterface() (*Interface, error) {
 	ifconfig := water.Config{
 		DeviceType: water.TUN,
 	}
+	ifconfig.Name = "cframe.0"
 
 	ifce, err := water.New(ifconfig)
 	if err != nil {

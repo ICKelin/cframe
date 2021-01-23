@@ -19,6 +19,7 @@ type RegisterReq struct {
 	// edge name
 	Name      string
 	SecretKey string
+	PublicIP  string
 }
 
 // edge information

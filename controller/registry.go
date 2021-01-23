@@ -13,6 +13,7 @@ import (
 	"github.com/ICKelin/cframe/controller/models"
 	"github.com/ICKelin/cframe/pkg/edgemanager"
 	log "github.com/ICKelin/cframe/pkg/logs"
+	"github.com/ICKelin/cframe/pkg/routemanager"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -95,8 +96,11 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	}
 
 	log.Info("node register %v", reg)
-	remoteAddr := conn.RemoteAddr().String()
-	remoteIP, _, _ := net.SplitHostPort(remoteAddr)
+	remoteIP := reg.PublicIP
+	if len(remoteIP) <= 0 {
+		remoteAddr := conn.RemoteAddr().String()
+		remoteIP, _, _ = net.SplitHostPort(remoteAddr)
+	}
 
 	// verify secret key
 	req := &proto.GetUserBySecretReq{
@@ -331,3 +335,7 @@ func (s *RegistryServer) ModifyEdge(edg *edgemanager.Edge) {
 	log.Info("modify edge: %v", edg)
 	s.broadcastOnline(edg)
 }
+
+func (s *RegistryServer) DelRoute(route *routemanager.Route) {}
+
+func (s *RegistryServer) AddRoute(route *routemanager.Route) {}

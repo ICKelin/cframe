@@ -9,6 +9,7 @@ import (
 	"github.com/ICKelin/cframe/pkg/edgemanager"
 	"github.com/ICKelin/cframe/pkg/etcdstorage"
 	log "github.com/ICKelin/cframe/pkg/logs"
+	"github.com/ICKelin/cframe/pkg/routemanager"
 	"google.golang.org/grpc"
 )
 
@@ -37,6 +38,9 @@ func main() {
 	// create edge manager
 	edgeManager := edgemanager.New(store)
 
+	// create route manager
+	routeManager := routemanager.New(store)
+
 	// initial mongodb url
 	database.NewModelManager(conf.MongoUrl, conf.DBName)
 
@@ -55,6 +59,16 @@ func main() {
 			r.ModifyEdge(edg)
 		})
 
+	// watch for route delete/put
+	// tell registry route change
+	go routeManager.Watch(
+		func(route *routemanager.Route) {
+			r.DelRoute(route)
+		},
+		func(route *routemanager.Route) {
+			r.AddRoute(route)
+		},
+	)
 	r.ListenAndServe()
 }
 
