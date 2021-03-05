@@ -38,6 +38,7 @@ type CSPInfo struct {
 type RegisterReply struct {
 	EdgeList []*Edge
 	CSPInfo  *CSPInfo
+	Routes   []*proto.Route
 }
 
 func (r *RegisterReply) String() string {

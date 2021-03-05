@@ -44,3 +44,10 @@ type AddCSPForm struct {
 type DelCSPForm struct {
 	CSPType int `json:"csptype"`
 }
+
+// route
+type AddRouteForm struct {
+	Name    string `json:"name"`
+	Cidr    string `json:"cidr"`
+	Nexthop string `json:"nexthop"`
+}

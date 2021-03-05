@@ -69,7 +69,7 @@ func (s *Server) ListenAndServe() error {
 	defer lconn.Close()
 
 	go s.readLocal(lconn)
-	go s.ping(lconn)
+	// go s.ping(lconn)
 	s.readRemote(lconn)
 	return nil
 }

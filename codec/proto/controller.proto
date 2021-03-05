@@ -127,9 +127,11 @@ message GetStatReply {
 }
 
 message AddRouteReq {
-    string edgeId = 1;
-    string cidr = 2;
-    string nexthop = 3;
+    string cidr = 1;
+    string nexthop = 2;
+    string userId = 3;
+    string name = 4;
+    string edgeId = 5;
 }
 
 message AddRouteReply {
@@ -138,7 +140,8 @@ message AddRouteReply {
 }
 
 message DelRouteReq {
-    string id = 1;
+    string userId = 1;
+    string id = 2;
 }
 
 message DelRouteReply {
@@ -146,16 +149,25 @@ message DelRouteReply {
     string message = 2;
 }
 
-message GetEdgeRoutesReq {
-    string edgeId = 1;
+message GetUserRoutesReq {
+    string userId = 1;
 }
 
-message GetEdgeRoutesReply {
-    int32 code = 1;
+message GetUserRoutesReply {
+    int32 code =1;
     string message = 2;
     repeated Route routes = 3;
 }
 
+// message GetEdgeRoutesReq {
+//     string edgeId = 1;
+// }
+
+// message GetEdgeRoutesReply {
+//     int32 code =1;
+//     string message = 2;
+//     repeated Route routes = 3;
+// }
 
 service ControllerService {
     rpc GetEdgeList(GetEdgeListReq) returns (GetEdgeListReply){}
@@ -167,5 +179,6 @@ service ControllerService {
     rpc GetStat(GetStatReq) returns (GetStatReply) {}
     rpc AddRoute(AddRouteReq) returns (AddRouteReply) {}
     rpc DelRoute(DelRouteReq) returns (DelRouteReply) {}
-    rpc GetEdgeRoutes(GetEdgeRoutesReq) returns (GetEdgeRoutesReply) {}
+    rpc GetUserRoutes(GetUserRoutesReq) returns (GetUserRoutesReply) {}
+    // rpc GetEdgeRoutes(GetEdgeRoutesReq) returns (GetEdgeRoutesReply) {}
 }
