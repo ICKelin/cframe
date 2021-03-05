@@ -43,10 +43,12 @@ func (s *ApiServer) Run() {
 	edgeHandler := handler.NewEdgeHandler(userCli, ctrlCli)
 	userHandler := handler.NewUserHandler(userCli)
 	cspHandler := handler.NewCSPHandler(userCli, ctrlCli)
+	routeHandler := handler.NewRouteHandler(userCli, ctrlCli)
 
 	edgeHandler.Run(eng)
 	userHandler.Run(eng)
 	cspHandler.Run(eng)
+	routeHandler.Run(eng)
 
 	eng.Static("/public", "./static")
 

@@ -33,13 +33,22 @@ func New(store *etcdstorage.Etcd) *EdgeManager {
 	return m
 }
 
-func (m *EdgeManager) Watch(delfunc, putfunc func(edge *Edge)) {
+func (m *EdgeManager) Watch(delfunc, putfunc func(userId string, edge *Edge)) {
 	chs := m.storage.Watch(edgePrefix)
 	for c := range chs {
 		for _, evt := range c.Events {
 			log.Info("type: %v", evt.Type)
 			log.Info("new: %v", evt.Kv)
 			log.Info("old: %v", evt.PrevKv)
+			sp := strings.Split(string(evt.Kv.Key), "/")
+
+			if len(sp) < 3 {
+				log.Warn("unsupported key value")
+				continue
+			}
+
+			userId := sp[2]
+
 			switch evt.Type {
 			case clientv3.EventTypeDelete:
 				if delfunc != nil {
@@ -50,7 +59,7 @@ func (m *EdgeManager) Watch(delfunc, putfunc func(edge *Edge)) {
 						continue
 					}
 
-					delfunc(&edge)
+					delfunc(userId, &edge)
 				}
 
 			case clientv3.EventTypePut:
@@ -62,7 +71,7 @@ func (m *EdgeManager) Watch(delfunc, putfunc func(edge *Edge)) {
 						continue
 					}
 
-					putfunc(&edge)
+					putfunc(userId, &edge)
 				}
 			}
 		}

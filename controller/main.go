@@ -52,21 +52,21 @@ func main() {
 	// watch for edge delete/put
 	// tell registry edge change
 	go edgeManager.Watch(
-		func(edg *edgemanager.Edge) {
-			r.DelEdge(edg)
+		func(userId string, edg *edgemanager.Edge) {
+			r.DelEdge(userId, edg)
 		},
-		func(edg *edgemanager.Edge) {
-			r.ModifyEdge(edg)
+		func(userId string, edg *edgemanager.Edge) {
+			r.ModifyEdge(userId, edg)
 		})
 
 	// watch for route delete/put
 	// tell registry route change
 	go routeManager.Watch(
-		func(route *routemanager.Route) {
-			r.DelRoute(route)
+		func(userId string, route *routemanager.Route) {
+			r.DelRoute(userId, route)
 		},
-		func(route *routemanager.Route) {
-			r.AddRoute(route)
+		func(userId string, route *routemanager.Route) {
+			r.AddRoute(userId, route)
 		},
 	)
 	r.ListenAndServe()

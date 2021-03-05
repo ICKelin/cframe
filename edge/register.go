@@ -71,6 +71,14 @@ func (r *Registry) run() error {
 		return fmt.Errorf("get csp fail")
 	}
 
+	// add peers route
+	for _, route := range reply.Routes {
+		r.server.AddPeer(&codec.Edge{
+			ListenAddr: route.Nexthop,
+			Cidr:       route.Cidr,
+		})
+	}
+
 	instance, err := vpc.GetVPCInstance(reply.CSPInfo.CspType, reply.CSPInfo.AccessKey, reply.CSPInfo.AccessSecret)
 	if err != nil {
 		log.Error("unsupported vpc %v", reply.CSPInfo.CspType)
@@ -186,7 +194,7 @@ func (r *Registry) read(conn net.Conn) {
 			delRoute := codec.DelRouteMsg{}
 			err := json.Unmarshal(body, &delRoute)
 			if err != nil {
-				log.Error("invalid add route msg: %v", err)
+				log.Error("invalid del route msg: %v", err)
 				continue
 			}
 			r.server.DelRoute(&delRoute)

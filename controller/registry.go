@@ -31,7 +31,7 @@ type RegistryServer struct {
 	// key: edge listen addr
 	// val: edge info and tcp connection
 	mu   sync.Mutex
-	sess map[string]*Session
+	sess map[string]map[string]*Session
 
 	// edge manager, query edge info from db
 	edgeManager *models.EdgeManager
@@ -47,6 +47,9 @@ type RegistryServer struct {
 
 	// user manager rpc client
 	userCli proto.UserServiceClient
+
+	// route manager
+	routeManager *models.RouteManager
 }
 
 type Session struct {
@@ -57,11 +60,12 @@ type Session struct {
 func NewRegistryServer(addr string, cli proto.UserServiceClient) *RegistryServer {
 	return &RegistryServer{
 		addr:         addr,
-		sess:         make(map[string]*Session),
+		sess:         make(map[string]map[string]*Session),
 		edgeManager:  models.GetEdgeManager(),
 		cspManager:   models.GetCSPManager(),
 		statManager:  models.GetStatManager(),
 		alarmManager: models.GetAlarmManager(),
+		routeManager: models.GetRouteManager(),
 		userCli:      cli,
 	}
 }
@@ -158,8 +162,17 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 		// return
 	}
 
-	log.Debug("csp info: %v", csp)
+	// get routes info
+	routes := make([]*proto.Route, 0)
+	storeRoutes, _ := s.routeManager.GetOtherRoutes(userObjectId, fmt.Sprintf("%s:%d", curEdge.PublicIP, curEdge.PublicPort))
+	for _, r := range storeRoutes {
+		routes = append(routes, &proto.Route{
+			Cidr:    r.Cidr,
+			Nexthop: r.Nexthop,
+		})
+	}
 
+	log.Debug("csp info: %v", csp)
 	log.Info("register success: %v", curEdge)
 
 	edges := make([]*codec.Edge, 0)
@@ -172,7 +185,10 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 
 	s.mu.Lock()
 	curEdgeAddr := fmt.Sprintf("%s:%d", curEdge.PublicIP, curEdge.PublicPort)
-	s.sess[curEdgeAddr] = &Session{
+	if s.sess[userObjectId.Hex()] == nil {
+		s.sess[userObjectId.Hex()] = make(map[string]*Session)
+	}
+	s.sess[userObjectId.Hex()][curEdgeAddr] = &Session{
 		edge: &codec.Edge{
 			ListenAddr: curEdgeAddr,
 			Cidr:       curEdge.Cidr,
@@ -182,7 +198,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	s.mu.Unlock()
 	defer func() {
 		s.mu.Lock()
-		delete(s.sess, curEdgeAddr)
+		delete(s.sess[userObjectId.Hex()], curEdgeAddr)
 		s.mu.Unlock()
 	}()
 
@@ -194,6 +210,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 			AccessKey:    csp.AccessKey,
 			AccessSecret: csp.SecretKey,
 		},
+		Routes: routes,
 	})
 	if err != nil {
 		log.Error("write json fail: %v", err)
@@ -248,10 +265,10 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	}
 }
 
-func (s *RegistryServer) broadcastOnline(edge *edgemanager.Edge) {
+func (s *RegistryServer) broadcastOnline(userId string, edge *edgemanager.Edge) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	for addr, host := range s.sess {
+	for addr, host := range s.sess[userId] {
 		if addr == edge.ListenAddr {
 			continue
 		}
@@ -277,11 +294,11 @@ func (s *RegistryServer) online(peer net.Conn, edge *edgemanager.Edge) {
 	}
 }
 
-func (s *RegistryServer) broadcastOffline(edge *edgemanager.Edge) {
+func (s *RegistryServer) broadcastOffline(userId string, edge *edgemanager.Edge) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	for addr, host := range s.sess {
+	for addr, host := range s.sess[userId] {
 		if addr == edge.ListenAddr {
 			continue
 		}
@@ -307,35 +324,103 @@ func (s *RegistryServer) offline(peer net.Conn, edge *edgemanager.Edge) {
 	}
 }
 
+func (s *RegistryServer) broadcastAddRoute(userId string, r *routemanager.Route) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	for addr, host := range s.sess[userId] {
+		if addr == r.Nexthop {
+			continue
+		}
+
+		go s.addRoute(host.conn, r)
+	}
+}
+
+func (s *RegistryServer) addRoute(peer net.Conn, r *routemanager.Route) {
+	log.Info("send addroute msg %v to %s\n",
+		r, peer.RemoteAddr().String())
+
+	obj := &codec.AddRouteMsg{
+		Cidr:    r.Cidr,
+		Nexthop: r.Nexthop,
+	}
+
+	peer.SetWriteDeadline(time.Now().Add(time.Second * 10))
+	err := codec.WriteJSON(peer, codec.CmdAddRoute, obj)
+	peer.SetWriteDeadline(time.Time{})
+	if err != nil {
+		log.Error("write json fail: %v", err)
+	}
+}
+
+func (s *RegistryServer) broadcastDelRoute(userId string, r *routemanager.Route) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	for addr, host := range s.sess[userId] {
+		if addr == r.Nexthop {
+			continue
+		}
+
+		go s.delRoute(host.conn, r)
+	}
+}
+
+func (s *RegistryServer) delRoute(peer net.Conn, r *routemanager.Route) {
+	log.Info("send addroute msg %v to %s\n",
+		r, peer.RemoteAddr().String())
+
+	obj := &codec.AddRouteMsg{
+		Cidr:    r.Cidr,
+		Nexthop: r.Nexthop,
+	}
+
+	peer.SetWriteDeadline(time.Now().Add(time.Second * 10))
+	err := codec.WriteJSON(peer, codec.CmdDelRoute, obj)
+	peer.SetWriteDeadline(time.Time{})
+	if err != nil {
+		log.Error("write json fail: %v", err)
+	}
+}
+
 func (s *RegistryServer) state() {
 	tick := time.NewTicker(time.Second * 30)
 	defer tick.Stop()
 	for range tick.C {
 		s.mu.Lock()
-		for _, sess := range s.sess {
-			log.Info("edge: %s cidr: %s", sess.edge.ListenAddr, sess.edge.Cidr)
+		for userId, sesses := range s.sess {
+			for _, sess := range sesses {
+				log.Info("userId %s edge: %s cidr: %s",
+					userId, sess.edge.ListenAddr, sess.edge.Cidr)
+			}
 		}
 		s.mu.Unlock()
 	}
 }
 
-func (s *RegistryServer) DelEdge(edg *edgemanager.Edge) {
-	log.Info("delete edge: %v", edg)
-	s.broadcastOffline(edg)
+func (s *RegistryServer) DelEdge(userId string, edg *edgemanager.Edge) {
+	log.Info("delete edge: %s %v", userId, edg)
+	s.broadcastOffline(userId, edg)
 	// force edge connection offline
-	edgSess := s.sess[edg.ListenAddr]
+	edgSess := s.sess[userId][edg.ListenAddr]
 	if edgSess != nil {
 		log.Info("force close edge connection: %v", edgSess.conn.RemoteAddr())
 		edgSess.conn.Close()
-
 	}
 }
 
-func (s *RegistryServer) ModifyEdge(edg *edgemanager.Edge) {
-	log.Info("modify edge: %v", edg)
-	s.broadcastOnline(edg)
+func (s *RegistryServer) ModifyEdge(userId string, edg *edgemanager.Edge) {
+	log.Info("modify edge: %s %v", userId, edg)
+	s.broadcastOnline(userId, edg)
 }
 
-func (s *RegistryServer) DelRoute(route *routemanager.Route) {}
+func (s *RegistryServer) DelRoute(userId string, route *routemanager.Route) {
+	log.Info("del route: %s %v", userId, route)
+	s.broadcastDelRoute(userId, route)
+}
 
-func (s *RegistryServer) AddRoute(route *routemanager.Route) {}
+func (s *RegistryServer) AddRoute(userId string, route *routemanager.Route) {
+	log.Info("add route: %s %v", userId, route)
+	s.broadcastAddRoute(userId, route)
+}
