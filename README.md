@@ -1,7 +1,11 @@
 [![Build Status](https://travis-ci.org/ICKelin/cframe.svg?branch=master)](https://travis-ci.org/ICKelin/cframe) ![goreport](https://goreportcard.com/badge/github.com/ICKelin/cframe)
 
 # cframe是什么
-cframe是一款基于公网传输的网络软件，通过cframe可以实现VPC与VPC之间,企业数据中心与VPC之间的互联互通，纯软件实现，不依赖硬件设备，每个VPC只需要一台linux服务器即可。
+cframe是一款L3 overlay 隧道软件，可以解决以下问题：
+
+- 跨机房、跨云k8s集群互通
+- 多云VPC网络互通
+- 公有云与idc网络互通
 
 ![cframe](doc/images/vpcpeer.jpg)
 
@@ -29,4 +33,6 @@ AWS一直是云服务厂商的巨头，很多新的产品和解决方案都是�
 
 ![dci](doc/images/dci.jpg)
 
-如果您有以上四个应用场景，可以尝试使用cframe进行解决，在使用过程当中有任何问题可以随时提交issue。
+如果您有以上四个应用场景，可以尝试使用cframe进行解决，在使用过程当中有任何问题可以随时提交issue，如果有任何关于cframe的使用问题，或者定制化方案，可以关注我的公众号给我留言。
+
+![](qrcode.jpg)

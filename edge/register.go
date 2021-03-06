@@ -71,6 +71,14 @@ func (r *Registry) run() error {
 		return fmt.Errorf("get csp fail")
 	}
 
+	instance, err := vpc.GetVPCInstance(reply.CSPInfo.CspType, reply.CSPInfo.AccessKey, reply.CSPInfo.AccessSecret)
+	if err != nil {
+		log.Error("unsupported vpc %v", reply.CSPInfo.CspType)
+		// return err
+	} else {
+		r.server.SetVPCInstance(instance)
+	}
+
 	// add peers route
 	for _, route := range reply.Routes {
 		r.server.AddPeer(&codec.Edge{
@@ -79,13 +87,7 @@ func (r *Registry) run() error {
 		})
 	}
 
-	instance, err := vpc.GetVPCInstance(reply.CSPInfo.CspType, reply.CSPInfo.AccessKey, reply.CSPInfo.AccessSecret)
-	if err != nil {
-		log.Error("unsupported vpc %v", reply.CSPInfo.CspType)
-		// return err
-	} else {
-		r.server.SetVPCInstance(instance)
-	}
+	// add peer edge
 	r.server.AddPeers(reply.EdgeList)
 
 	go r.read(conn)
