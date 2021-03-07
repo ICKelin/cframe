@@ -7,6 +7,8 @@ cframe是一款L3 overlay 隧道软件，可以解决以下问题：
 - 多云VPC网络互通
 - 公有云与idc网络互通
 
+![topology](topology.svg)
+
 ![cframe](doc/images/vpcpeer.jpg)
 
 ## 应用场景1: 阿里云不同可用区VPC互通

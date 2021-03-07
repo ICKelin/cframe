@@ -1,0 +1,137 @@
+<svg width="592pt" height="376pt"
+ viewBox="0.00 0.00 592.00 376.13" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 372.13)">
+<title>topology</title>
+<polygon fill="white" stroke="transparent" points="-4,4 -4,-372.13 588,-372.13 588,4 -4,4"/>
+<g id="clust1" class="cluster">
+<title>cluster_0</title>
+<polygon fill="none" stroke="black" stroke-dasharray="5,2" points="346,-83.03 346,-211.58 576,-211.58 576,-83.03 346,-83.03"/>
+</g>
+<g id="clust2" class="cluster">
+<title>cluster_1</title>
+<polygon fill="none" stroke="black" stroke-dasharray="5,2" points="8,-158.06 8,-286.61 306,-286.61 306,-158.06 8,-158.06"/>
+</g>
+<g id="clust3" class="cluster">
+<title>cluster_2</title>
+<polygon fill="none" stroke="black" stroke-dasharray="5,2" points="116,-8 116,-136.55 330,-136.55 330,-8 116,-8"/>
+</g>
+<g id="clust4" class="cluster">
+<title>cluster_3</title>
+<polygon fill="none" stroke="black" stroke-dasharray="5,2" points="314,-233.1 314,-360.13 552,-360.13 552,-233.1 314,-233.1"/>
+</g>
+<!-- 阿里云&#45;深圳&#45;CICD环境 -->
+<g id="node1" class="node">
+<title>阿里云&#45;深圳&#45;CICD环境</title>
+<ellipse fill="lightgrey" stroke="black" cx="433" cy="-260.61" rx="110.71" ry="19.53"/>
+<text text-anchor="middle" x="433" y="-259.21" font-family="Times,serif" font-size="14.00">阿里云&#45;深圳&#45;CICD环境</text>
+</g>
+<!-- 阿里云&#45;香港&#45;生产环境k8s集群 -->
+<g id="node2" class="node">
+<title>阿里云&#45;香港&#45;生产环境k8s集群</title>
+<ellipse fill="lightgrey" stroke="black" cx="157" cy="-185.58" rx="140.61" ry="19.53"/>
+<text text-anchor="middle" x="157" y="-184.18" font-family="Times,serif" font-size="14.00">阿里云&#45;香港&#45;生产环境k8s集群</text>
+</g>
+<!-- 阿里云&#45;深圳&#45;CICD环境&#45;&gt;阿里云&#45;香港&#45;生产环境k8s集群 -->
+<g id="edge1" class="edge">
+<title>阿里云&#45;深圳&#45;CICD环境&#45;&gt;阿里云&#45;香港&#45;生产环境k8s集群</title>
+<path fill="none" stroke="black" d="M374.13,-244.03C328.69,-232.01 265.97,-215.41 219.62,-203.15"/>
+</g>
+<!-- 阿里云&#45;香港&#45;开发环境 -->
+<g id="node3" class="node">
+<title>阿里云&#45;香港&#45;开发环境</title>
+<ellipse fill="lightgrey" stroke="black" cx="461" cy="-110.55" rx="107" ry="19.53"/>
+<text text-anchor="middle" x="461" y="-109.15" font-family="Times,serif" font-size="14.00">阿里云&#45;香港&#45;开发环境</text>
+</g>
+<!-- 阿里云&#45;深圳&#45;CICD环境&#45;&gt;阿里云&#45;香港&#45;开发环境 -->
+<g id="edge2" class="edge">
+<title>阿里云&#45;深圳&#45;CICD环境&#45;&gt;阿里云&#45;香港&#45;开发环境</title>
+<path fill="none" stroke="black" d="M469.15,-242.14C480.86,-234.5 492.51,-224.34 499,-211.58 509.79,-190.38 506.99,-180.47 499,-158.06 495.29,-147.65 488.13,-137.89 481.03,-130.02"/>
+</g>
+<!-- AWS&#45;美东&#45;生产环境 -->
+<g id="node4" class="node">
+<title>AWS&#45;美东&#45;生产环境</title>
+<ellipse fill="lightgrey" stroke="black" cx="223" cy="-35.52" rx="98.53" ry="19.53"/>
+<text text-anchor="middle" x="223" y="-34.12" font-family="Times,serif" font-size="14.00">AWS&#45;美东&#45;生产环境</text>
+</g>
+<!-- 阿里云&#45;深圳&#45;CICD环境&#45;&gt;AWS&#45;美东&#45;生产环境 -->
+<g id="edge3" class="edge">
+<title>阿里云&#45;深圳&#45;CICD环境&#45;&gt;AWS&#45;美东&#45;生产环境</title>
+<path fill="none" stroke="black" d="M386.72,-242.75C370.92,-235.17 354.18,-224.89 342,-211.58 300.15,-165.88 326.66,-131.46 288,-83.03 278.91,-71.64 266.34,-61.77 254.68,-54.09"/>
+</g>
+<!-- 阿里云&#45;香港&#45;生产环境k8s集群&#45;&gt;阿里云&#45;香港&#45;开发环境 -->
+<g id="edge4" class="edge">
+<title>阿里云&#45;香港&#45;生产环境k8s集群&#45;&gt;阿里云&#45;香港&#45;开发环境</title>
+<path fill="none" stroke="black" d="M224.47,-168.37C276.59,-155.85 348.17,-138.65 398.9,-126.47"/>
+</g>
+<!-- 阿里云&#45;香港&#45;生产环境k8s集群&#45;&gt;AWS&#45;美东&#45;生产环境 -->
+<g id="edge5" class="edge">
+<title>阿里云&#45;香港&#45;生产环境k8s集群&#45;&gt;AWS&#45;美东&#45;生产环境</title>
+<path fill="none" stroke="black" d="M227.78,-168.64C243.98,-161.54 259.28,-151.3 269,-136.55 282.09,-116.69 278.04,-105.03 269,-83.03 264.51,-72.11 256.08,-62.38 247.64,-54.68"/>
+</g>
+<!-- 阿里云&#45;香港&#45;开发环境&#45;&gt;AWS&#45;美东&#45;生产环境 -->
+<g id="edge6" class="edge">
+<title>阿里云&#45;香港&#45;开发环境&#45;&gt;AWS&#45;美东&#45;生产环境</title>
+<path fill="none" stroke="black" d="M408.48,-93.43C368.5,-81.16 313.8,-64.38 274.16,-52.22"/>
+</g>
+<!-- 192.168.11.0/24 -->
+<g id="node5" class="node">
+<title>192.168.11.0/24</title>
+<ellipse fill="none" stroke="black" cx="433" cy="-334.13" rx="67.52" ry="18"/>
+<text text-anchor="middle" x="433" y="-329.93" font-family="Times,serif" font-size="14.00">192.168.11.0/24</text>
+</g>
+<!-- 192.168.11.0/24&#45;&gt;阿里云&#45;深圳&#45;CICD环境 -->
+<g id="edge7" class="edge">
+<title>192.168.11.0/24&#45;&gt;阿里云&#45;深圳&#45;CICD环境</title>
+<path fill="none" stroke="black" d="M433,-315.82C433,-308.18 433,-298.99 433,-290.36"/>
+<polygon fill="black" stroke="black" points="433,-280.27 437.5,-290.27 433,-285.27 433,-290.27 433,-290.27 433,-290.27 433,-285.27 428.5,-290.27 433,-280.27 433,-280.27"/>
+</g>
+<!-- 192.168.15.0/24 -->
+<g id="node6" class="node">
+<title>192.168.15.0/24</title>
+<ellipse fill="none" stroke="black" cx="422" cy="-185.58" rx="67.67" ry="18"/>
+<text text-anchor="middle" x="422" y="-181.38" font-family="Times,serif" font-size="14.00">192.168.15.0/24</text>
+</g>
+<!-- 192.168.15.0/24&#45;&gt;阿里云&#45;香港&#45;开发环境 -->
+<g id="edge8" class="edge">
+<title>192.168.15.0/24&#45;&gt;阿里云&#45;香港&#45;开发环境</title>
+<path fill="none" stroke="black" d="M431.05,-167.64C435.58,-159.15 441.19,-148.65 446.32,-139.04"/>
+<polygon fill="black" stroke="black" points="451.05,-130.19 450.3,-141.13 448.69,-134.6 446.33,-139.01 446.33,-139.01 446.33,-139.01 448.69,-134.6 442.37,-136.89 451.05,-130.19 451.05,-130.19"/>
+</g>
+<!-- 10.15.0.0/16 -->
+<g id="node7" class="node">
+<title>10.15.0.0/16</title>
+<ellipse fill="none" stroke="black" cx="225" cy="-260.61" rx="54.64" ry="18"/>
+<text text-anchor="middle" x="225" y="-256.41" font-family="Times,serif" font-size="14.00">10.15.0.0/16</text>
+</g>
+<!-- 10.15.0.0/16&#45;&gt;阿里云&#45;香港&#45;生产环境k8s集群 -->
+<g id="edge9" class="edge">
+<title>10.15.0.0/16&#45;&gt;阿里云&#45;香港&#45;生产环境k8s集群</title>
+<path fill="none" stroke="black" d="M209.57,-243.04C201.2,-234.05 190.67,-222.74 181.23,-212.6"/>
+<polygon fill="black" stroke="black" points="174.28,-205.14 184.39,-209.39 177.69,-208.8 181.1,-212.46 181.1,-212.46 181.1,-212.46 177.69,-208.8 177.8,-215.53 174.28,-205.14 174.28,-205.14"/>
+</g>
+<!-- 10.244.0.0/16 -->
+<g id="node8" class="node">
+<title>10.244.0.0/16</title>
+<ellipse fill="none" stroke="black" cx="93" cy="-260.61" rx="58.98" ry="18"/>
+<text text-anchor="middle" x="93" y="-256.41" font-family="Times,serif" font-size="14.00">10.244.0.0/16</text>
+</g>
+<!-- 10.244.0.0/16&#45;&gt;阿里云&#45;香港&#45;生产环境k8s集群 -->
+<g id="edge10" class="edge">
+<title>10.244.0.0/16&#45;&gt;阿里云&#45;香港&#45;生产环境k8s集群</title>
+<path fill="none" stroke="black" d="M107.52,-243.04C115.32,-234.14 125.12,-222.96 133.93,-212.9"/>
+<polygon fill="black" stroke="black" points="140.73,-205.14 137.53,-215.63 137.44,-208.9 134.14,-212.66 134.14,-212.66 134.14,-212.66 137.44,-208.9 130.76,-209.7 140.73,-205.14 140.73,-205.14"/>
+</g>
+<!-- 192.168.17.0/24 -->
+<g id="node9" class="node">
+<title>192.168.17.0/24</title>
+<ellipse fill="none" stroke="black" cx="192" cy="-110.55" rx="67.67" ry="18"/>
+<text text-anchor="middle" x="192" y="-106.35" font-family="Times,serif" font-size="14.00">192.168.17.0/24</text>
+</g>
+<!-- 192.168.17.0/24&#45;&gt;AWS&#45;美东&#45;生产环境 -->
+<g id="edge11" class="edge">
+<title>192.168.17.0/24&#45;&gt;AWS&#45;美东&#45;生产环境</title>
+<path fill="none" stroke="black" d="M199.19,-92.61C202.72,-84.29 207.07,-74.05 211.08,-64.6"/>
+<polygon fill="black" stroke="black" points="215.09,-55.16 215.32,-66.12 213.13,-59.76 211.18,-64.36 211.18,-64.36 211.18,-64.36 213.13,-59.76 207.04,-62.6 215.09,-55.16 215.09,-55.16"/>
+</g>
+</g>
+</svg>
