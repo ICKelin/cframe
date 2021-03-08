@@ -34,6 +34,8 @@ message Stat {
 message Route {
     string cidr = 1;
     string nexthop = 2;
+    string name = 3;
+    string id = 4;
 }
 
 enum CSPType {
@@ -140,8 +142,8 @@ message AddRouteReply {
 }
 
 message DelRouteReq {
-    string userId = 1;
-    string id = 2;
+    string id = 1;
+    string userId = 2;
 }
 
 message DelRouteReply {

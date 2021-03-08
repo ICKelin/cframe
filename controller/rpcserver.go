@@ -282,7 +282,7 @@ func (s *RPCServer) AddRoute(ctx context.Context,
 		return &proto.AddRouteReply{Code: 50000, Message: err.Error()}, nil
 	}
 
-	routemanager.AddRoute(req.UserId, req.Name, &routemanager.Route{
+	routemanager.AddRoute(req.UserId, route.Id.Hex(), &routemanager.Route{
 		Id:      route.Id.Hex(),
 		Cidr:    req.Cidr,
 		Nexthop: req.Nexthop,
@@ -292,6 +292,7 @@ func (s *RPCServer) AddRoute(ctx context.Context,
 
 func (s *RPCServer) DelRoute(ctx context.Context,
 	req *proto.DelRouteReq) (*proto.DelRouteReply, error) {
+	log.Info("del user %s route", req.UserId)
 	badReq := &proto.DelRouteReply{Code: 40000, Message: "Bad Param"}
 	if !bson.IsObjectIdHex(req.Id) {
 		log.Error("invalid id: ", req.Id)
@@ -300,7 +301,7 @@ func (s *RPCServer) DelRoute(ctx context.Context,
 
 	err := s.routeManager.DelRoute(bson.ObjectIdHex(req.Id))
 	if err != nil {
-		log.Error("del route %s fail: %v", req.Id, err)
+		log.Error("del route for user %s fail: %v", req.UserId, err)
 		return &proto.DelRouteReply{Code: 50000, Message: err.Error()}, nil
 	}
 
@@ -351,6 +352,8 @@ func (s *RPCServer) GetUserRoutes(ctx context.Context, req *proto.GetUserRoutesR
 		outroutes = append(outroutes, &proto.Route{
 			Cidr:    r.Cidr,
 			Nexthop: r.Nexthop,
+			Name:    r.Name,
+			Id:      r.Id.Hex(),
 		})
 	}
 

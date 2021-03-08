@@ -51,3 +51,7 @@ type AddRouteForm struct {
 	Cidr    string `json:"cidr"`
 	Nexthop string `json:"nexthop"`
 }
+
+type DelRouteForm struct {
+	Id string `json:"id"`
+}

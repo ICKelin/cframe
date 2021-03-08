@@ -368,7 +368,7 @@ func (s *RegistryServer) broadcastDelRoute(userId string, r *routemanager.Route)
 }
 
 func (s *RegistryServer) delRoute(peer net.Conn, r *routemanager.Route) {
-	log.Info("send addroute msg %v to %s\n",
+	log.Info("send delroute msg %v to %s\n",
 		r, peer.RemoteAddr().String())
 
 	obj := &codec.AddRouteMsg{
