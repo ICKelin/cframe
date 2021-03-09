@@ -16,7 +16,6 @@
     <link rel="stylesheet" href="assets/vendor/charts/c3charts/c3.css">
     <link rel="stylesheet" href="assets/vendor/fonts/flag-icon-css/flag-icon.min.css">
     <link rel="stylesheet" href="assets/vendor/bootstrap-select/css/bootstrap-select.css">
-    <link rel="stylesheet" href="https://unpkg.com/browse/vis-network@8.4.0/dist/dist/vis-network.min.css">
     
 
     <title>cframe后台管理系统</title>
@@ -49,8 +48,11 @@
                                 <a class="nav-link" href="#"  onclick="moveTo('cloud_connect')">云虚拟网关管理</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="#"  onclick="moveTo('csp')">云服务授权管理</a>
+                                <a class="nav-link" href="#"  onclick="moveTo('route')">路由管理</a>
                             </li>
+                            <!-- <li class="nav-item">
+                                <a class="nav-link" href="#"  onclick="moveTo('csp')">云服务授权管理</a>
+                            </li> -->
                         </ul>
                     </div>
                 </nav>
@@ -67,12 +69,6 @@
                                 <ul class="nav nav-pills mb-1" id="pills-tab" role="tablist">
                                     <li class="nav-item">
                                         <a class="nav-link active" id="stat-tab" data-toggle="pill" href="#stat-stat" role="tab" aria-controls="home" aria-selected="true">运行状态</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" id="edge-tab" data-toggle="pill" href="#stat-edge" role="tab" aria-controls="profile" aria-selected="false">虚拟网关监控</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" id="alarm-tab" data-toggle="pill" href="#stat-alarm" role="tab" aria-controls="contact" aria-selected="false">告警管理</a>
                                     </li>
                                 </ul>
                                 <div class="tab-content" id="pills-tabContent">
@@ -93,9 +89,9 @@
                                             <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 col-12">
                                                 <div class="card border-3 border-top border-top-primary  border-secondary">
                                                     <div class="card-body text-center">
-                                                        <h5 class="text-muted">告警</h5>
+                                                        <h5 class="text-muted">路由表</h5>
                                                         <div class="metric-value d-inline-block">
-                                                            <h1 class="mb-1  text-danger"><span v-text="edgeMeta.warnning">0</span></h1>
+                                                            <h1 class="mb-1  text-danger"><span v-text="routeMeta.routelist.length">0</span></h1>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -130,8 +126,8 @@
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
-                                                                <tr v-for="edge in edgeMeta.edgelist">
-                                                                    <th scope="row">1</th>
+                                                                <tr v-for="(edge,idx) in edgeMeta.edgelist">
+                                                                    <th scope="row" v-text="idx+1"></th>
                                                                     <td v-text="cspDetail[edge.cspType]"></td>
                                                                     <td v-text="edge.name"></td>
                                                                     <td v-text="edge.publicIP"></td>
@@ -148,7 +144,7 @@
                                                         </table>
                                                     </div>
                                                 </div>
-
+<!-- 
                                                 <div class="card">
                                                     <h5 class="card-header">云服务授权列表</h5>
                                                     <div class="card-body">
@@ -172,34 +168,10 @@
                                                             </tbody>
                                                         </table>
                                                     </div>
-                                                </div>
+                                                </div> -->
                                             </div>
                                         </div>
 
-                                    </div>
-                                    <div class="tab-pane fade" id="stat-edge" role="tabpanel" aria-labelledby="edge-tab">
-                                        <div class="row">
-                                            <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                                                <h4>选择云虚拟网关</h4>
-                                                <select class="selectpicker" v-model="edgeSelected" v-on:change="getEdgeStat()">
-                                                    <option v-for="edge in edgeMeta.edgelist">
-                                                        {{ edge.name }}
-                                                    </option>
-                                                </select>    
-                                            </div>
-                                        </div>
-                                        <div class="row" >
-                                            <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                                                <h5 class="text-center">网络流量 <a href="#" v-on:click="getEdgeStat()">刷新</a></h5> 
-                                                <canvas id="traffic-charts" height="50"></canvas>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="tab-pane fade" id="stat-alarm" role="tabpanel" aria-labelledby="alarm-tab">
-                                        TODO:
-                                    </div>
-                                    <div class="tab-pane fade" id="stat-topology" role="tabpanel" aria-labelledby=topology-tab">
-                                       TODO:
                                     </div>
                                 </div>
                             </div>
@@ -234,8 +206,8 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr v-for="edge in edgeMeta.edgelist">
-                                                <th scope="row">1</th>
+                                            <tr v-for="(edge,idx) in edgeMeta.edgelist">
+                                                <th scope="row" v-text="idx+1"></th>
                                                 <td v-text="cspDetail[edge.cspType]"></td>
                                                 <td v-text="edge.name"></td>
                                                 <td v-text="edge.publicIP"></td>
@@ -321,8 +293,110 @@
            
         </div>
 
+        <div class="dashboard-wrapper" id="route" style="display:none">
+            <div class="dashboard-ecommerce">
+                <div class="container-fluid dashboard-content ">
+                    <div class="row">
+                        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                            <div class="card">
+                                <h5 class="card-header">路由表</h5>
+                                <div class="card-body">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">#</th>
+                                                <th scope="col">名称</th>
+                                                <th scope="col">CIDR</th>
+                                                <th scope="col">下一跳云虚拟网关</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="(r,idx) in routeMeta.routelist">
+                                                <th scope="row" v-text="idx"></th>
+                                                <td v-text="r.name"></td>
+                                                <td v-text="r.cidr"></td>
+                                                <td v-text="r.nexthop"></td>
+                                                <td>
+                                                    <button class="btn btn-space btn-secondary" v-on:click=delRoute(r.id)>停用</button>
+                                                </td>                                            
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="col col-sm-10 col-lg-9 offset-sm-1 offset-lg-0">
+                                    <button class="btn btn-space btn-primary" v-on:click="routeMeta.showAddForm=true">创建路由表项</button>
+                                </div>
+                            </div>
+                            <div class="card" v-show="routeMeta.showAddForm">
+                                <h5 class="card-header">创建路由表项</h5>
+                                <div class="card-body">
+                                    <div class="form-group row">
+                                        <label class="col-3 col-lg-2 col-form-label text-right">名称</label>
+                                        <div class="col-9 col-lg-10">
+                                            <input required="" v-model="edgeMeta.addEdgeForm.name"placeholder="名称" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label  class="col-3 col-lg-2 col-form-label text-right">公网ip</label>
+                                        <div class="col-9 col-lg-10">
+                                            <input required="" v-model="edgeMeta.addEdgeForm.hostaddr" placeholder="公网ip" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-3 col-lg-2 col-form-label text-right">对外端口</label>
+                                        <div class="col-9 col-lg-10">
+                                            <input required="" v-model="edgeMeta.addEdgeForm.publicPort" placeholder="对外提供端口" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-3 col-lg-2 col-form-label text-right">VPC地址段</label>
+                                        <div class="col-9 col-lg-10">
+                                            <input required="" v-model="edgeMeta.addEdgeForm.cidr" data-parsley-type="url" placeholder="vpc地址段" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <label class="col-3 col-lg-2 col-form-label text-right">描述</label>
+                                        <div class="col-9 col-lg-10">
+                                            <input required="" v-model="edgeMeta.addEdgeForm.comment" data-parsley-type="url" placeholder="描述" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-sm-6 col-md-1 offset-2">
+                                            <label class="custom-control custom-radio custom-control-inline">
+                                                <input type="radio" checked="" value="0" v-model="edgeMeta.addEdgeForm.csptype"  class="custom-control-input"><span class="custom-control-label">自建idc</span>
+                                            </label>
+                                        </div>
+                                        <div class="col-sm-6 col-md-1">
+                                            <label class="custom-control custom-radio custom-control-inline">
+                                                <input type="radio" checked="" value="1" v-model="edgeMeta.addEdgeForm.csptype"  class="custom-control-input"><span class="custom-control-label">阿里云</span>
+                                            </label>
+                                        </div>
+                                        <div class="col-sm-6 col-md-4">
+                                            <label class="custom-control custom-radio custom-control-inline">
+                                                <input type="radio" checked="" value="3" v-model="edgeMeta.addEdgeForm.csptype"  class="custom-control-input"><span class="custom-control-label">亚马逊(AWS)</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="row pt-2 pt-sm-5 mt-1">
+                                        <div class="col-sm-6 pl-0">
+                                            <p class="text-right">
+                                                <button class="btn btn-space btn-primary" v-on:click="addEdge">确认</button>
+                                                <button class="btn btn-space btn-secondary" v-on:click="edgeMeta.showAddForm=false">取消</button>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+           
+        </div>
+
+
         <!-- 云服务厂商管理 -->
-        <div class="dashboard-wrapper" id="csp" style="display: none;">
+        <!-- <div class="dashboard-wrapper" id="csp" style="display: none;">
             <div class="dashboard-ecommerce">
                 <div class="container-fluid dashboard-content ">
                     <div class="row">
@@ -397,7 +471,7 @@
                 </div>
             </div>
            
-        </div>
+        </div> -->
     </div>
     <!-- ============================================================== -->
     <!-- end main wrapper  -->
@@ -421,12 +495,11 @@
     <script src="assets/vendor/bootstrap-select/js/bootstrap-select.js"></script>
 
 
-    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.21.1/axios.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue"></script>
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
-    <script src="https//cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/Chart.js/2.9.3/Chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.min.js"></script>
-    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
     <script>
         current ="overview"
         function moveTo(target) {
@@ -474,7 +547,6 @@
                             })
                         }
                     }
-console.log(gnodes,gedges)
                     network.setData({nodes: gnodes, edges: gedges})
                 })
             }
@@ -529,6 +601,10 @@ console.log(gnodes,gedges)
                     2: "腾讯云",
                     3: "亚马逊(AWS)"
                 },
+                routeMeta: {
+                    showAddForm: false,
+                    routelist: []
+                },
                 edgeSelected: ""
             },
             methods: {
@@ -570,6 +646,7 @@ console.log(gnodes,gedges)
                         }
                     })
                 },
+
                 delEdge: function(name) {
                     var accessToken = this.userMeta.accessToken
                     var baseUrl = this.apiMeta.baseUrl
@@ -588,6 +665,7 @@ console.log(gnodes,gedges)
                         p.getEdgelist()  
                     })
                 },
+
                 addEdge: function() {
                     console.log(this.edgeMeta.addEdgeForm)
                     var accessToken = this.userMeta.accessToken
@@ -615,6 +693,7 @@ console.log(gnodes,gedges)
                         p.getEdgelist()
                     })
                 },
+                
                 getCSPlist: function() {
                     var accessToken = this.userMeta.accessToken
                     var baseUrl = this.apiMeta.baseUrl
@@ -632,6 +711,7 @@ console.log(gnodes,gedges)
                         p.cspMeta.csplist = body.data
                     })
                 },
+                
                 delCSP: function(csptype) {
                     var accessToken = this.userMeta.accessToken
                     var baseUrl = this.apiMeta.baseUrl
@@ -650,6 +730,7 @@ console.log(gnodes,gedges)
                         p.getCSPlist()
                     })
                 },
+                
                 addCSP: function() {
                    var accessToken = this.userMeta.accessToken
                     var baseUrl = this.apiMeta.baseUrl
@@ -677,8 +758,6 @@ console.log(gnodes,gedges)
                 },
 
                 getEdgeStat: function(edgeName) {
-                    console.log(this.edgeSelected)
-
                     getStatForm = {
                         name: this.edgeSelected,
                         from: 0,
@@ -743,6 +822,47 @@ console.log(gnodes,gedges)
                             p.chartjs.chart.update()
                         }
                     })
+
+                },
+
+                addRoute: function() {},
+
+                delRoute: function(id) {
+                    var p = this
+                    var accessToken = this.userMeta.accessToken
+                    var baseUrl = this.apiMeta.baseUrl
+                    axios({
+                        method: "post",
+                        url: baseUrl+"/route/del",
+                        headers: {
+                            "Access-Token": accessToken,
+                        },
+                        data: {
+                            id:id
+                        },
+                    })
+                    .then(function(response) {
+                        p.getRouteList()
+                    })
+                },
+
+                getRouteList: function() {
+                    var p = this
+                    var accessToken = this.userMeta.accessToken
+                    var baseUrl = this.apiMeta.baseUrl
+                    axios({
+                        method: "get",
+                        url: baseUrl+"/route/list",
+                        headers: {
+                            "Access-Token": accessToken,
+                        },
+                        data: {},
+                    })
+                    .then(function(response) {
+                        var body = response.data
+                        p.routeMeta.routelist = body.data.routes
+                        console.log(p.routeMeta.routelist)
+                    })
                 },
             }
         })
@@ -754,11 +874,13 @@ console.log(gnodes,gedges)
         app.userMeta.userId = Cookies.get("userId")
         app.getEdgelist()
         app.getCSPlist()
+        app.getRouteList()
 
         setInterval("load()", 1000*10)
         load = function() {
             app.getEdgelist()
-            app.getCSPlist()
+            // app.getCSPlist()
+            app.getRouteList()
         }
 
         function timestampToTime(timestamp) {
