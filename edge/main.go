@@ -44,7 +44,9 @@ func main() {
 		return
 	}
 
-	s := NewServer(lisAddr, secret, iface, nil)
+	block, _ := NewTwofishBlockCrypt([]byte("cframe"))
+
+	s := NewServer(lisAddr, secret, iface, block, nil)
 
 	reg := NewRegistry(ctrlAddr, secret, s)
 	go func() {

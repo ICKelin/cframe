@@ -29,13 +29,14 @@ require (
 	github.com/tdewolff/minify v2.3.6+incompatible // indirect
 	github.com/tdewolff/parse v2.3.4+incompatible // indirect
 	github.com/templexxx/cpufeat v0.0.0-20180724012125-cef66df7f161 // indirect
-	github.com/templexxx/xor v0.0.0-20191217153810-f85b25db303b // indirect
+	github.com/templexxx/xor v0.0.0-20191217153810-f85b25db303b
 	github.com/tencentcloud/tencentcloud-sdk-go v3.0.233+incompatible // indirect
-	github.com/tjfoc/gmsm v1.3.2 // indirect
+	github.com/tjfoc/gmsm v1.3.2
 	github.com/urfave/cli v1.22.4
 	github.com/urfave/cli/v2 v2.2.0
 	github.com/xtaci/kcp-go v5.4.20+incompatible
 	go.uber.org/zap v1.15.0 // indirect
+	golang.org/x/crypto v0.0.0-20200323165209-0ec3e9974c59
 	google.golang.org/genproto v0.0.0-20200711021454-869866162049 // indirect
 	google.golang.org/grpc v1.29.1
 	gopkg.in/mgo.v2 v2.0.0-20190816093944-a6b53ec6cb22

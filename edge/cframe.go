@@ -26,6 +26,9 @@ type Server struct {
 	// tun device wrap
 	iface *Interface
 
+	// crypt block
+	block BlockCrypt
+
 	vpcInstance vpc.IVPC
 }
 
@@ -37,12 +40,13 @@ type peerConn struct {
 	cidr string
 }
 
-func NewServer(laddr, key string, iface *Interface, vpcInstance vpc.IVPC) *Server {
+func NewServer(laddr, key string, iface *Interface, block BlockCrypt, vpcInstance vpc.IVPC) *Server {
 	return &Server{
 		laddr:       laddr,
 		key:         key,
 		peerConns:   make(map[string]*peerConn),
 		iface:       iface,
+		block:       block,
 		vpcInstance: vpcInstance,
 	}
 }
@@ -96,16 +100,23 @@ func (s *Server) ping(sock *net.UDPConn) {
 }
 
 func (s *Server) readRemote(lconn *net.UDPConn) {
-	buf := make([]byte, 1024*64)
+	rawbytes := make([]byte, 1024*64)
 	key := s.key
 	klen := len(key)
 	ping := "ping"
 	plen := len(ping)
 	for {
-		nr, _, err := lconn.ReadFromUDP(buf)
+		nr, _, err := lconn.ReadFromUDP(rawbytes)
 		if err != nil {
 			log.Error("read full fail: %v", err)
 			continue
+		}
+
+		buf := make([]byte, nr)
+		if s.block != nil {
+			s.block.Decrypt(buf, rawbytes[:nr])
+		} else {
+			buf = rawbytes[:nr]
 		}
 
 		if nr < klen {
