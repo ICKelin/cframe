@@ -21,32 +21,46 @@
 
 [English](README_EN.md) | 简体中文
 
-## 介绍
-
 **状态: Work in progress**
 
-cframe是一款网状VPN项目，能解决多个IP地址不冲突的网络互联，以下是一些典型的应用场景：
+## 介绍
+cframe是一款网格VPN(mesh vpn)项目，能解决多个IP地址不冲突的网络互联，以下是一些典型的应用场景：
 
 - 跨VPC之间网络互联
 - 跨云网络互联
 - VPC与IDC网络互联
 - k8s多集群互联
 
-cframe包括两个重要组件，`controller`和`edge`，controller也即是控制平面，用于路由下发以及edge节点管理，edge也即是数据平面，用于路由和转发数据到对应的edge节点，任意两个edge节点互联，形成一个网状结构。
-
-![](doc/images/arch.jpg)
+cframe包括两个重要组件，`controller`和`edge`，controller也即是控制平面，用于路由下发以及edge节点管理，edge也即是数据平面，用于路由和转发数据到对应的edge节点，任意两个edge节点互联，形成一个网状结构，详细技术细节可以参考[cframe的技术原理](#cframe的技术原理)
 
 ## 目录
 - [介绍](#介绍)
-- [功能特性](#功能特性)
 - [cframe的技术原理](#cframe的技术原理)
+- [功能特性](#功能特性)
 - [如何开始使用](#如何开始使用)
 - [有问题怎么办](#有问题怎么办)
 - [关于作者](#关于作者)
 
-## 功能特性
 
 ## cframe的技术原理
+![](doc/images/arch.jpg)
+
+cframe是一款mesh vpn项目，由edge节点两两互联形成edge网络，controller将拓扑信息通过长连接下发到每个edge节点，每个edge节点内部有一个或者多个网络，edge节点会与其他edge节点的连接以及其他edge节点的网络信息，以便路由查询。
+
+edge当中包括以下3种路由：
+
+- edge节点维护的内存路由
+- 静态路由
+- 公有云的VPC路由
+
+接下来会以一个示例结合这三种路由阐述数据包从一个腾讯云VPC网络到另外阿里云VPC的过程，具体拓扑如下。
+
+![](doc/images/demo.jpg)
+
+
+[返回目录](#目录)
+
+## 功能特性
 [返回目录](#目录)
 
 ## 如何使用
