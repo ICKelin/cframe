@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"time"
 
 	"github.com/ICKelin/cframe/codec/proto"
 	"github.com/ICKelin/cframe/pkg/database"
@@ -24,7 +25,7 @@ func main() {
 	}
 
 	log.Init(conf.Log.Path, conf.Log.Level, conf.Log.Days)
-	log.Info("%v", conf)
+	log.Debug("%v", conf)
 
 	cli, err := createUserServiceCli(conf.UserCenterAddr)
 	if err != nil {
@@ -44,13 +45,15 @@ func main() {
 	// initial mongodb url
 	database.NewModelManager(conf.MongoUrl, conf.DBName)
 
+	// rpc server api-service
 	rpcsrv := NewRPCServer(conf.RpcAddr)
 	go rpcsrv.ListenAndServe()
 
+	// registry server for edge
 	r := NewRegistryServer(conf.ListenAddr, cli)
 
 	// watch for edge delete/put
-	// tell registry edge change
+	// notify online edge
 	go edgeManager.Watch(
 		func(userId string, edg *edgemanager.Edge) {
 			r.DelEdge(userId, edg)
@@ -60,7 +63,7 @@ func main() {
 		})
 
 	// watch for route delete/put
-	// tell registry route change
+	// notify online edge
 	go routeManager.Watch(
 		func(userId string, route *routemanager.Route) {
 			r.DelRoute(userId, route)
@@ -73,10 +76,15 @@ func main() {
 }
 
 func createUserServiceCli(remote string) (proto.UserServiceClient, error) {
-	conn, err := grpc.Dial(remote, grpc.WithInsecure())
-	if err != nil {
-		return nil, err
+	for {
+		conn, err := grpc.Dial(remote, grpc.WithInsecure(), grpc.WithTimeout(time.Second*10))
+		if err != nil {
+			log.Error("connect to user service fail: %v", err)
+			time.Sleep(time.Second * 3)
+			continue
+		}
+
+		cli := proto.NewUserServiceClient(conn)
+		return cli, nil
 	}
-	cli := proto.NewUserServiceClient(conn)
-	return cli, nil
 }

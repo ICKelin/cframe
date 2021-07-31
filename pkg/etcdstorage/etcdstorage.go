@@ -31,25 +31,30 @@ func NewEtcd(endpoints []string) *Etcd {
 
 func (s *Etcd) Set(key string, val interface{}) error {
 	b, _ := json.Marshal(val)
-	_, err := s.cli.Put(context.Background(), key, string(b))
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second*10))
+	defer cancel()
+	_, err := s.cli.Put(ctx, key, string(b))
 	return err
 }
 
 func (s *Etcd) SetWithExpiration(key string, val interface{},
 	exp time.Duration) error {
 	b, _ := json.Marshal(val)
-	resp, err := s.cli.Grant(context.TODO(), int64(exp.Seconds()))
+	resp, err := s.cli.Grant(context.Background(), int64(exp.Seconds()))
 	if err != nil {
 		return err
 	}
 
-	ctx := context.Background()
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second*10))
+	defer cancel()
 	_, err = s.cli.Put(ctx, key, string(b), clientv3.WithLease(resp.ID))
 	return err
 }
 
 func (s *Etcd) Get(key string, obj interface{}) error {
-	resp, err := s.cli.Get(context.Background(), key)
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second*10))
+	defer cancel()
+	resp, err := s.cli.Get(ctx, key)
 	if err != nil {
 		return err
 	}
@@ -61,15 +66,21 @@ func (s *Etcd) Get(key string, obj interface{}) error {
 }
 
 func (s *Etcd) Del(key string) {
-	s.cli.Delete(context.Background(), key)
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second*10))
+	defer cancel()
+	s.cli.Delete(ctx, key)
 }
 
 func (s *Etcd) DelPrefix(prefix string) {
-	s.cli.Delete(context.Background(), prefix, clientv3.WithPrefix())
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second*10))
+	defer cancel()
+	s.cli.Delete(ctx, prefix, clientv3.WithPrefix())
 }
 
 func (s *Etcd) List(root string) (map[string]string, error) {
-	resp, err := s.cli.Get(context.Background(), root, clientv3.WithPrefix())
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second*10))
+	defer cancel()
+	resp, err := s.cli.Get(ctx, root, clientv3.WithPrefix())
 	if err != nil {
 		return nil, err
 	}
