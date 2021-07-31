@@ -8,7 +8,11 @@ import (
 )
 
 func main() {
-	log.Init("log/edge.log", "debug", 3)
+	logLevel := os.Getenv("LOG_LEVEL")
+	if len(logLevel) == 0 {
+		logLevel = "debug"
+	}
+	log.Init("log/edge.log", logLevel, 3)
 
 	iface, err := NewInterface()
 	if err != nil {
@@ -44,9 +48,7 @@ func main() {
 		return
 	}
 
-	block, _ := NewTwofishBlockCrypt([]byte("cframe"))
-
-	s := NewServer(lisAddr, secret, iface, block, nil)
+	s := NewServer(lisAddr, secret, iface)
 
 	reg := NewRegistry(ctrlAddr, secret, s)
 	go func() {

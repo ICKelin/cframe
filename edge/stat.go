@@ -2,7 +2,7 @@ package main
 
 import (
 	"os"
-	"sync/atomic"
+	"sync"
 	"time"
 
 	"github.com/ICKelin/cframe/codec"
@@ -18,14 +18,25 @@ func init() {
 	}
 }
 
+var msgMu sync.Mutex
 var msg = &codec.ReportMsg{}
 
 func AddTrafficIn(traffic int64) {
-	atomic.AddInt64(&msg.TrafficIn, traffic)
+	msgMu.Lock()
+	defer msgMu.Unlock()
+	msg.TrafficIn += traffic
 }
 
 func AddTrafficOut(traffic int64) {
-	atomic.AddInt64(&msg.TrafficOut, traffic)
+	msgMu.Lock()
+	defer msgMu.Unlock()
+	msg.TrafficOut += traffic
+}
+
+func AddErrorLog(err error) {
+	msgMu.Lock()
+	defer msgMu.Unlock()
+	msg.Error = append(msg.Error, err.Error())
 }
 
 func ResetStat() *codec.ReportMsg {
@@ -35,7 +46,7 @@ func ResetStat() *codec.ReportMsg {
 	mem, _ := p.MemoryPercent()
 	m.CPU = int32(cpu)
 	m.Mem = int32(mem)
-	msg = &codec.ReportMsg{}
+	msg = &codec.ReportMsg{Error: make([]string, 0, 3)}
 
 	return m
 }

@@ -31,7 +31,11 @@ cframe是一款网格VPN(mesh vpn)项目，能解决多个IP地址不冲突的�
 - VPC与IDC网络互联
 - k8s多集群互联
 
-cframe包括两个重要组件，`controller`和`edge`，controller也即是控制平面，用于路由下发以及edge节点管理，edge也即是数据平面，用于路由和转发数据到对应的edge节点，任意两个edge节点互联，形成一个网状结构，详细技术细节可以参考[cframe的核心技术原理](#cframe的核心技术原理)
+cframe包括两个重要组件，`controller`和`edge`，controller也即是控制平面，用于路由下发以及edge节点管理，edge也即是数据平面，用于路由和转发数据到对应的edge节点，任意两个edge节点互联，形成一个网状结构。
+
+您可以将edge节点类比为路由器，每个路由器上保存着全量的路由信息，当一个数据包到来时，edge节点查找全局路由，找到对应的下一跳edge 节点并转发。
+
+详细技术细节可以参考[cframe的核心技术原理](#cframe的核心技术原理)
 
 ## 目录
 - [介绍](#介绍)
@@ -43,7 +47,8 @@ cframe包括两个重要组件，`controller`和`edge`，controller也即是控�
 
 
 ## cframe的核心技术原理
-![](doc/images/arch.jpg)
+![](doc/images/arch.png)
+
 
 cframe是一款mesh vpn项目，由edge节点两两互联形成edge网络，controller将拓扑信息通过长连接下发到每个edge节点，每个edge节点内部有一个或者多个网络，edge节点会与其他edge节点的连接以及其他edge节点的网络信息，以便路由查询。
 

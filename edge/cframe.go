@@ -26,9 +26,6 @@ type Server struct {
 	// tun device wrap
 	iface *Interface
 
-	// crypt block
-	block BlockCrypt
-
 	vpcInstance vpc.IVPC
 }
 
@@ -40,14 +37,12 @@ type peerConn struct {
 	cidr string
 }
 
-func NewServer(laddr, key string, iface *Interface, block BlockCrypt, vpcInstance vpc.IVPC) *Server {
+func NewServer(laddr, key string, iface *Interface) *Server {
 	return &Server{
-		laddr:       laddr,
-		key:         key,
-		peerConns:   make(map[string]*peerConn),
-		iface:       iface,
-		block:       block,
-		vpcInstance: vpcInstance,
+		laddr:     laddr,
+		key:       key,
+		peerConns: make(map[string]*peerConn),
+		iface:     iface,
 	}
 }
 
@@ -103,8 +98,6 @@ func (s *Server) readRemote(lconn *net.UDPConn) {
 	rawbytes := make([]byte, 1024*64)
 	key := s.key
 	klen := len(key)
-	ping := "ping"
-	plen := len(ping)
 	for {
 		nr, _, err := lconn.ReadFromUDP(rawbytes)
 		if err != nil {
@@ -112,12 +105,7 @@ func (s *Server) readRemote(lconn *net.UDPConn) {
 			continue
 		}
 
-		buf := make([]byte, nr)
-		if s.block != nil {
-			s.block.Decrypt(buf, rawbytes[:nr])
-		} else {
-			buf = rawbytes[:nr]
-		}
+		buf := rawbytes[:nr]
 
 		if nr < klen {
 			log.Error("pkt to small")
@@ -132,12 +120,6 @@ func (s *Server) readRemote(lconn *net.UDPConn) {
 		}
 
 		pkt := buf[klen:nr]
-
-		if len(pkt) >= plen && string(pkt[:plen]) == ping {
-			log.Debug("recv ping from remote")
-			continue
-		}
-
 		p := Packet(pkt)
 		if p.Invalid() {
 			log.Error("invalid ipv4 packet")
@@ -231,46 +213,41 @@ func (s *Server) route(dst string) (string, error) {
 }
 
 func (s *Server) AddPeer(peer *codec.Edge) error {
-	log.Info("add peer: ", peer)
+	log.Info("adding peer: %v", peer)
 
-	// remove old item
-	log.Info("removing old local route item")
-	out, err := execCmd("route", []string{"del", "-net",
-		peer.Cidr, "dev", s.iface.tun.Name()})
-	if err != nil {
-		log.Info("route del -net %s dev %s, %s %v",
-			peer.Cidr, s.iface.tun.Name(), out, err)
-	}
-
-	// add local route item
-	log.Info("adding new local route item")
-	out, err = execCmd("route", []string{"add", "-net",
-		peer.Cidr, "dev", s.iface.tun.Name()})
-	if err != nil {
-		log.Error("route add -net %s dev %s, %s %v\n",
-			peer.Cidr, s.iface.tun.Name(), out, err)
-		return err
-	}
-	log.Info("route add -net %s dev %s, %s %v\n",
-		peer.Cidr, s.iface.tun.Name(), out, err)
-
+	// add vpc route
 	if s.vpcInstance != nil {
 		// add vpc route entry
 		// route to current instance
-		log.Info("adding new vpc route item")
 		err := s.vpcInstance.CreateRoute(peer.Cidr)
 		if err != nil {
 			log.Error("create vpc route fail: %v", err)
+			AddErrorLog(err)
 			// Do not return
 		}
 	}
 
-	// finaly, add memory route
+	// add local static route
+	execCmd("route", []string{"del", "-net",
+		peer.Cidr, "dev", s.iface.tun.Name()})
+
+	out, err := execCmd("route", []string{"add", "-net",
+		peer.Cidr, "dev", s.iface.tun.Name()})
+	if err != nil {
+		log.Error("route add -net %s dev %s, %s %v\n",
+			peer.Cidr, s.iface.tun.Name(), out, err)
+		AddErrorLog(err)
+		return err
+	}
+
+	// add memory route
 	s.peerConns[peer.Cidr] = &peerConn{
 		addr: peer.ListenAddr,
 		cidr: peer.Cidr,
 	}
 
+	log.Info("added peer %v OK", peer)
+	log.Info("==========================\n")
 	return nil
 }
 
@@ -281,14 +258,15 @@ func (s *Server) AddPeers(peers []*codec.Edge) {
 }
 
 func (s *Server) DelPeer(peer *codec.Edge) {
-	log.Info("del peer: ", peer)
+	log.Info("del peer: %v", peer)
 	delete(s.peerConns, peer.Cidr)
 
 	out, err := execCmd("route", []string{"del", "-net",
 		peer.Cidr, "dev", s.iface.tun.Name()})
 	log.Info("route del -net %s dev %s, %s %v",
 		peer.Cidr, s.iface.tun.Name(), out, err)
-	// TODO: remove vpc route item
+	log.Info("del peer %s OK", peer)
+	log.Info("==========================\n")
 }
 
 func (s *Server) AddRoute(msg *codec.AddRouteMsg) {

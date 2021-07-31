@@ -10,6 +10,7 @@ package codec
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/ICKelin/cframe/codec/proto"
 )
@@ -26,6 +27,10 @@ type RegisterReq struct {
 type Edge struct {
 	ListenAddr string
 	Cidr       string
+}
+
+func (e *Edge) String() string {
+	return fmt.Sprintf("listen %s, local cidr %s", e.ListenAddr, e.Cidr)
 }
 
 type CSPInfo struct {
@@ -86,6 +91,7 @@ type ReportMsg struct {
 	Mem        int32
 	TrafficIn  int64
 	TrafficOut int64
+	Error      []string
 }
 
 type Heartbeat struct{}
