@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/ICKelin/cframe/codec"
 	"github.com/ICKelin/cframe/pkg/etcdstorage"
 	log "github.com/ICKelin/cframe/pkg/logs"
 	"github.com/coreos/etcd/clientv3"
@@ -12,7 +13,7 @@ import (
 
 var (
 	defaultRouteManager *RouteManager
-	routePrefix         = "/route/"
+	routePrefix         = "/routes/"
 )
 
 type RouteManager struct {
@@ -31,7 +32,7 @@ func New(store *etcdstorage.Etcd) *RouteManager {
 	return m
 }
 
-func (m *RouteManager) Watch(delfunc, putfunc func(userId string, route *Route)) {
+func (m *RouteManager) Watch(delfunc, putfunc func(appId string, route *codec.Route)) {
 	chs := m.storage.Watch(routePrefix)
 	for c := range chs {
 		for _, evt := range c.Events {
@@ -45,30 +46,30 @@ func (m *RouteManager) Watch(delfunc, putfunc func(userId string, route *Route))
 				continue
 			}
 
-			userId := sp[2]
+			appId := sp[2]
 			switch evt.Type {
 			case clientv3.EventTypeDelete:
 				if delfunc != nil {
-					route := Route{}
+					route := codec.Route{}
 					err := json.Unmarshal(evt.PrevKv.Value, &route)
 					if err != nil {
 						log.Info("json unmarshal fail: %v", err)
 						continue
 					}
 
-					delfunc(userId, &route)
+					delfunc(appId, &route)
 				}
 
 			case clientv3.EventTypePut:
 				if putfunc != nil {
-					route := Route{}
+					route := codec.Route{}
 					err := json.Unmarshal(evt.Kv.Value, &route)
 					if err != nil {
 						log.Info("json unmarshal fail: %v", err)
 						continue
 					}
 
-					putfunc(userId, &route)
+					putfunc(appId, &route)
 				}
 			}
 		}
@@ -76,27 +77,13 @@ func (m *RouteManager) Watch(delfunc, putfunc func(userId string, route *Route))
 
 }
 
-func (m *RouteManager) AddRoute(username, name string, route *Route) error {
-	key := fmt.Sprintf("%s%s/%s", routePrefix, username, name)
+func (m *RouteManager) AddRoute(appId, route *codec.Route) error {
+	key := fmt.Sprintf("%s%s/%s", routePrefix, appId, route.Name)
 	return m.storage.Set(key, route)
 }
 
-func (m *RouteManager) DelRoute(username, name string) error {
-	key := fmt.Sprintf("%s%s/%s", routePrefix, username, name)
+func (m *RouteManager) DelRoute(appId, name string) error {
+	key := fmt.Sprintf("%s%s/%s", routePrefix, appId, name)
 	m.storage.Del(key)
 	return nil
-}
-
-func AddRoute(username, name string, route *Route) error {
-	if defaultRouteManager == nil {
-		return fmt.Errorf("route manager nil")
-	}
-	return defaultRouteManager.AddRoute(username, name, route)
-}
-
-func DelRoute(username, name string) error {
-	if defaultRouteManager == nil {
-		return fmt.Errorf("route manager nil")
-	}
-	return defaultRouteManager.DelRoute(username, name)
 }

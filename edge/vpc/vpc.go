@@ -3,7 +3,7 @@ package vpc
 import (
 	"fmt"
 
-	"github.com/ICKelin/cframe/codec/proto"
+	"github.com/ICKelin/cframe/codec"
 )
 
 const (
@@ -14,13 +14,13 @@ type IVPC interface {
 	CreateRoute(cidr string) error
 }
 
-func GetVPCInstance(typ proto.CSPType, key, secret string) (IVPC, error) {
+func GetVPCInstance(typ codec.CSPType, key, secret string) (IVPC, error) {
 	switch typ {
-	case proto.CSPType_ALI:
+	case codec.CSP_TYPE_ALI:
 		return NewAliVPC(key, secret), nil
-	case proto.CSPType_AWS:
+	case codec.CSP_TYPE_AWS:
 		return NewAWSVPC(key, secret), nil
 	default:
-		return nil, fmt.Errorf("unsupported vpc type %s", typ)
+		return nil, fmt.Errorf("unsupported vpc type %d", typ)
 	}
 }

@@ -11,9 +11,28 @@ package codec
 import (
 	"encoding/json"
 	"fmt"
-
-	"github.com/ICKelin/cframe/codec/proto"
 )
+
+type CSPType int
+
+const (
+	CSP_TYPE_NONE = iota
+	CSP_TYPE_ALI
+	CSP_TYPE_AWS
+)
+
+type Route struct {
+	CIDR    string
+	Nexthop string
+	Name    string
+}
+
+type Edge struct {
+	Name       string  `json:"name"`
+	Cidr       string  `json:"cidr"`
+	ListenAddr string  `json:"listen_addr"`
+	Type       CSPType `json:"type"`
+}
 
 // edge register req
 type RegisterReq struct {
@@ -23,18 +42,12 @@ type RegisterReq struct {
 	PublicIP  string
 }
 
-// edge information
-type Edge struct {
-	ListenAddr string
-	Cidr       string
-}
-
 func (e *Edge) String() string {
 	return fmt.Sprintf("listen %s, local cidr %s", e.ListenAddr, e.Cidr)
 }
 
 type CSPInfo struct {
-	CspType      proto.CSPType
+	CspType      CSPType
 	AccessKey    string
 	AccessSecret string
 }
@@ -43,7 +56,7 @@ type CSPInfo struct {
 type RegisterReply struct {
 	EdgeList []*Edge
 	CSPInfo  *CSPInfo
-	Routes   []*proto.Route
+	Routes   []*Route
 }
 
 func (r *RegisterReply) String() string {

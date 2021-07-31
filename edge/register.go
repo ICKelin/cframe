@@ -83,7 +83,7 @@ func (r *Registry) run() error {
 	for _, route := range reply.Routes {
 		r.server.AddPeer(&codec.Edge{
 			ListenAddr: route.Nexthop,
-			Cidr:       route.Cidr,
+			Cidr:       route.CIDR,
 		})
 	}
 

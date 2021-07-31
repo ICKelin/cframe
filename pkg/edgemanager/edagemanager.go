@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ICKelin/cframe/codec"
 	"github.com/ICKelin/cframe/pkg/etcdstorage"
 	"github.com/ICKelin/cframe/pkg/ip"
 	log "github.com/ICKelin/cframe/pkg/logs"
@@ -33,7 +34,7 @@ func New(store *etcdstorage.Etcd) *EdgeManager {
 	return m
 }
 
-func (m *EdgeManager) Watch(delfunc, putfunc func(userId string, edge *Edge)) {
+func (m *EdgeManager) Watch(delfunc, putfunc func(appId string, edge *codec.Edge)) {
 	chs := m.storage.Watch(edgePrefix)
 	for c := range chs {
 		for _, evt := range c.Events {
@@ -47,31 +48,31 @@ func (m *EdgeManager) Watch(delfunc, putfunc func(userId string, edge *Edge)) {
 				continue
 			}
 
-			userId := sp[2]
+			appId := sp[2]
 
 			switch evt.Type {
 			case clientv3.EventTypeDelete:
 				if delfunc != nil {
-					edge := Edge{}
+					edge := codec.Edge{}
 					err := json.Unmarshal(evt.PrevKv.Value, &edge)
 					if err != nil {
 						log.Info("json unmarshal fail: %v", err)
 						continue
 					}
 
-					delfunc(userId, &edge)
+					delfunc(appId, &edge)
 				}
 
 			case clientv3.EventTypePut:
 				if putfunc != nil {
-					edge := Edge{}
+					edge := codec.Edge{}
 					err := json.Unmarshal(evt.Kv.Value, &edge)
 					if err != nil {
 						log.Info("json unmarshal fail: %v", err)
 						continue
 					}
 
-					putfunc(userId, &edge)
+					putfunc(appId, &edge)
 				}
 			}
 		}
@@ -79,22 +80,22 @@ func (m *EdgeManager) Watch(delfunc, putfunc func(userId string, edge *Edge)) {
 
 }
 
-func (m *EdgeManager) AddEdge(username, name string, edge *Edge) {
-	key := fmt.Sprintf("%s%s/%s", edgePrefix, username, name)
+func (m *EdgeManager) AddEdge(appId string, edge *codec.Edge) {
+	key := fmt.Sprintf("%s%s/%s", edgePrefix, appId, edge.Name)
 	e := m.storage.Set(key, edge)
 	if e != nil {
 		log.Error("add edge fail: %v", e)
 	}
 }
 
-func (m *EdgeManager) DelEdge(username, name string) {
-	key := fmt.Sprintf("%s%s/%s", edgePrefix, username, name)
+func (m *EdgeManager) DelEdge(appId, name string) {
+	key := fmt.Sprintf("%s%s/%s", edgePrefix, appId, name)
 	m.storage.Del(key)
 }
 
-func (m *EdgeManager) GetEdge(username, name string) *Edge {
-	key := fmt.Sprintf("%s%s/%s", edgePrefix, username, name)
-	edg := Edge{}
+func (m *EdgeManager) GetEdge(appId, name string) *codec.Edge {
+	key := fmt.Sprintf("%s%s/%s", edgePrefix, appId, name)
+	edg := codec.Edge{}
 	err := m.storage.Get(key, &edg)
 	if err != nil {
 		return nil
@@ -102,17 +103,17 @@ func (m *EdgeManager) GetEdge(username, name string) *Edge {
 	return &edg
 }
 
-func (m *EdgeManager) GetEdges(username string) []*Edge {
-	key := fmt.Sprintf("%s%s", edgePrefix, username)
+func (m *EdgeManager) GetEdges(appId string) []*codec.Edge {
+	key := fmt.Sprintf("%s%s", edgePrefix, appId)
 	res, err := m.storage.List(key)
 	if err != nil {
 		log.Error("list %s fail: %v", edgePrefix, err)
 		return nil
 	}
 
-	edges := make([]*Edge, 0)
+	edges := make([]*codec.Edge, 0)
 	for _, val := range res {
-		edge := Edge{}
+		edge := codec.Edge{}
 		err := json.Unmarshal([]byte(val), &edge)
 		if err != nil {
 			log.Error("unmarshal to edge fail: %v", err)
@@ -183,40 +184,4 @@ func (m *EdgeManager) verifyConflict(cidr1, cidr2 string) bool {
 	}
 
 	return !ipn1.Overlaps(ipn2)
-}
-
-func AddEdge(username, name string, edge *Edge) {
-	if defaultEdgeManager == nil {
-		return
-	}
-	defaultEdgeManager.AddEdge(username, name, edge)
-}
-
-func DelEdge(username, name string) {
-	if defaultEdgeManager == nil {
-		return
-	}
-	defaultEdgeManager.DelEdge(username, name)
-}
-
-func GetEdge(username, name string) *Edge {
-	if defaultEdgeManager == nil {
-		return nil
-	}
-	return defaultEdgeManager.GetEdge(username, name)
-}
-
-func GetEdges(username string) []*Edge {
-	if defaultEdgeManager == nil {
-		return nil
-	}
-	return defaultEdgeManager.GetEdges(username)
-}
-
-func VerifyCidr(cidr string) bool {
-	if defaultEdgeManager == nil {
-		return false
-	}
-
-	return defaultEdgeManager.VerifyCidr(cidr)
 }

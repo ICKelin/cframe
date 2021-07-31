@@ -77,7 +77,6 @@ func (v *AliVPC) CreateRoute(cidr string) error {
 		for _, tbitem := range rentry.RouteEntry {
 			if tbitem.Type == ecs.RouteTableCustom &&
 				tbitem.DestinationCidrBlock == cidr {
-				// TODO: remove old item
 				route := &ecs.DeleteRouteEntryArgs{
 					RouteTableId:         route.RouteTableId,
 					DestinationCidrBlock: cidr,
