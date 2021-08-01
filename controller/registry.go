@@ -84,7 +84,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 		return
 	}
 
-	log.Info("node register %v", reg)
+	log.Info("edge register %v", reg)
 	remoteIP := reg.PublicIP
 	if len(remoteIP) <= 0 {
 		remoteAddr := conn.RemoteAddr().String()
@@ -128,22 +128,19 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	routes := s.routeManager.GetRoutes(appInfo.Secret)
 	log.Info("route list: %+v", routes)
 
-	// reply to edge
-	err = codec.WriteJSON(conn, codec.CmdRegister, &codec.RegisterReply{
-		EdgeList: otherEdges,
-		Routes:   routes,
-	})
-	if err != nil {
-		log.Error("write json fail: %v", err)
+	// store session
+	sessKey := appInfo.Secret
+	s.mu.Lock()
+	if s.sess[sessKey] == nil {
+		s.sess[sessKey] = make(map[string]*Session)
+	}
+	if _, ok := s.sess[sessKey][curEdge.ListenAddr]; ok {
+		log.Warn("edge %s addr %s is running", curEdge.Name, curEdge.ListenAddr)
+		s.mu.Unlock()
 		return
 	}
 
-	// store session
-	s.mu.Lock()
-	if s.sess[appInfo.Secret] == nil {
-		s.sess[appInfo.Secret] = make(map[string]*Session)
-	}
-	s.sess[appInfo.Secret][curEdge.ListenAddr] = &Session{
+	s.sess[sessKey][curEdge.ListenAddr] = &Session{
 		edge: &codec.Edge{
 			ListenAddr: curEdge.ListenAddr,
 			Cidr:       curEdge.Cidr,
@@ -153,10 +150,19 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	s.mu.Unlock()
 	defer func() {
 		s.mu.Lock()
-		delete(s.sess[appInfo.Secret], curEdge.ListenAddr)
+		delete(s.sess[sessKey], curEdge.ListenAddr)
 		s.mu.Unlock()
 	}()
 
+	// reply to edge
+	err = codec.WriteJSON(conn, codec.CmdRegister, &codec.RegisterReply{
+		EdgeList: otherEdges,
+		Routes:   routes,
+	})
+	if err != nil {
+		log.Error("write json fail: %v", err)
+		return
+	}
 	// keepalived
 	fail := 0
 	hb := codec.Heartbeat{}
@@ -181,7 +187,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 			}
 
 		case codec.CmdReport:
-			log.Info("receive report from edge: %s %s", curEdge.Name, string(body))
+			log.Debug("receive report from edge: %s %s", curEdge.Name, string(body))
 
 		case codec.CmdAlarm:
 			log.Info("receive alarm from edge: %s %s", curEdge.Name, string(body))
@@ -320,7 +326,7 @@ func (s *RegistryServer) state() {
 		s.mu.Lock()
 		for userId, sesses := range s.sess {
 			for _, sess := range sesses {
-				log.Info("userId %s edge: %s cidr: %s",
+				log.Info("appId %s edge: %s cidr: %s",
 					userId, sess.edge.ListenAddr, sess.edge.Cidr)
 			}
 		}
