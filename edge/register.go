@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net"
 	"os"
 	"time"
@@ -66,17 +65,14 @@ func (r *Registry) run() error {
 	reply := &codec.RegisterReply{}
 	codec.ReadJSON(conn, reply)
 	log.Debug("%v", reply)
-	if reply.CSPInfo == nil {
-		log.Error("get csp fail: %v", reply)
-		return fmt.Errorf("get csp fail")
-	}
-
-	instance, err := vpc.GetVPCInstance(reply.CSPInfo.CspType, reply.CSPInfo.AccessKey, reply.CSPInfo.AccessSecret)
-	if err != nil {
-		log.Error("unsupported vpc %v", reply.CSPInfo.CspType)
-		// return err
-	} else {
-		r.server.SetVPCInstance(instance)
+	if reply.CSPInfo != nil {
+		instance, err := vpc.GetVPCInstance(reply.CSPInfo.CspType, reply.CSPInfo.AccessKey, reply.CSPInfo.AccessSecret)
+		if err != nil {
+			log.Error("unsupported vpc %v", reply.CSPInfo.CspType)
+			// return err
+		} else {
+			r.server.SetVPCInstance(instance)
+		}
 	}
 
 	// add peers route

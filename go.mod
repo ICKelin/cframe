@@ -31,7 +31,7 @@ require (
 	github.com/jonboulle/clockwork v0.1.0 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/pelletier/go-toml v1.8.0
-	github.com/satori/go.uuid v1.2.0 // indirect
+	github.com/satori/go.uuid v1.2.0
 	github.com/shirou/gopsutil v2.20.9+incompatible
 	github.com/soheilhy/cmux v0.1.4 // indirect
 	github.com/songgao/water v0.0.0-20200317203138-2b4b6d7c09d8

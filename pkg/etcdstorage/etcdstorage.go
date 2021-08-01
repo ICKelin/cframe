@@ -37,20 +37,6 @@ func (s *Etcd) Set(key string, val interface{}) error {
 	return err
 }
 
-func (s *Etcd) SetWithExpiration(key string, val interface{},
-	exp time.Duration) error {
-	b, _ := json.Marshal(val)
-	resp, err := s.cli.Grant(context.Background(), int64(exp.Seconds()))
-	if err != nil {
-		return err
-	}
-
-	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second*10))
-	defer cancel()
-	_, err = s.cli.Put(ctx, key, string(b), clientv3.WithLease(resp.ID))
-	return err
-}
-
 func (s *Etcd) Get(key string, obj interface{}) error {
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second*10))
 	defer cancel()

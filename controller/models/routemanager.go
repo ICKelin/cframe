@@ -1,4 +1,4 @@
-package routemanager
+package models
 
 import (
 	"encoding/json"
@@ -20,16 +20,10 @@ type RouteManager struct {
 	storage *etcdstorage.Etcd
 }
 
-func New(store *etcdstorage.Etcd) *RouteManager {
-	if defaultRouteManager != nil {
-		return defaultRouteManager
-	}
-
-	m := &RouteManager{
+func NewRouteManager(store *etcdstorage.Etcd) *RouteManager {
+	return &RouteManager{
 		storage: store,
 	}
-	defaultRouteManager = m
-	return m
 }
 
 func (m *RouteManager) Watch(delfunc, putfunc func(appId string, route *codec.Route)) {
@@ -86,4 +80,25 @@ func (m *RouteManager) DelRoute(appId, name string) error {
 	key := fmt.Sprintf("%s%s/%s", routePrefix, appId, name)
 	m.storage.Del(key)
 	return nil
+}
+
+func (m *RouteManager) GetRoutes(appId string) []*codec.Route {
+	key := fmt.Sprintf("%s%s", routePrefix, appId)
+	res, err := m.storage.List(key)
+	if err != nil {
+		log.Error("list %s fail: %v", edgePrefix, err)
+		return nil
+	}
+
+	routes := make([]*codec.Route, 0)
+	for _, val := range res {
+		r := codec.Route{}
+		err := json.Unmarshal([]byte(val), &r)
+		if err != nil {
+			log.Error("unmarshal to edge fail: %v", err)
+			continue
+		}
+		routes = append(routes, &r)
+	}
+	return routes
 }

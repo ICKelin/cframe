@@ -1,30 +1,5 @@
 version: '2.0'
 services:
-  api-service:
-    build:
-      context: "./api-service"
-      dockerfile: Dockerfile
-    container_name: api-service
-    restart: always
-    volumes:
-    - /opt/logs/api-service:/log
-    ports:
-      - 12345:12345
-    environment:
-      TIME_ZONE: Asia/Shanghai
-      settings: |
-        api_addr=":12345"
-
-        etcd = [
-          # replace with etcd endpoints
-          "172.18.171.247:2379"
-        ]
-
-        [log]
-        level = "debug"
-        path = "log/apiserver.log"
-        days = 5
-
   controller:
     build:
       context: "./controller"

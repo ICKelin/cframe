@@ -5,10 +5,9 @@ import (
 	"fmt"
 
 	"github.com/ICKelin/cframe/codec"
-	"github.com/ICKelin/cframe/pkg/edgemanager"
+	"github.com/ICKelin/cframe/controller/models"
 	"github.com/ICKelin/cframe/pkg/etcdstorage"
 	log "github.com/ICKelin/cframe/pkg/logs"
-	"github.com/ICKelin/cframe/pkg/routemanager"
 )
 
 func main() {
@@ -28,13 +27,16 @@ func main() {
 	store := etcdstorage.NewEtcd(conf.Etcd)
 
 	// create edge manager
-	edgeManager := edgemanager.New(store)
+	edgeManager := models.NewEdgeManager(store)
 
 	// create route manager
-	routeManager := routemanager.New(store)
+	routeManager := models.NewRouteManager(store)
+
+	// create app manager
+	appManager := models.NewAppManager(store)
 
 	// registry server for edge
-	r := NewRegistryServer(conf.ListenAddr)
+	r := NewRegistryServer(conf.ListenAddr, edgeManager, routeManager, appManager)
 
 	// watch for edge delete/put
 	// notify online edge

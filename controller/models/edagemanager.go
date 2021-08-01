@@ -1,4 +1,4 @@
-package edgemanager
+package models
 
 import (
 	"encoding/json"
@@ -22,16 +22,10 @@ type EdgeManager struct {
 	storage *etcdstorage.Etcd
 }
 
-func New(store *etcdstorage.Etcd) *EdgeManager {
-	if defaultEdgeManager != nil {
-		return defaultEdgeManager
-	}
-
-	m := &EdgeManager{
+func NewEdgeManager(store *etcdstorage.Etcd) *EdgeManager {
+	return &EdgeManager{
 		storage: store,
 	}
-	defaultEdgeManager = m
-	return m
 }
 
 func (m *EdgeManager) Watch(delfunc, putfunc func(appId string, edge *codec.Edge)) {
