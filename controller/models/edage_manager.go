@@ -28,7 +28,7 @@ func NewEdgeManager(store *etcdstorage.Etcd) *EdgeManager {
 	}
 }
 
-func (m *EdgeManager) Watch(delfunc, putfunc func(appId string, edge *codec.Edge)) {
+func (m *EdgeManager) Watch(delfunc, putfunc func(namespace string, edge *codec.Edge)) {
 	chs := m.storage.Watch(edgePrefix)
 	for c := range chs {
 		for _, evt := range c.Events {
@@ -42,7 +42,7 @@ func (m *EdgeManager) Watch(delfunc, putfunc func(appId string, edge *codec.Edge
 				continue
 			}
 
-			appId := sp[2]
+			namespace := sp[2]
 
 			switch evt.Type {
 			case clientv3.EventTypeDelete:
@@ -54,7 +54,7 @@ func (m *EdgeManager) Watch(delfunc, putfunc func(appId string, edge *codec.Edge
 						continue
 					}
 
-					delfunc(appId, &edge)
+					delfunc(namespace, &edge)
 				}
 
 			case clientv3.EventTypePut:
@@ -66,7 +66,7 @@ func (m *EdgeManager) Watch(delfunc, putfunc func(appId string, edge *codec.Edge
 						continue
 					}
 
-					putfunc(appId, &edge)
+					putfunc(namespace, &edge)
 				}
 			}
 		}
@@ -74,21 +74,21 @@ func (m *EdgeManager) Watch(delfunc, putfunc func(appId string, edge *codec.Edge
 
 }
 
-func (m *EdgeManager) AddEdge(appId string, edge *codec.Edge) {
-	key := fmt.Sprintf("%s%s/%s", edgePrefix, appId, edge.Name)
+func (m *EdgeManager) AddEdge(namespace string, edge *codec.Edge) {
+	key := fmt.Sprintf("%s%s/%s", edgePrefix, namespace, edge.Name)
 	e := m.storage.Set(key, edge)
 	if e != nil {
 		log.Error("add edge fail: %v", e)
 	}
 }
 
-func (m *EdgeManager) DelEdge(appId, name string) {
-	key := fmt.Sprintf("%s%s/%s", edgePrefix, appId, name)
+func (m *EdgeManager) DelEdge(namespace, name string) {
+	key := fmt.Sprintf("%s%s/%s", edgePrefix, namespace, name)
 	m.storage.Del(key)
 }
 
-func (m *EdgeManager) GetEdge(appId, name string) *codec.Edge {
-	key := fmt.Sprintf("%s%s/%s", edgePrefix, appId, name)
+func (m *EdgeManager) GetEdge(namespace, name string) *codec.Edge {
+	key := fmt.Sprintf("%s%s/%s", edgePrefix, namespace, name)
 	edg := codec.Edge{}
 	err := m.storage.Get(key, &edg)
 	if err != nil {
@@ -97,8 +97,8 @@ func (m *EdgeManager) GetEdge(appId, name string) *codec.Edge {
 	return &edg
 }
 
-func (m *EdgeManager) GetEdges(appId string) []*codec.Edge {
-	key := fmt.Sprintf("%s%s", edgePrefix, appId)
+func (m *EdgeManager) GetEdges(namespace string) []*codec.Edge {
+	key := fmt.Sprintf("%s%s", edgePrefix, namespace)
 	res, err := m.storage.List(key)
 	if err != nil {
 		log.Error("list %s fail: %v", edgePrefix, err)

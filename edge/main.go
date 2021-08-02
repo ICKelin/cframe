@@ -48,9 +48,15 @@ func main() {
 		return
 	}
 
+	ns := os.Getenv("namespace")
+	if len(ns) <= 0 {
+		log.Error("invalid namespace")
+		return
+	}
+
 	s := NewServer(lisAddr, secret, iface)
 
-	reg := NewRegistry(ctrlAddr, secret, s)
+	reg := NewRegistry(ctrlAddr, ns, secret, s)
 	go func() {
 		err := reg.Run()
 		if err != nil {

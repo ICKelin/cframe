@@ -32,30 +32,30 @@ func main() {
 	// create route manager
 	routeManager := models.NewRouteManager(store)
 
-	// create app manager
-	appManager := models.NewAppManager(store)
+	// create namespace manager
+	namespaceManager := models.NewNamespaceManager(store)
 
 	// registry server for edge
-	r := NewRegistryServer(conf.ListenAddr, edgeManager, routeManager, appManager)
+	r := NewRegistryServer(conf.ListenAddr, edgeManager, routeManager, namespaceManager)
 
 	// watch for edge delete/put
 	// notify online edge
 	go edgeManager.Watch(
-		func(userId string, edg *codec.Edge) {
-			r.DelEdge(userId, edg)
+		func(namespace string, edg *codec.Edge) {
+			r.DelEdge(namespace, edg)
 		},
 		func(userId string, edg *codec.Edge) {
-			r.ModifyEdge(userId, edg)
+			r.ModifyEdge(namespace, edg)
 		})
 
 	// watch for route delete/put
 	// notify online edge
 	go routeManager.Watch(
-		func(userId string, route *codec.Route) {
-			r.DelRoute(userId, route)
+		func(namespace string, route *codec.Route) {
+			r.DelRoute(namespace, route)
 		},
-		func(userId string, route *codec.Route) {
-			r.AddRoute(userId, route)
+		func(namespace string, route *codec.Route) {
+			r.AddRoute(namespace, route)
 		},
 	)
 	r.ListenAndServe()

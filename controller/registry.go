@@ -33,8 +33,8 @@ type RegistryServer struct {
 	// route manager
 	routeManager *models.RouteManager
 
-	// app manager
-	appManager *models.AppManager
+	// namespace manager
+	namespaceMgr *models.NamespaceManager
 }
 
 type Session struct {
@@ -45,13 +45,13 @@ type Session struct {
 func NewRegistryServer(addr string,
 	edgeMgr *models.EdgeManager,
 	routeMgr *models.RouteManager,
-	appMgr *models.AppManager) *RegistryServer {
+	namespaceMgr *models.NamespaceManager) *RegistryServer {
 	return &RegistryServer{
 		addr:         addr,
 		sess:         make(map[string]map[string]*Session),
 		edgeManager:  edgeMgr,
 		routeManager: routeMgr,
-		appManager:   appMgr,
+		namespaceMgr: namespaceMgr,
 	}
 }
 
@@ -92,15 +92,21 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	}
 
 	// verify key
-	appInfo, err := s.appManager.GetApp(reg.SecretKey)
+	nsInfo, err := s.namespaceMgr.GetNamespace(reg.Namespace)
 	if err != nil {
-		log.Error("verify key fail: %v", err)
+		log.Error("get namespace %s fail: %v", reg.Namespace, err)
 		return
 	}
-	log.Info("app info: %+v", appInfo)
+
+	if nsInfo.Secret != reg.SecretKey {
+		log.Error("verify namespace key fail")
+		return
+	}
+
+	log.Info("namespace info: %+v", nsInfo)
 
 	// verify edge
-	edges := s.edgeManager.GetEdges(appInfo.Secret)
+	edges := s.edgeManager.GetEdges(nsInfo.Secret)
 	otherEdges := make([]*codec.Edge, 0, len(edges)-1)
 	curEdge := &codec.Edge{}
 
@@ -125,11 +131,11 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	// TODO: get csp info
 
 	// get routes
-	routes := s.routeManager.GetRoutes(appInfo.Secret)
+	routes := s.routeManager.GetRoutes(nsInfo.Secret)
 	log.Info("route list: %+v", routes)
 
 	// store session
-	sessKey := appInfo.Secret
+	sessKey := nsInfo.Secret
 	s.mu.Lock()
 	if s.sess[sessKey] == nil {
 		s.sess[sessKey] = make(map[string]*Session)
@@ -200,10 +206,10 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	}
 }
 
-func (s *RegistryServer) broadcastOnline(appId string, edge *codec.Edge) {
+func (s *RegistryServer) broadcastOnline(namespace string, edge *codec.Edge) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	for addr, host := range s.sess[appId] {
+	for addr, host := range s.sess[namespace] {
 		if addr == edge.ListenAddr {
 			continue
 		}
@@ -229,11 +235,11 @@ func (s *RegistryServer) online(peer net.Conn, edge *codec.Edge) {
 	}
 }
 
-func (s *RegistryServer) broadcastOffline(appId string, edge *codec.Edge) {
+func (s *RegistryServer) broadcastOffline(namespace string, edge *codec.Edge) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	for addr, host := range s.sess[appId] {
+	for addr, host := range s.sess[namespace] {
 		if addr == edge.ListenAddr {
 			continue
 		}
@@ -259,11 +265,11 @@ func (s *RegistryServer) offline(peer net.Conn, edge *codec.Edge) {
 	}
 }
 
-func (s *RegistryServer) broadcastAddRoute(appId string, r *codec.Route) {
+func (s *RegistryServer) broadcastAddRoute(namespace string, r *codec.Route) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	for addr, host := range s.sess[appId] {
+	for addr, host := range s.sess[namespace] {
 		if addr == r.Nexthop {
 			continue
 		}
@@ -289,11 +295,11 @@ func (s *RegistryServer) addRoute(peer net.Conn, r *codec.Route) {
 	}
 }
 
-func (s *RegistryServer) broadcastDelRoute(appId string, r *codec.Route) {
+func (s *RegistryServer) broadcastDelRoute(namespace string, r *codec.Route) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	for addr, host := range s.sess[appId] {
+	for addr, host := range s.sess[namespace] {
 		if addr == r.Nexthop {
 			continue
 		}
@@ -326,7 +332,7 @@ func (s *RegistryServer) state() {
 		s.mu.Lock()
 		for userId, sesses := range s.sess {
 			for _, sess := range sesses {
-				log.Info("appId %s edge: %s cidr: %s",
+				log.Info("namespace %s edge: %s cidr: %s",
 					userId, sess.edge.ListenAddr, sess.edge.Cidr)
 			}
 		}
@@ -334,28 +340,28 @@ func (s *RegistryServer) state() {
 	}
 }
 
-func (s *RegistryServer) DelEdge(appId string, edg *codec.Edge) {
-	log.Info("delete edge: %s %v", appId, edg)
-	s.broadcastOffline(appId, edg)
+func (s *RegistryServer) DelEdge(namespace string, edg *codec.Edge) {
+	log.Info("delete edge: %s %v", namespace, edg)
+	s.broadcastOffline(namespace, edg)
 	// force edge connection offline
-	edgSess := s.sess[appId][edg.ListenAddr]
+	edgSess := s.sess[namespace][edg.ListenAddr]
 	if edgSess != nil {
 		log.Info("force close edge connection: %v", edgSess.conn.RemoteAddr())
 		edgSess.conn.Close()
 	}
 }
 
-func (s *RegistryServer) ModifyEdge(appId string, edg *codec.Edge) {
-	log.Info("modify edge: %s %v", appId, edg)
-	s.broadcastOnline(appId, edg)
+func (s *RegistryServer) ModifyEdge(namespace string, edg *codec.Edge) {
+	log.Info("modify edge: %s %v", namespace, edg)
+	s.broadcastOnline(namespace, edg)
 }
 
-func (s *RegistryServer) DelRoute(appId string, route *codec.Route) {
-	log.Info("del route: %s %v", appId, route)
-	s.broadcastDelRoute(appId, route)
+func (s *RegistryServer) DelRoute(namespace string, route *codec.Route) {
+	log.Info("del route: %s %v", namespace, route)
+	s.broadcastDelRoute(namespace, route)
 }
 
-func (s *RegistryServer) AddRoute(appId string, route *codec.Route) {
-	log.Info("add route: %s %v", appId, route)
-	s.broadcastAddRoute(appId, route)
+func (s *RegistryServer) AddRoute(namespace string, route *codec.Route) {
+	log.Info("add route: %s %v", namespace, route)
+	s.broadcastAddRoute(namespace, route)
 }

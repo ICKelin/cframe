@@ -36,8 +36,7 @@ type Edge struct {
 
 // edge register req
 type RegisterReq struct {
-	// edge name
-	Name      string
+	Namespace string
 	SecretKey string
 	PublicIP  string
 }

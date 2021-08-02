@@ -26,7 +26,7 @@ func NewRouteManager(store *etcdstorage.Etcd) *RouteManager {
 	}
 }
 
-func (m *RouteManager) Watch(delfunc, putfunc func(appId string, route *codec.Route)) {
+func (m *RouteManager) Watch(delfunc, putfunc func(namespace string, route *codec.Route)) {
 	chs := m.storage.Watch(routePrefix)
 	for c := range chs {
 		for _, evt := range c.Events {
@@ -40,7 +40,7 @@ func (m *RouteManager) Watch(delfunc, putfunc func(appId string, route *codec.Ro
 				continue
 			}
 
-			appId := sp[2]
+			namespace := sp[2]
 			switch evt.Type {
 			case clientv3.EventTypeDelete:
 				if delfunc != nil {
@@ -51,7 +51,7 @@ func (m *RouteManager) Watch(delfunc, putfunc func(appId string, route *codec.Ro
 						continue
 					}
 
-					delfunc(appId, &route)
+					delfunc(namespace, &route)
 				}
 
 			case clientv3.EventTypePut:
@@ -63,7 +63,7 @@ func (m *RouteManager) Watch(delfunc, putfunc func(appId string, route *codec.Ro
 						continue
 					}
 
-					putfunc(appId, &route)
+					putfunc(namespace, &route)
 				}
 			}
 		}
@@ -71,19 +71,19 @@ func (m *RouteManager) Watch(delfunc, putfunc func(appId string, route *codec.Ro
 
 }
 
-func (m *RouteManager) AddRoute(appId, route *codec.Route) error {
-	key := fmt.Sprintf("%s%s/%s", routePrefix, appId, route.Name)
+func (m *RouteManager) AddRoute(namespace, route *codec.Route) error {
+	key := fmt.Sprintf("%s%s/%s", routePrefix, namespace, route.Name)
 	return m.storage.Set(key, route)
 }
 
-func (m *RouteManager) DelRoute(appId, name string) error {
-	key := fmt.Sprintf("%s%s/%s", routePrefix, appId, name)
+func (m *RouteManager) DelRoute(namespace, name string) error {
+	key := fmt.Sprintf("%s%s/%s", routePrefix, namespace, name)
 	m.storage.Del(key)
 	return nil
 }
 
-func (m *RouteManager) GetRoutes(appId string) []*codec.Route {
-	key := fmt.Sprintf("%s%s", routePrefix, appId)
+func (m *RouteManager) GetRoutes(namespace string) []*codec.Route {
+	key := fmt.Sprintf("%s%s", routePrefix, namespace)
 	res, err := m.storage.List(key)
 	if err != nil {
 		log.Error("list %s fail: %v", edgePrefix, err)
