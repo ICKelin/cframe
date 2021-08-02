@@ -212,7 +212,7 @@ func (s *Server) route(dst string) (string, error) {
 	return "", fmt.Errorf("no route")
 }
 
-func (s *Server) AddPeer(peer *codec.Edge) error {
+func (s *Server) addRoute(peer *codec.Edge) error {
 	log.Info("adding peer: %v", peer)
 
 	ipmask := strings.Split(peer.Cidr, "/")
@@ -261,13 +261,7 @@ func (s *Server) AddPeer(peer *codec.Edge) error {
 	return nil
 }
 
-func (s *Server) AddPeers(peers []*codec.Edge) {
-	for _, p := range peers {
-		s.AddPeer(p)
-	}
-}
-
-func (s *Server) DelPeer(peer *codec.Edge) {
+func (s *Server) delRoute(peer *codec.Edge) {
 	log.Info("del peer: %v", peer)
 	delete(s.peerConns, peer.Cidr)
 
@@ -279,15 +273,29 @@ func (s *Server) DelPeer(peer *codec.Edge) {
 	log.Info("==========================\n")
 }
 
+func (s *Server) AddPeers(peers []*codec.Edge) {
+	for _, p := range peers {
+		s.addRoute(p)
+	}
+}
+
+func (s *Server) AddPeer(peer *codec.Edge) {
+	s.addRoute(peer)
+}
+
+func (s *Server) DelPeer(peer *codec.Edge) {
+	s.delRoute(peer)
+}
+
 func (s *Server) AddRoute(msg *codec.AddRouteMsg) {
-	s.AddPeer(&codec.Edge{
+	s.addRoute(&codec.Edge{
 		Cidr:       msg.Cidr,
 		ListenAddr: msg.Nexthop,
 	})
 }
 
 func (s *Server) DelRoute(msg *codec.DelRouteMsg) {
-	s.DelPeer(&codec.Edge{
+	s.delRoute(&codec.Edge{
 		Cidr:       msg.Cidr,
 		ListenAddr: msg.Nexthop,
 	})

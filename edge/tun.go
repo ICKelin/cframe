@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os/exec"
 	"runtime"
+	"time"
 
+	log "github.com/ICKelin/cframe/pkg/logs"
 	"github.com/songgao/water"
 )
 
@@ -18,15 +20,21 @@ func NewInterface() (*Interface, error) {
 	ifconfig := water.Config{
 		DeviceType: water.TUN,
 	}
-	ifconfig.Name = "cframe.0"
 
-	ifce, err := water.New(ifconfig)
-	if err != nil {
-		return nil, err
+	for i := 0; i < 10; i++ {
+		ifconfig.Name = fmt.Sprintf("cframe.%d", i)
+
+		ifce, err := water.New(ifconfig)
+		if err != nil {
+			log.Error("new interface %s fail: %v", ifconfig.Name, err)
+			time.Sleep(time.Second * 1)
+			continue
+		}
+
+		iface.tun = ifce
+		return iface, nil
 	}
-
-	iface.tun = ifce
-	return iface, nil
+	return nil, fmt.Errorf("new interface %s fail", ifconfig.Name)
 }
 
 func (iface *Interface) Up() error {

@@ -2,13 +2,20 @@ package main
 
 import (
 	"os"
+	"strings"
 
 	"github.com/ICKelin/cframe/pkg/etcdstorage"
 	cli "github.com/urfave/cli/v2"
 )
 
 func main() {
-	store := etcdstorage.NewEtcd([]string{"127.0.0.1:2379"})
+	endpoints := []string{"127.0.0.1:2379"}
+	envendpoints := os.Getenv("ETCD_ENDPOINTS")
+	if len(envendpoints) > 0 {
+		endpoints = strings.Split(envendpoints, ",")
+	}
+
+	store := etcdstorage.NewEtcd(endpoints)
 
 	app := cli.NewApp()
 	app.Usage = "cfctl manage namespace/edge of cframe"
