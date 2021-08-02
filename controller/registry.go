@@ -106,7 +106,12 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	log.Info("namespace info: %+v", nsInfo)
 
 	// verify edge
-	edges := s.edgeManager.GetEdges(nsInfo.Secret)
+	edges := s.edgeManager.GetEdges(nsInfo.Name)
+	if len(edges) <= 0 {
+		log.Error("get edges for namespace %s fail", nsInfo.Name)
+		return
+	}
+
 	otherEdges := make([]*codec.Edge, 0, len(edges)-1)
 	curEdge := &codec.Edge{}
 
@@ -122,7 +127,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 		otherEdges = append(otherEdges, edges[i])
 	}
 	if !find {
-		log.Error("verify edge fail: %v", err)
+		log.Error("verify edge fail, edge not in %s namespace", nsInfo.Name)
 		return
 	}
 
@@ -135,7 +140,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	log.Info("route list: %+v", routes)
 
 	// store session
-	sessKey := nsInfo.Secret
+	sessKey := nsInfo.Name
 	s.mu.Lock()
 	if s.sess[sessKey] == nil {
 		s.sess[sessKey] = make(map[string]*Session)

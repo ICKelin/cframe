@@ -215,6 +215,12 @@ func (s *Server) route(dst string) (string, error) {
 func (s *Server) AddPeer(peer *codec.Edge) error {
 	log.Info("adding peer: %v", peer)
 
+	ipmask := strings.Split(peer.Cidr, "/")
+	cidrtype := "-net"
+	if len(ipmask) == 1 || ipmask[1] == "32" {
+		cidrtype = "-host"
+	}
+
 	// add vpc route
 	if s.vpcInstance != nil {
 		// add vpc route entry
@@ -228,19 +234,23 @@ func (s *Server) AddPeer(peer *codec.Edge) error {
 	}
 
 	// add local static route
-	execCmd("route", []string{"del", "-net",
+	execCmd("route", []string{"del", cidrtype,
 		peer.Cidr, "dev", s.iface.tun.Name()})
 
-	out, err := execCmd("route", []string{"add", "-net",
+	out, err := execCmd("route", []string{"add", cidrtype,
 		peer.Cidr, "dev", s.iface.tun.Name()})
 	if err != nil {
-		log.Error("route add -net %s dev %s, %s %v\n",
-			peer.Cidr, s.iface.tun.Name(), out, err)
+		log.Error("route add %s %s dev %s, %s %v\n",
+			peer.Cidr, cidrtype, s.iface.tun.Name(), out, err)
 		AddErrorLog(err)
 		return err
 	}
 
 	// add memory route
+	if cidrtype == "-host" {
+		peer.Cidr = fmt.Sprintf("%s/32", ipmask[0])
+	}
+
 	s.peerConns[peer.Cidr] = &peerConn{
 		addr: peer.ListenAddr,
 		cidr: peer.Cidr,

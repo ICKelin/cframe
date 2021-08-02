@@ -44,7 +44,7 @@ func main() {
 		func(namespace string, edg *codec.Edge) {
 			r.DelEdge(namespace, edg)
 		},
-		func(userId string, edg *codec.Edge) {
+		func(namespace string, edg *codec.Edge) {
 			r.ModifyEdge(namespace, edg)
 		})
 
