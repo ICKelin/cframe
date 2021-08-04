@@ -16,6 +16,7 @@ type Registry struct {
 	srv       string
 	namespace string
 	secret    string
+	lport     string
 	server    *Server
 
 	//heart beat channel
@@ -25,10 +26,11 @@ type Registry struct {
 	reportchan chan struct{}
 }
 
-func NewRegistry(srv, ns, secret string, s *Server) *Registry {
+func NewRegistry(srv, ns, secret string, lport string, s *Server) *Registry {
 	return &Registry{
 		srv:        srv,
 		namespace:  ns,
+		lport:      lport,
 		secret:     secret,
 		server:     s,
 		hbchan:     make(chan struct{}),
@@ -55,9 +57,10 @@ func (r *Registry) run() error {
 	defer conn.Close()
 
 	reg := codec.RegisterReq{
-		Namespace: r.namespace,
-		SecretKey: r.secret,
-		PublicIP:  os.Getenv("PUBLIC_IP"),
+		Namespace:  r.namespace,
+		SecretKey:  r.secret,
+		PublicIP:   os.Getenv("PUBLIC_IP"),
+		PublicPort: r.lport,
 	}
 	err = codec.WriteJSON(conn, codec.CmdRegister, &reg)
 	if err != nil {

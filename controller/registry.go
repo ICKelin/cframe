@@ -1,8 +1,8 @@
 package main
 
 import (
+	"fmt"
 	"net"
-	"strings"
 	"sync"
 	"time"
 
@@ -86,6 +86,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 
 	log.Info("edge register %v", reg)
 	remoteIP := reg.PublicIP
+	remotePort := reg.PublicPort
 	if len(remoteIP) <= 0 {
 		remoteAddr := conn.RemoteAddr().String()
 		remoteIP, _, _ = net.SplitHostPort(remoteAddr)
@@ -117,8 +118,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 
 	find := false
 	for i, edge := range edges {
-		ipport := strings.Split(edge.ListenAddr, ":")
-		if ipport[0] == remoteIP {
+		if edge.ListenAddr == fmt.Sprintf("%s:%s", remoteIP, remotePort) {
 			find = true
 			curEdge = edges[i]
 			continue

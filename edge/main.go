@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	log "github.com/ICKelin/cframe/pkg/logs"
 )
@@ -31,6 +32,12 @@ func main() {
 		lisAddr = lis
 	}
 
+	ipport := strings.Split(lisAddr, ":")
+	if len(ipport) != 2 {
+		log.Error("invalid listen addr %s, should be ip:p port format", lisAddr)
+		return
+	}
+
 	// create registry to get connect to controller
 	// just hard code controller address once without env var
 	ctrlAddr := "demo.notr.tech:58422"
@@ -56,7 +63,7 @@ func main() {
 
 	s := NewServer(lisAddr, secret, iface)
 
-	reg := NewRegistry(ctrlAddr, ns, secret, s)
+	reg := NewRegistry(ctrlAddr, ns, secret, ipport[1], s)
 	go func() {
 		err := reg.Run()
 		if err != nil {
