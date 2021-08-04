@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net"
 	"sync"
 	"time"
@@ -84,15 +83,9 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 		return
 	}
 
-	log.Info("edge register %v", reg)
-	remoteIP := reg.PublicIP
-	remotePort := reg.PublicPort
-	if len(remoteIP) <= 0 {
-		remoteAddr := conn.RemoteAddr().String()
-		remoteIP, _, _ = net.SplitHostPort(remoteAddr)
-	}
+	log.Info("edge register %+v", reg)
 
-	// verify key
+	// verify namespace
 	nsInfo, err := s.namespaceMgr.GetNamespace(reg.Namespace)
 	if err != nil {
 		log.Error("get namespace %s fail: %v", reg.Namespace, err)
@@ -118,7 +111,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 
 	find := false
 	for i, edge := range edges {
-		if edge.ListenAddr == fmt.Sprintf("%s:%s", remoteIP, remotePort) {
+		if edge.Name == reg.Name {
 			find = true
 			curEdge = edges[i]
 			continue

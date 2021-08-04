@@ -36,10 +36,9 @@ type Edge struct {
 
 // edge register req
 type RegisterReq struct {
-	Namespace  string
-	SecretKey  string
-	PublicIP   string
-	PublicPort string
+	Namespace string
+	SecretKey string
+	Name      string
 }
 
 func (e *Edge) String() string {

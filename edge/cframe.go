@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net"
 	"strings"
-	"time"
 
 	"github.com/ICKelin/cframe/codec"
 	"github.com/ICKelin/cframe/edge/vpc"
@@ -68,30 +67,8 @@ func (s *Server) ListenAndServe() error {
 	defer lconn.Close()
 
 	go s.readLocal(lconn)
-	// go s.ping(lconn)
 	s.readRemote(lconn)
 	return nil
-}
-
-func (s *Server) ping(sock *net.UDPConn) {
-	tc := time.NewTicker(time.Second * 5)
-	defer tc.Stop()
-	ping := "ping"
-	buf := make([]byte, 0, len(s.key)+len(ping))
-	buf = append(buf, []byte(s.key)...)
-	buf = append(buf, []byte(ping)...)
-	for range tc.C {
-		for _, p := range s.peerConns {
-			log.Debug("ping %s", p.addr)
-			raddr, err := net.ResolveUDPAddr("udp", p.addr)
-			if err != nil {
-				log.Error("resolve %s fail: %v", err)
-				continue
-			}
-
-			sock.WriteToUDP(buf, raddr)
-		}
-	}
 }
 
 func (s *Server) readRemote(lconn *net.UDPConn) {
@@ -263,12 +240,21 @@ func (s *Server) addRoute(peer *codec.Edge) error {
 
 func (s *Server) delRoute(peer *codec.Edge) {
 	log.Info("del peer: %v", peer)
-	delete(s.peerConns, peer.Cidr)
-
-	out, err := execCmd("route", []string{"del", "-net",
+	ipmask := strings.Split(peer.Cidr, "/")
+	cidrtype := "-net"
+	if len(ipmask) == 1 || ipmask[1] == "32" {
+		cidrtype = "-host"
+	}
+	out, err := execCmd("route", []string{"del", cidrtype,
 		peer.Cidr, "dev", s.iface.tun.Name()})
-	log.Info("route del -net %s dev %s, %s %v",
-		peer.Cidr, s.iface.tun.Name(), out, err)
+	log.Info("route del %s %s dev %s, %s %v",
+		cidrtype, peer.Cidr, s.iface.tun.Name(), out, err)
+
+	if cidrtype == "-host" {
+		peer.Cidr = fmt.Sprintf("%s/32", ipmask[0])
+	}
+
+	delete(s.peerConns, peer.Cidr)
 	log.Info("del peer %s OK", peer)
 	log.Info("==========================\n")
 }
