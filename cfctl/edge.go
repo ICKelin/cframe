@@ -29,7 +29,7 @@ func listEdges(ns string, store *etcdstorage.Etcd) {
 	edges := edgeMgr.GetEdges(ns)
 
 	fmt.Println("edge list:")
-	fmt.Printf("      %-15s %-25s %-15s\n", "Name", "ListenAddress", "CIDR")
+	fmt.Printf("      %-15s %-25s %-15s\n", "Name", "Listener", "CIDR")
 	fmt.Println("-----------------------------------------------------------")
 	for i, edge := range edges {
 		fmt.Printf("%-5d %-15s %-25s %-15s\n", i+1, edge.Name, edge.ListenAddr, edge.Cidr)

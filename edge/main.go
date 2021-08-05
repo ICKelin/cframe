@@ -50,7 +50,8 @@ func main() {
 
 	ns := os.Getenv("namespace")
 	if len(ns) <= 0 {
-		log.Error("invalid namespace")
+		log.Info("use default namespace")
+		ns = "default"
 		return
 	}
 

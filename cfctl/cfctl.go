@@ -31,7 +31,6 @@ func main() {
 					Flags: []cli.Flag{
 						&cli.StringFlag{
 							Name:     "name",
-							Value:    "namespace name",
 							Required: true,
 						},
 					},
@@ -47,7 +46,6 @@ func main() {
 					Flags: []cli.Flag{
 						&cli.StringFlag{
 							Name:     "name",
-							Value:    "namespace name",
 							Required: true,
 						},
 					},
@@ -75,8 +73,9 @@ func main() {
 					Usage: "add a new edge",
 					Flags: []cli.Flag{
 						&cli.StringFlag{
-							Name:     "ns",
-							Required: true,
+							Name:    "namespace",
+							Aliases: []string{"ns"},
+							Value:   "default",
 						},
 						&cli.StringFlag{
 							Name:     "name",
@@ -108,8 +107,9 @@ func main() {
 					Usage: "delete a edge",
 					Flags: []cli.Flag{
 						&cli.StringFlag{
-							Name:     "ns",
-							Required: true,
+							Name:    "namespace",
+							Aliases: []string{"ns"},
+							Value:   "default",
 						},
 						&cli.StringFlag{
 							Name: "name",
@@ -127,8 +127,9 @@ func main() {
 					Usage: "list all edges",
 					Flags: []cli.Flag{
 						&cli.StringFlag{
-							Name:     "ns",
-							Required: true,
+							Name:    "namespace",
+							Aliases: []string{"ns"},
+							Value:   "default",
 						},
 					},
 					Action: func(ctx *cli.Context) error {
