@@ -40,6 +40,9 @@ const (
 
 	// del route
 	CmdDelRoute
+
+	// exit edge
+	CmdExit
 )
 
 // version: 1byte

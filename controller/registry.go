@@ -235,14 +235,22 @@ func (s *RegistryServer) online(peer net.Conn, edge *codec.Edge) {
 
 func (s *RegistryServer) broadcastOffline(namespace string, edge *codec.Edge) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
-
+	var conn net.Conn
 	for addr, host := range s.sess[namespace] {
 		if addr == edge.ListenAddr {
+			conn = host.conn
 			continue
 		}
 
 		go s.offline(host.conn, edge)
+	}
+	s.mu.Unlock()
+
+	// exit to stop edge process
+	if conn != nil {
+		conn.SetWriteDeadline(time.Now().Add(time.Second * 10))
+		codec.WriteJSON(conn, codec.CmdExit, nil)
+		conn.SetWriteDeadline(time.Time{})
 	}
 }
 

@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net"
+	"os"
 	"time"
 
 	"github.com/ICKelin/cframe/codec"
@@ -201,6 +202,9 @@ func (r *Registry) read(conn net.Conn) {
 			}
 			r.server.DelRoute(&delRoute)
 
+		case codec.CmdExit:
+			log.Warn("receive exit signal")
+			os.Exit(0)
 		}
 	}
 }
