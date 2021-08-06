@@ -139,6 +139,74 @@ func main() {
 				},
 			},
 		},
+		{
+			Name:    "route",
+			Aliases: []string{"ro"},
+			Usage:   "route manager",
+			Subcommands: []*cli.Command{
+				{
+					Name:  "add",
+					Usage: "add a new route",
+					Flags: []cli.Flag{
+						&cli.StringFlag{
+							Name:     "namespace",
+							Aliases:  []string{"ns"},
+							Usage:    "namespace",
+							Value:    "default",
+							Required: true,
+						},
+						&cli.StringFlag{
+							Name:     "edge",
+							Usage:    "edge name",
+							Required: true,
+						},
+						&cli.StringFlag{
+							Name:     "name",
+							Usage:    "route name",
+							Required: true,
+						},
+						&cli.StringFlag{
+							Name:     "dst",
+							Usage:    "dst cidr block",
+							Required: true,
+						},
+					},
+					Action: func(ctx *cli.Context) error {
+						return nil
+					},
+				},
+				{
+					Name:  "del",
+					Usage: "del a route",
+					Flags: []cli.Flag{
+						&cli.StringFlag{
+							Name:     "namespace",
+							Aliases:  []string{"ns"},
+							Usage:    "namespace",
+							Value:    "default",
+							Required: true,
+						},
+						&cli.StringFlag{
+							Name:     "name",
+							Usage:    "route name",
+							Required: true,
+						},
+					},
+				},
+				{
+					Name:  "list",
+					Usage: "list namespace routes",
+					Flags: []cli.Flag{
+						&cli.StringFlag{
+							Name:    "namespace",
+							Aliases: []string{"ns"},
+							Usage:   "namespace",
+							Value:   "default",
+						},
+					},
+				},
+			},
+		},
 	}
 
 	app.Run(os.Args)
