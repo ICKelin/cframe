@@ -71,7 +71,7 @@ func (m *RouteManager) Watch(delfunc, putfunc func(namespace string, route *code
 
 }
 
-func (m *RouteManager) AddRoute(namespace, route *codec.Route) error {
+func (m *RouteManager) AddRoute(namespace string, route *codec.Route) error {
 	key := fmt.Sprintf("%s%s/%s", routePrefix, namespace, route.Name)
 	return m.storage.Set(key, route)
 }

@@ -82,9 +82,9 @@ func main() {
 							Required: true,
 						},
 						&cli.StringFlag{
-							Name:     "listen",
+							Name:     "listener",
 							Required: true,
-							Usage:    "eg: 1.2.3.4:58423",
+							Usage:    "edge listener, eg: 1.2.3.4:58423",
 						},
 						&cli.StringFlag{
 							Name:     "cidr",
@@ -149,15 +149,14 @@ func main() {
 					Usage: "add a new route",
 					Flags: []cli.Flag{
 						&cli.StringFlag{
-							Name:     "namespace",
-							Aliases:  []string{"ns"},
-							Usage:    "namespace",
-							Value:    "default",
-							Required: true,
+							Name:    "namespace",
+							Aliases: []string{"ns"},
+							Usage:   "namespace",
+							Value:   "default",
 						},
 						&cli.StringFlag{
-							Name:     "edge",
-							Usage:    "edge name",
+							Name:     "listener",
+							Usage:    "edge listener",
 							Required: true,
 						},
 						&cli.StringFlag{
@@ -166,12 +165,17 @@ func main() {
 							Required: true,
 						},
 						&cli.StringFlag{
-							Name:     "dst",
+							Name:     "cidr",
 							Usage:    "dst cidr block",
 							Required: true,
 						},
 					},
 					Action: func(ctx *cli.Context) error {
+						ns := ctx.String("namespace")
+						name := ctx.String("name")
+						listener := ctx.String("listener")
+						cidr := ctx.String("cidr")
+						addRoute(ns, name, listener, cidr, store)
 						return nil
 					},
 				},
@@ -180,17 +184,20 @@ func main() {
 					Usage: "del a route",
 					Flags: []cli.Flag{
 						&cli.StringFlag{
-							Name:     "namespace",
-							Aliases:  []string{"ns"},
-							Usage:    "namespace",
-							Value:    "default",
-							Required: true,
+							Name:    "namespace",
+							Aliases: []string{"ns"},
+							Usage:   "namespace",
+							Value:   "default",
 						},
 						&cli.StringFlag{
 							Name:     "name",
 							Usage:    "route name",
 							Required: true,
 						},
+					},
+					Action: func(ctx *cli.Context) error {
+						delRoute(ctx.String("namespace"), ctx.String("name"), store)
+						return nil
 					},
 				},
 				{
@@ -203,6 +210,10 @@ func main() {
 							Usage:   "namespace",
 							Value:   "default",
 						},
+					},
+					Action: func(ctx *cli.Context) error {
+						listRoutes(ctx.String("namespace"), store)
+						return nil
 					},
 				},
 			},

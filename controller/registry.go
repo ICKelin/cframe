@@ -129,8 +129,16 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	// TODO: get csp info
 
 	// get routes
-	routes := s.routeManager.GetRoutes(nsInfo.Secret)
+	routes := s.routeManager.GetRoutes(nsInfo.Name)
 	log.Info("route list: %+v", routes)
+	otherRoutes := make([]*codec.Route, 0)
+	for i, route := range routes {
+		if route.Nexthop == curEdge.ListenAddr {
+			continue
+		}
+		otherRoutes = append(otherRoutes, routes[i])
+	}
+	log.Info("will dispatch route list: ", otherRoutes)
 
 	// store session
 	sessKey := nsInfo.Name
@@ -161,7 +169,7 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	// reply to edge
 	err = codec.WriteJSON(conn, codec.CmdRegister, &codec.RegisterReply{
 		EdgeList: otherEdges,
-		Routes:   routes,
+		Routes:   otherRoutes,
 	})
 	if err != nil {
 		log.Error("write json fail: %v", err)

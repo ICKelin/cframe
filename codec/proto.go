@@ -27,6 +27,10 @@ type Route struct {
 	Name    string
 }
 
+func (r *Route) String() string {
+	return fmt.Sprintf("name %s, listener %s, cidr %s", r.Name, r.Nexthop, r.CIDR)
+}
+
 type Edge struct {
 	Name       string  `json:"name"`
 	Cidr       string  `json:"cidr"`
