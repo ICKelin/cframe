@@ -95,7 +95,7 @@ func main() {
 					Action: func(ctx *cli.Context) error {
 						ns := ctx.String("ns")
 						edgeName := ctx.String("name")
-						listen := ctx.String("listen")
+						listen := ctx.String("listener")
 						cidr := ctx.String("cidr")
 
 						addEdge(ns, edgeName, listen, cidr, store)
