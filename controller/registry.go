@@ -167,19 +167,24 @@ func (s *RegistryServer) onConn(conn net.Conn) {
 	}()
 
 	// reply to edge
+	conn.SetWriteDeadline(time.Now().Add(time.Second*10))
 	err = codec.WriteJSON(conn, codec.CmdRegister, &codec.RegisterReply{
 		EdgeList: otherEdges,
 		Routes:   otherRoutes,
 	})
+	conn.SetWriteDeadline(time.Time{})
 	if err != nil {
 		log.Error("write json fail: %v", err)
 		return
 	}
+
 	// keepalived
 	fail := 0
 	hb := codec.Heartbeat{}
 	for {
+		conn.SetReadDeadline(time.Now().Add(time.Second*30))
 		header, body, err := codec.Read(conn)
+		conn.SetReadDeadline(time.Time{})
 		if err != nil {
 			log.Error("read fail: %v", err)
 			fail += 1
