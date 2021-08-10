@@ -12,8 +12,7 @@ import (
 )
 
 var (
-	defaultRouteManager *RouteManager
-	routePrefix         = "/routes/"
+	routePrefix = "/routes/"
 )
 
 type RouteManager struct {
