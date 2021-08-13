@@ -37,6 +37,14 @@ func NewInterface() (*Interface, error) {
 	return nil, fmt.Errorf("new interface %s fail", ifconfig.Name)
 }
 
+func (iface *Interface) SetMTU(mtu int) error {
+	out, err := execCmd("ifconfig", []string{iface.tun.Name(), "mtu", fmt.Sprintf("%d", mtu)})
+	if err != nil {
+		return fmt.Errorf("set mtu fail: %s %v", out, err)
+	}
+	return nil
+}
+
 func (iface *Interface) Up() error {
 	switch runtime.GOOS {
 	case "linux":

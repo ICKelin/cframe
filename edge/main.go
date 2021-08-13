@@ -21,7 +21,16 @@ func main() {
 	}
 
 	defer iface.Close()
-	iface.Up()
+	err = iface.Up()
+	if err != nil {
+		log.Error("up interface fail: %v", err)
+		return
+	}
+
+	err = iface.SetMTU(1400)
+	if err != nil {
+		log.Error("set mtu fail: %v", err)
+	}
 
 	// create cframe udp server
 	// just hard code listen address once without env var
