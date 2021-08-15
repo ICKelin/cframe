@@ -31,7 +31,15 @@ type Server struct {
 	// tun device wrap
 	iface *Interface
 
+	// snd buffer
+	sndq []chan *sendReq
+
 	vpcInstance vpc.IVPC
+}
+
+type sendReq struct {
+	buf  []byte
+	conn net.Conn
 }
 
 type peerConn struct {
@@ -44,12 +52,19 @@ type peerConn struct {
 }
 
 func NewServer(laddr, key string, iface *Interface) *Server {
-	return &Server{
+	s := &Server{
 		laddr:     laddr,
 		key:       key,
 		peerConns: make(map[string]*peerConn),
 		iface:     iface,
+		sndq:      make([]chan *sendReq, 1000),
 	}
+
+	for i := 0; i < 1000; i++ {
+		s.sndq[i] = make(chan *sendReq, 10000)
+		go s.writePeer(s.sndq[i])
+	}
+	return s
 }
 
 func (s *Server) SetRegistry(r *Registry) {
@@ -166,9 +181,35 @@ func (s *Server) readLocal() {
 		buf = append(buf, plen...)
 		buf = append(buf, pkt...)
 
+		idx := time33(dst) % uint64(len(s.sndq))
+		select {
+		case s.sndq[idx] <- &sendReq{buf, peer}:
+		default:
+			peer.SetWriteDeadline(time.Now().Add(time.Second * 3))
+			nw, err := peer.Write(buf)
+			peer.SetWriteDeadline(time.Time{})
+			if err != nil {
+				log.Error("write to peer %s fail %v", dst, err)
+				continue
+			}
+
+			if nw != len(buf) {
+				log.Error("stream write not full")
+				continue
+			}
+		}
+	}
+}
+
+func (s *Server) writePeer(sndq chan *sendReq) {
+	for req := range sndq {
+		peer := req.conn
+		buf := req.buf
+		peer.SetWriteDeadline(time.Now().Add(time.Second * 3))
 		nw, err := peer.Write(buf)
+		peer.SetWriteDeadline(time.Time{})
 		if err != nil {
-			log.Error("write to peer %s fail %v", dst, err)
+			log.Error("write to peer fail %v", err)
 			continue
 		}
 
@@ -402,4 +443,14 @@ func (s *Server) DelRoute(msg *codec.DelRouteMsg) {
 		Cidr:       msg.Cidr,
 		ListenAddr: msg.Nexthop,
 	})
+}
+
+func time33(s string) uint64 {
+	var hash uint64 = 5381
+
+	for _, c := range s {
+		hash = ((hash << 5) + hash) + uint64(c)
+	}
+
+	return hash
 }
