@@ -79,4 +79,5 @@ cframe包括两个重要组件，`controller`和`edge`，controller也即是控�
 
 可加微信: zyj995139094
 微信群:
-<img width="500" height="500" src="doc/images/wxgroup.jpg"/>
+
+<img width="400" height="400" src="doc/images/wxgroup.jpg"/>
