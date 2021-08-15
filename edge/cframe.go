@@ -16,8 +16,6 @@ import (
 )
 
 type Server struct {
-	registry *Registry
-
 	// secret
 	key string
 
@@ -44,9 +42,6 @@ type sendReq struct {
 
 type peerConn struct {
 	addr string
-	// conn *net.UDPConn
-	// conn *kcp.UDPSession
-	// conn net.Conn
 	conn *smux.Stream
 	cidr string
 }
@@ -60,15 +55,12 @@ func NewServer(laddr, key string, iface *Interface) *Server {
 		sndq:      make([]chan *sendReq, 1000),
 	}
 
+	go s.readLocal()
 	for i := 0; i < 1000; i++ {
 		s.sndq[i] = make(chan *sendReq, 10000)
 		go s.writePeer(s.sndq[i])
 	}
 	return s
-}
-
-func (s *Server) SetRegistry(r *Registry) {
-	s.registry = r
 }
 
 func (s *Server) SetVPCInstance(vpcInstance vpc.IVPC) {
@@ -78,7 +70,6 @@ func (s *Server) SetVPCInstance(vpcInstance vpc.IVPC) {
 }
 
 func (s *Server) ListenAndServe() error {
-	go s.readLocal()
 	lis, err := net.Listen("tcp", s.laddr)
 	if err != nil {
 		return err
@@ -185,18 +176,8 @@ func (s *Server) readLocal() {
 		select {
 		case s.sndq[idx] <- &sendReq{buf, peer}:
 		default:
-			peer.SetWriteDeadline(time.Now().Add(time.Second * 3))
-			nw, err := peer.Write(buf)
-			peer.SetWriteDeadline(time.Time{})
-			if err != nil {
-				log.Error("write to peer %s fail %v", dst, err)
-				continue
-			}
-
-			if nw != len(buf) {
-				log.Error("stream write not full")
-				continue
-			}
+			log.Warn("sndq[%d] is full", idx)
+			s.write(buf, peer)
 		}
 	}
 }
@@ -205,18 +186,22 @@ func (s *Server) writePeer(sndq chan *sendReq) {
 	for req := range sndq {
 		peer := req.conn
 		buf := req.buf
-		peer.SetWriteDeadline(time.Now().Add(time.Second * 3))
-		nw, err := peer.Write(buf)
-		peer.SetWriteDeadline(time.Time{})
-		if err != nil {
-			log.Error("write to peer fail %v", err)
-			continue
-		}
+		s.write(buf, peer)
+	}
+}
 
-		if nw != len(buf) {
-			log.Error("stream write not full")
-			continue
-		}
+func (s *Server) write(buf []byte, peer net.Conn) {
+	peer.SetWriteDeadline(time.Now().Add(time.Second * 3))
+	nw, err := peer.Write(buf)
+	peer.SetWriteDeadline(time.Time{})
+	if err != nil {
+		log.Error("write to peer fail %v", err)
+		return
+	}
+
+	if nw != len(buf) {
+		log.Error("stream write not full")
+		return
 	}
 }
 
@@ -337,7 +322,7 @@ func (s *Server) addRoute(peer *codec.Edge) error {
 }
 
 func (s *Server) deadlineCheck(peer *codec.Edge, sess *smux.Session) {
-	tick := time.NewTicker(time.Second * 5)
+	tick := time.NewTicker(time.Second * 1)
 	for range tick.C {
 		if !sess.IsClosed() {
 			continue

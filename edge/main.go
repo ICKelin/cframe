@@ -10,9 +10,9 @@ import (
 func main() {
 	logLevel := os.Getenv("LOG_LEVEL")
 	if len(logLevel) == 0 {
-		logLevel = "debug"
+		logLevel = "info"
 	}
-	log.Init("log/edge.log", logLevel, 3)
+	log.Init("edge.log", logLevel, 3)
 
 	iface, err := NewInterface()
 	if err != nil {
@@ -61,7 +61,6 @@ func main() {
 	if len(ns) <= 0 {
 		log.Info("use default namespace")
 		ns = "default"
-		return
 	}
 
 	s := NewServer(lisAddr, secret, iface)
@@ -75,6 +74,5 @@ func main() {
 		}
 	}()
 
-	s.SetRegistry(reg)
 	s.ListenAndServe()
 }
