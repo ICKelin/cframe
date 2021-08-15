@@ -334,6 +334,7 @@ func (s *Server) deadlineCheck(peer *codec.Edge, sess *smux.Session) {
 			_, ok := s.peerConns[peer.Cidr]
 			// peer edge has been removed
 			if !ok {
+				s.peerConnMu.Unlock()
 				log.Warn("peer %s has not session", peer.Cidr)
 				break
 			}
