@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -109,6 +110,7 @@ func (s *Server) handleStream(stream *smux.Stream) {
 	defer stream.Close()
 
 	plen := make([]byte, 2)
+	handshaked := false
 	for {
 		_, err := io.ReadFull(stream, plen)
 		if err != nil {
@@ -123,6 +125,20 @@ func (s *Server) handleStream(stream *smux.Stream) {
 		if err != nil {
 			log.Error("read packet len fail: %v", err)
 			break
+		}
+
+		if !handshaked {
+			hsPacket := codec.Handshake{}
+			err := json.Unmarshal(body, &hsPacket)
+			if err != nil {
+				log.Error("invalid handshake packet")
+				break
+			}
+			if hsPacket.Secret != s.key {
+				log.Error("unexpected secret %s", hsPacket.Secret)
+				break
+			}
+			handshaked = true
 		}
 
 		pkt := body[:nr]
@@ -243,6 +259,28 @@ func (s *Server) route(dst string) (*smux.Stream, error) {
 	return nil, fmt.Errorf("no route")
 }
 
+func (s *Server) handshake(stream *smux.Stream) error {
+	hsPacket := &codec.Handshake{Secret: s.key}
+	b, err := json.Marshal(hsPacket)
+	if err != nil {
+		return err
+	}
+
+	body := make([]byte, len(b)+2)
+	plen := make([]byte, 2)
+	binary.BigEndian.PutUint16(plen, uint16(len(b)))
+	body = append(body, plen...)
+	body = append(body, b...)
+	stream.SetWriteDeadline(time.Now().Add(time.Minute * 1))
+	_, err = stream.Write(body)
+	stream.SetWriteDeadline(time.Time{})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *Server) addRoute(peer *codec.Edge) error {
 	log.Info("adding peer: %v", peer)
 
@@ -255,6 +293,7 @@ func (s *Server) addRoute(peer *codec.Edge) error {
 			time.Sleep(time.Second * 3)
 			continue
 		}
+
 		sess, err = smux.Client(lconn, nil)
 		if err != nil {
 			log.Error("smux client fail: %v", err)
@@ -264,6 +303,13 @@ func (s *Server) addRoute(peer *codec.Edge) error {
 		stream, err = sess.OpenStream()
 		if err != nil {
 			log.Error("smux open stream fail: %v", err)
+			time.Sleep(time.Second * 3)
+			continue
+		}
+
+		err = s.handshake(stream)
+		if err != nil {
+			log.Error("handshake fail: %v", err)
 			time.Sleep(time.Second * 3)
 			continue
 		}
@@ -358,6 +404,13 @@ func (s *Server) deadlineCheck(peer *codec.Edge, sess *smux.Session) {
 			stream, err := smuxSess.OpenStream()
 			if err != nil {
 				log.Error("smux open stream fail: %v", err)
+				time.Sleep(time.Second * 3)
+				continue
+			}
+
+			err = s.handshake(stream)
+			if err != nil {
+				log.Error("handshake fail: %v", err)
 				time.Sleep(time.Second * 3)
 				continue
 			}

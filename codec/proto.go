@@ -123,3 +123,7 @@ type AddRouteMsg struct {
 
 // controller deploy route deleted to edges
 type DelRouteMsg AddRouteMsg
+
+type Handshake struct {
+	Secret string
+}
