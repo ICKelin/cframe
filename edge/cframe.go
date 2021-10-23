@@ -1,22 +1,18 @@
 package main
 
 import (
-	"encoding/binary"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net"
 	"strings"
-	"sync"
-	"time"
 
 	"github.com/ICKelin/cframe/codec"
 	"github.com/ICKelin/cframe/edge/vpc"
 	log "github.com/ICKelin/cframe/pkg/logs"
-	"github.com/xtaci/smux"
 )
 
 type Server struct {
+	registry *Registry
+
 	// secret
 	key string
 
@@ -24,44 +20,33 @@ type Server struct {
 	laddr string
 
 	// peers connection
-	peerConnMu sync.RWMutex
-	peerConns  map[string]*peerConn
+	peerConns map[string]*peerConn
 
 	// tun device wrap
 	iface *Interface
 
-	// snd buffer
-	sndq []chan *sendReq
-
 	vpcInstance vpc.IVPC
-}
-
-type sendReq struct {
-	buf  []byte
-	conn net.Conn
 }
 
 type peerConn struct {
 	addr string
-	conn *smux.Stream
+	// conn *net.UDPConn
+	// conn *kcp.UDPSession
+	// conn net.Conn
 	cidr string
 }
 
 func NewServer(laddr, key string, iface *Interface) *Server {
-	s := &Server{
+	return &Server{
 		laddr:     laddr,
 		key:       key,
 		peerConns: make(map[string]*peerConn),
 		iface:     iface,
-		sndq:      make([]chan *sendReq, 1000),
 	}
+}
 
-	go s.readLocal()
-	for i := 0; i < 1000; i++ {
-		s.sndq[i] = make(chan *sendReq, 10000)
-		go s.writePeer(s.sndq[i])
-	}
-	return s
+func (s *Server) SetRegistry(r *Registry) {
+	s.registry = r
 }
 
 func (s *Server) SetVPCInstance(vpcInstance vpc.IVPC) {
@@ -71,77 +56,47 @@ func (s *Server) SetVPCInstance(vpcInstance vpc.IVPC) {
 }
 
 func (s *Server) ListenAndServe() error {
-	lis, err := net.Listen("tcp", s.laddr)
+	laddr, err := net.ResolveUDPAddr("udp", s.laddr)
 	if err != nil {
 		return err
 	}
-	defer lis.Close()
-
-	for {
-		rconn, err := lis.Accept()
-		if err != nil {
-			return err
-		}
-		go s.handleConn(rconn)
-	}
-}
-
-func (s *Server) handleConn(conn net.Conn) {
-	defer conn.Close()
-	sess, err := smux.Server(conn, nil)
+	lconn, err := net.ListenUDP("udp", laddr)
 	if err != nil {
-		log.Error("run smux server fail: %v", err)
-		return
+		return err
 	}
-	defer sess.Close()
+	defer lconn.Close()
 
-	for {
-		stream, err := sess.AcceptStream()
-		if err != nil {
-			log.Error("accept stream fail: %v", err)
-			break
-		}
-		log.Info("accept stream from: %v", stream.RemoteAddr())
-		go s.handleStream(stream)
-	}
+	go s.readLocal(lconn)
+	s.readRemote(lconn)
+	return nil
 }
 
-func (s *Server) handleStream(stream *smux.Stream) {
-	defer stream.Close()
-
-	plen := make([]byte, 2)
-	handshaked := false
+func (s *Server) readRemote(lconn *net.UDPConn) {
+	rawbytes := make([]byte, 1024*64)
+	key := s.key
+	klen := len(key)
 	for {
-		_, err := io.ReadFull(stream, plen)
+		nr, _, err := lconn.ReadFromUDP(rawbytes)
 		if err != nil {
-			log.Error("read packet len fail: %v", err)
-			break
+			log.Error("read full fail: %v", err)
+			continue
 		}
 
-		size := binary.BigEndian.Uint16(plen)
+		buf := rawbytes[:nr]
 
-		body := make([]byte, size)
-		nr, err := io.ReadFull(stream, body)
-		if err != nil {
-			log.Error("read packet len fail: %v", err)
-			break
+		if nr < klen {
+			log.Error("pkt to small")
+			continue
 		}
 
-		if !handshaked {
-			hsPacket := codec.Handshake{}
-			err := json.Unmarshal(body, &hsPacket)
-			if err != nil {
-				log.Error("invalid handshake packet")
-				break
-			}
-			if hsPacket.Secret != s.key {
-				log.Error("unexpected secret %s", hsPacket.Secret)
-				break
-			}
-			handshaked = true
+		// decode key
+		rkey := buf[:klen]
+		if string(rkey) != key {
+			log.Error("access forbidden!!")
+			continue
 		}
 
-		pkt := body[:nr]
+		pkt := buf[klen:nr]
 		p := Packet(pkt)
 		if p.Invalid() {
 			log.Error("invalid ipv4 packet")
@@ -157,7 +112,7 @@ func (s *Server) handleStream(stream *smux.Stream) {
 	}
 }
 
-func (s *Server) readLocal() {
+func (s *Server) readLocal(sock *net.UDPConn) {
 	for {
 		pkt, err := s.iface.Read()
 		if err != nil {
@@ -182,49 +137,24 @@ func (s *Server) readLocal() {
 			continue
 		}
 
-		plen := make([]byte, 2)
-		binary.BigEndian.PutUint16(plen, uint16(len(pkt)))
-		buf := make([]byte, 0, len(pkt)+2)
-		buf = append(buf, plen...)
-		buf = append(buf, pkt...)
+		raddr, err := net.ResolveUDPAddr("udp", peer)
+		if err != nil {
+			log.Error("parse %s fail: %v", peer, err)
+			continue
+		}
 
-		idx := time33(dst) % uint64(len(s.sndq))
-		select {
-		case s.sndq[idx] <- &sendReq{buf, peer}:
-		default:
-			log.Warn("sndq[%d] is full", idx)
-			s.write(buf, peer)
+		// encode key
+		buf := make([]byte, 0, len(pkt)+len(s.key))
+		buf = append(buf, []byte(s.key)...)
+		buf = append(buf, pkt...)
+		_, e := sock.WriteToUDP(buf, raddr)
+		if e != nil {
+			log.Error("%v", e)
 		}
 	}
 }
 
-func (s *Server) writePeer(sndq chan *sendReq) {
-	for req := range sndq {
-		peer := req.conn
-		buf := req.buf
-		s.write(buf, peer)
-	}
-}
-
-func (s *Server) write(buf []byte, peer net.Conn) {
-	peer.SetWriteDeadline(time.Now().Add(time.Second * 3))
-	nw, err := peer.Write(buf)
-	peer.SetWriteDeadline(time.Time{})
-	if err != nil {
-		log.Error("write to peer fail %v", err)
-		return
-	}
-
-	if nw != len(buf) {
-		log.Error("stream write not full")
-		return
-	}
-}
-
-func (s *Server) route(dst string) (*smux.Stream, error) {
-	s.peerConnMu.RLock()
-	defer s.peerConnMu.RUnlock()
-
+func (s *Server) route(dst string) (string, error) {
 	for _, p := range s.peerConns {
 		_, ipnet, err := net.ParseCIDR(p.cidr)
 		if err != nil {
@@ -252,69 +182,15 @@ func (s *Server) route(dst string) (*smux.Stream, error) {
 				continue
 			}
 
-			return p.conn, nil
+			return p.addr, nil
 		}
 	}
 
-	return nil, fmt.Errorf("no route")
-}
-
-func (s *Server) handshake(stream *smux.Stream) error {
-	hsPacket := &codec.Handshake{Secret: s.key}
-	b, err := json.Marshal(hsPacket)
-	if err != nil {
-		return err
-	}
-
-	body := make([]byte, len(b)+2)
-	plen := make([]byte, 2)
-	binary.BigEndian.PutUint16(plen, uint16(len(b)))
-	body = append(body, plen...)
-	body = append(body, b...)
-	stream.SetWriteDeadline(time.Now().Add(time.Minute * 1))
-	_, err = stream.Write(body)
-	stream.SetWriteDeadline(time.Time{})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return "", fmt.Errorf("no route")
 }
 
 func (s *Server) addRoute(peer *codec.Edge) error {
 	log.Info("adding peer: %v", peer)
-
-	var sess *smux.Session
-	var stream *smux.Stream
-	for {
-		lconn, err := net.Dial("tcp", peer.ListenAddr)
-		if err != nil {
-			log.Error("dial peer fail: %v", err)
-			time.Sleep(time.Second * 3)
-			continue
-		}
-
-		sess, err = smux.Client(lconn, nil)
-		if err != nil {
-			log.Error("smux client fail: %v", err)
-			time.Sleep(time.Second * 3)
-			continue
-		}
-		stream, err = sess.OpenStream()
-		if err != nil {
-			log.Error("smux open stream fail: %v", err)
-			time.Sleep(time.Second * 3)
-			continue
-		}
-
-		err = s.handshake(stream)
-		if err != nil {
-			log.Error("handshake fail: %v", err)
-			time.Sleep(time.Second * 3)
-			continue
-		}
-		break
-	}
 
 	ipmask := strings.Split(peer.Cidr, "/")
 	cidrtype := "-net"
@@ -352,80 +228,14 @@ func (s *Server) addRoute(peer *codec.Edge) error {
 		peer.Cidr = fmt.Sprintf("%s/32", ipmask[0])
 	}
 
-	s.peerConnMu.Lock()
-	defer s.peerConnMu.Unlock()
-
 	s.peerConns[peer.Cidr] = &peerConn{
 		addr: peer.ListenAddr,
 		cidr: peer.Cidr,
-		conn: stream,
 	}
 
-	go s.deadlineCheck(peer, sess)
 	log.Info("added peer %v OK", peer)
 	log.Info("==========================\n")
 	return nil
-}
-
-func (s *Server) deadlineCheck(peer *codec.Edge, sess *smux.Session) {
-	tick := time.NewTicker(time.Second * 1)
-	for range tick.C {
-		if !sess.IsClosed() {
-			continue
-		}
-
-		log.Info("receive dead channel for peer %s", peer.ListenAddr)
-		for {
-			s.peerConnMu.Lock()
-			_, ok := s.peerConns[peer.Cidr]
-			// peer edge has been removed
-			if !ok {
-				s.peerConnMu.Unlock()
-				log.Warn("peer %s has not session", peer.Cidr)
-				break
-			}
-			s.peerConnMu.Unlock()
-
-			// reconnect
-			lconn, err := net.Dial("tcp", peer.ListenAddr)
-			if err != nil {
-				log.Error("dial peer fail: %v", err)
-				time.Sleep(time.Second * 3)
-				continue
-			}
-
-			smuxSess, err := smux.Client(lconn, nil)
-			if err != nil {
-				log.Error("smux client fail: %v", err)
-				time.Sleep(time.Second * 3)
-				continue
-			}
-
-			stream, err := smuxSess.OpenStream()
-			if err != nil {
-				log.Error("smux open stream fail: %v", err)
-				time.Sleep(time.Second * 3)
-				continue
-			}
-
-			err = s.handshake(stream)
-			if err != nil {
-				log.Error("handshake fail: %v", err)
-				time.Sleep(time.Second * 3)
-				continue
-			}
-
-			s.peerConnMu.Lock()
-			s.peerConns[peer.Cidr] = &peerConn{
-				addr: peer.ListenAddr,
-				cidr: peer.Cidr,
-				conn: stream,
-			}
-			s.peerConnMu.Unlock()
-			sess = smuxSess
-			break
-		}
-	}
 }
 
 func (s *Server) delRoute(peer *codec.Edge) {
@@ -444,13 +254,6 @@ func (s *Server) delRoute(peer *codec.Edge) {
 		peer.Cidr = fmt.Sprintf("%s/32", ipmask[0])
 	}
 
-	s.peerConnMu.Lock()
-	defer s.peerConnMu.Unlock()
-	peerConn, ok := s.peerConns[peer.Cidr]
-	if ok {
-		peerConn.conn.Close()
-	}
-
 	delete(s.peerConns, peer.Cidr)
 	log.Info("del peer %s OK", peer)
 	log.Info("==========================\n")
@@ -458,38 +261,28 @@ func (s *Server) delRoute(peer *codec.Edge) {
 
 func (s *Server) AddPeers(peers []*codec.Edge) {
 	for _, p := range peers {
-		go s.addRoute(p)
+		s.addRoute(p)
 	}
 }
 
 func (s *Server) AddPeer(peer *codec.Edge) {
-	go s.addRoute(peer)
+	s.addRoute(peer)
 }
 
 func (s *Server) DelPeer(peer *codec.Edge) {
-	go s.delRoute(peer)
+	s.delRoute(peer)
 }
 
 func (s *Server) AddRoute(msg *codec.AddRouteMsg) {
-	go s.addRoute(&codec.Edge{
+	s.addRoute(&codec.Edge{
 		Cidr:       msg.Cidr,
 		ListenAddr: msg.Nexthop,
 	})
 }
 
 func (s *Server) DelRoute(msg *codec.DelRouteMsg) {
-	go s.delRoute(&codec.Edge{
+	s.delRoute(&codec.Edge{
 		Cidr:       msg.Cidr,
 		ListenAddr: msg.Nexthop,
 	})
-}
-
-func time33(s string) uint64 {
-	var hash uint64 = 5381
-
-	for _, c := range s {
-		hash = ((hash << 5) + hash) + uint64(c)
-	}
-
-	return hash
 }
