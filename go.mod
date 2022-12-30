@@ -7,7 +7,7 @@ replace google.golang.org/grpc => google.golang.org/grpc v1.26.0
 require (
 	github.com/StackExchange/wmi v1.2.0 // indirect
 	github.com/astaxie/beego v1.12.3
-	github.com/aws/aws-sdk-go v1.32.1
+	github.com/aws/aws-sdk-go v1.33.0
 	github.com/belogik/goes v0.0.0-20151229125003-e54d722c3aff
 	github.com/cloudflare/golz4 v0.0.0-20150217214814-ef862a3cdc58
 	github.com/coreos/bbolt v1.3.2 // indirect
@@ -38,7 +38,6 @@ require (
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5 // indirect
 	github.com/urfave/cli/v2 v2.3.0
 	github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2 // indirect
-	github.com/xtaci/smux v2.0.1+incompatible
 	go.etcd.io/bbolt v1.3.3 // indirect
 	go.uber.org/zap v1.15.0 // indirect
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
